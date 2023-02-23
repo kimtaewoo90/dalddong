@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>472009772104-u1su9hl4a19v76v6ab7cf9s41r6c514v.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.472009772104-u1su9hl4a19v76v6ab7cf9s41r6c514v</string>
+	<key>API_KEY</key>
+	<string>AIzaSyD7xwV-mLxd1zvelqtFKVv_F2Xlw3tfu_0</string>
+	<key>GCM_SENDER_ID</key>
+	<string>472009772104</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.ynot.dalddong</string>
+	<key>PROJECT_ID</key>
+	<string>dalddong-firebase</string>
+	<key>STORAGE_BUCKET</key>
+	<string>dalddong-firebase.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:472009772104:ios:f5325db7ba0c8bc7d81c7d</string>
+</dict>
+</plist>
