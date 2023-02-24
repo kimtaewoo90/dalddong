@@ -2,8 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-final DateTime initialStartTime = DateTime.now();
-final DateTime initialEndTime =  DateTime.now();
+final DateTime initialStartTime = DateTime.now().add(const Duration(hour : 1));
+final DateTime initialEndTime =  DateTime.now().add(const Duration(hour : 3));
 final DateTime initialAlarm = DateTime.now().subtract(const Duration(minutes: 10));
 const int initialAlarmMins = 10;
 const bool initialAllDay = false;
@@ -142,6 +142,13 @@ class ScheduleProvider with ChangeNotifier{
       _blockDates.add(date);
       _backgroundColor =  const Color.fromARGB(105, 105, 105, 105);
     }
+    notifyListeners();
+  }
+
+  void resetAllScheduleData(){
+    _initialDate = initialDateProvider;
+    _blockDates = initialBlockDates;
+    _backgroundColor = initialBackgroudColor;
     notifyListeners();
   }
 }

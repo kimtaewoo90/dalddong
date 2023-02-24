@@ -129,7 +129,7 @@ Future<int?> addBlockTypeDialog(BuildContext context, String msg) async {
               child: const Text('저녁')),
           ElevatedButton(
               onPressed: () => Navigator.pop(context, 2),
-              child: const Text('둘다')),
+              child: const Text('종일')),
         ],
       );
     },

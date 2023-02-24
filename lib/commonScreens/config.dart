@@ -22,4 +22,8 @@ class GeneralUiConfig{
    static const Color btnTextColor = Colors.white;
 
    static const Color floatingBtnColor = Colors.amberAccent;
+
+   static const Color blockLunchColor = Colors.red;
+   static const Color blockDinnerColor = Colors.pink;
+   static const Color blockAlldayColor = Colors.grey;
 }

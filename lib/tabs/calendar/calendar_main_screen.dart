@@ -63,6 +63,12 @@ class _MyScheduleState extends State<MySchedule> {
   void initState() {
     super.initState();
 
+    // build시 provider 변수 reset
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ScheduleProvider>().resetAllScheduleData();
+    });
+
+
     showAgenda = false;
     initialDate = context.read<ScheduleProvider>().initialDate;
     blackoutDates = context.read<ScheduleProvider>().blockDates;
@@ -139,9 +145,12 @@ class _MyScheduleState extends State<MySchedule> {
                       }
 
                       List<DateTime> blockDates = [];
+                      List<int> lunchOrDinner = [];
                       for (var element in blockSnapshot.data!.docs) {
                         blockDates.add(DateTime.parse(element.id));
+                        lunchOrDinner.add(element.get('LunchOrDinner'));
                       }
+                      Map<String, int> blockInfo = Map.fromIterables(blockDates, lunchOrDinner);
                       context.read<ScheduleProvider>().setInitialBlockDate(blockDates);
 
 
@@ -156,29 +165,38 @@ class _MyScheduleState extends State<MySchedule> {
                                 dayFormat: 'EEE',
                               ),
                               // blackoutDates: blockDates,
-                              blackoutDatesTextStyle: const TextStyle(
-                                  backgroundColor: Colors.grey,
-                                  decoration: TextDecoration.lineThrough
-                              ),
+                              // blackoutDatesTextStyle: const TextStyle(
+                              //     backgroundColor: Colors.grey,
+                              //     decoration: TextDecoration.lineThrough
+                              // ),
 
                               initialSelectedDate: initialDate,
                               dataSource: MeetingDataSource(
                                   _getDataSource(snapshot.data!.docs)),
                               monthCellBuilder: (BuildContext buildContext, MonthCellDetails details) {
-
-                                // TODO : 여기서 분기할 필요가 없음  => blackoutDates 가 안먹네
+                          
                                 if (blockDates.contains(details.date)) {
-                                  backgroundColor =
-                                  const Color.fromARGB(105, 105, 105, 105);
-                                } else {
-                                  backgroundColor =
-                                  const Color.fromARGB(255, 255, 255, 255);
+                                  // blocked lunch
+                                  if(blockInfo[details.date] == 0){
+                                    backgroundColor = GeneralUiConfig.blockLunchColor;
+                                  }
+                                  // blocked dinner
+                                  else if (blockInfo[details.date] == 1){
+                                    backgroundColor = GeneralUiConfig.blockDinnerColor;
+                                  }
+                                  // blocked allDay
+                                  else{
+                                  backgroundColor = GeneralUiConfig.blockAlldayColor;                                
+                                  }                              
                                 }
+                                else{
+                                  backgroundColor = GeneralUiConfig.backgroundColor;
+                                }                                                             
 
                                 final Color defaultColor =
                                 Theme.of(context).brightness == Brightness.dark
                                     ? Colors.black54
-                                    : Colors.white;
+                                    : Colors.black54;
                                 return Container(
                                   decoration: BoxDecoration(
                                       color: backgroundColor,
@@ -203,7 +221,7 @@ class _MyScheduleState extends State<MySchedule> {
                                 DateTime date = details.date!;
 
                                 if(!blackoutDates.contains(date)){
-                                  final result = await addBlockTypeDialog(context, "무엇을 막아버려버림?");
+                                  final result = await addBlockTypeDialog(context, "달똥요청을 막으시겠어요?");
                                   await FirebaseFirestore.instance
                                       .collection('user')
                                       .doc(FirebaseAuth.instance.currentUser!.email)
