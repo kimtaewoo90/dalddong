@@ -1,22 +1,17 @@
-
-
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:googleapis/customsearch/v1.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:contacts_service/contacts_service.dart';
+import 'package:dalddong/commonScreens/config.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../commonScreens/page_route_with_animation.dart';
 import '../../commonScreens/shared_app_bar.dart';
 import '../../functions/utilities/Utility.dart';
 import 'friends_profile_screen.dart';
 import 'friends_search_screen.dart';
-
-
-
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({Key? key}) : super(key: key);
@@ -28,22 +23,18 @@ class FriendsScreen extends StatefulWidget {
 class _FriendsScreenState extends State<FriendsScreen> {
   final firebase = FirebaseFirestore.instance;
 
-
   late String? _myName;
   late String? _myEmail;
   late String? _myImage;
   late String _myPhoneNumber;
 
-
   @override
   void initState() {
     super.initState();
     getMyInfo();
-
-
   }
 
-  getMyInfo() async{
+  getMyInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _myName = prefs.getString('userName');
     _myEmail = prefs.getString('userEmail');
@@ -64,23 +55,19 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
-
-  Future<bool> getPermission() async{
+  Future<bool> getPermission() async {
     var status = await Permission.contacts.status;
-    if(status.isGranted){
+    if (status.isGranted) {
       return true;
-    }
-    else if(status.isDenied){
+    } else if (status.isDenied) {
       return false;
     }
-
     return false;
   }
 
   @override
   Widget build(BuildContext context) {
     // kakao_friends();
-    double width = MediaQuery.of(context).size.width* 0.6;
 
     try {
       return WillPopScope(
@@ -90,203 +77,136 @@ class _FriendsScreenState extends State<FriendsScreen> {
         },
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child:
-
-          Scaffold(
-
+          child: Scaffold(
+            backgroundColor: GeneralUiConfig.backgroundColor,
             appBar: BaseAppBar(
               appBar: AppBar(),
               title: "달똥메이트",
               backBtn: false,
               center: false,
-
             ),
             body: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance.collection('user')
+              stream: FirebaseFirestore.instance
+                  .collection('user')
                   .doc(FirebaseAuth.instance.currentUser?.email)
-                  .collection('friendsList').snapshots(),
+                  .collection('friendsList')
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     const Text(
                       "내 프로필",
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 14,
                       ),
                     ),
 
-                    SizedBox(
-                      child: Card(
-                        child: Card(
-                          child: InkWell(
-                            onTap: () async {
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(builder: (context) =>
-                              //         showMyProfile(myName: _myName,
-                              //           myEmail: _myEmail,
-                              //           myImage: _myImage,),
-                              //     )).then((value) => setState(() {}));
-                              // showMyProfile(myName: _myName,
-                              //   myEmail: _myEmail,
-                              //   myImage: _myImage,);
-                            },
-
-                            child: Row(
-                                children: [
-                                  CircleAvatar(
-                                      radius: 25,
-                                      backgroundColor: Colors.blue,
-                                      backgroundImage: NetworkImage(_myImage ??
-                                          "")
-                                    //ExactAssetImage('image/default_profile.png'),
-                                  ),
-                                  const SizedBox(width: 15,),
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Column(
-                                      children: [
-                                        SizedBox(
-                                          width: width,
-                                          child: Text(
-                                            _myName!,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-
-                                        const SizedBox(height: 10,),
-                                        SizedBox(
-                                          width: width,
-                                          child: Text(
-                                            _myEmail!,
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                color: Colors.grey[500]
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                  )
-                                ]
-                            ),
+                    ListTile(
+                      leading: CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Colors.blue,
+                          backgroundImage: NetworkImage(_myImage ?? "")
+                          //ExactAssetImage('image/default_profile.png'),
                           ),
+                      title: Text(
+                        _myName!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
+                      subtitle: Text(
+                        _myEmail!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                      ),
                     ),
 
-                    const SizedBox(height: 15,),
+                    const SizedBox(
+                      height: 5,
+                    ),
+                    const Divider(),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
                     Text(
                       "친구 ${snapshot.data?.docs.length}",
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 14,
                       ),
                     ),
-                    SizedBox(
-                      child: ListView.builder(
-                        scrollDirection: Axis.vertical,
-                        shrinkWrap: true,
-                        itemCount: snapshot.data?.docs.length,
-                        itemBuilder: (ctx, index) =>
-                            Container(
-                              padding: const EdgeInsets.all(1),
-                              child: Card(
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (context) =>
-                                            showProfile(userName: snapshot.data
-                                                ?.docs[index]['userName'],
-                                              userEmail: snapshot.data
-                                                  ?.docs[index]['userEmail'],
-                                              userImage: snapshot.data
-                                                  ?.docs[index]['userImage'],
-                                              myEmail: _myEmail,),
-                                        )).then((value) => setState(() {}));
-                                    showProfile(userName: snapshot.data
-                                        ?.docs[index]['userName'],
-                                      userEmail: snapshot.data
-                                          ?.docs[index]['userEmail'],
-                                      userImage: snapshot.data
-                                          ?.docs[index]['userImage'],
-                                      myEmail: _myEmail,);
-                                  },
 
-                                  child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                            radius: 25,
-                                            backgroundColor: Colors.blue,
-                                            backgroundImage: NetworkImage(
-                                                snapshot.data
-                                                    ?.docs[index]['userImage'] ??
-                                                    "")
-                                          //ExactAssetImage('image/default_profile.png'),
-                                        ),
-                                        const SizedBox(width: 15,),
-                                        Padding(
-                                          padding: const EdgeInsets.all(10),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(
-                                                width: width,
-                                                child: Text(
-                                                  snapshot.data
-                                                      ?.docs[index]['userName'],
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ),
+                    if (snapshot.data!.docs.isEmpty)
+                      const Center(
+                        child: Text("노 친구"),
+                      ),
 
-                                              const SizedBox(height: 10,),
-                                              SizedBox(
-                                                width: width,
-                                                child: Text(
-                                                  snapshot.data
-                                                      ?.docs[index]['userEmail'],
-                                                  style: TextStyle(
-                                                      fontSize: 15,
-                                                      color: Colors.grey[500]
-                                                  ),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                        )
-                                      ]
+                    if (snapshot.data!.docs.isNotEmpty)
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => showProfile(
+                                        userName: snapshot.data?.docs[index]['userName'],
+                                        userEmail: snapshot.data?.docs[index]['userEmail'],
+                                        userImage: snapshot.data?.docs[index]['userImage'],
+                                        myEmail: _myEmail,
+                                      ),
+                                    ));
+                              },
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                    radius: 25,
+                                    backgroundColor: Colors.blue,
+                                    backgroundImage: NetworkImage(snapshot
+                                            .data?.docs[index]['userImage'] ??
+                                        "")
+                                    //ExactAssetImage('image/default_profile.png'),
+                                    ),
+                                title: Text(
+                                  snapshot.data?.docs[index]['userName'],
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
                                   ),
                                 ),
-
+                                subtitle: Text(
+                                  snapshot.data?.docs[index]['userEmail'],
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey[500]),
+                                ),
                               ),
-                            ),
+                            );
+                          },
+                          // separatorBuilder: (BuildContext context, int index) => null,
+                        ),
                       ),
-                    ),
                   ],
                 );
               },
             ),
-
             floatingActionButton: FloatingActionButton(
-              backgroundColor: const Color(0xff025645),
+              backgroundColor: GeneralUiConfig.floatingBtnColor,
               highlightElevation: 100,
               child: const Icon(
-                Icons.person_add_alt_outlined, color: Colors.white,),
+                Icons.person_add_alt_outlined,
+                color: Colors.black,
+              ),
               onPressed: () {
                 showModalBottomSheet(
                     context: context,
@@ -307,14 +227,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     ), // 설정 아이콘 생성
                                     onPressed: () {
                                       // 아이콘 버튼 실행
-                                      PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
-                                          const SearchFriends());
+                                      PageRouteWithAnimation pageRoute =
+                                          PageRouteWithAnimation(
+                                              const SearchFriends());
                                       Navigator.push(context,
                                           pageRoute.slideBottonToTop());
                                     },
                                   ),
                                   const Text('친구검색'),
-
                                 ],
                               ),
                             ),
@@ -329,19 +249,21 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     ), // 설정 아이콘 생성
                                     onPressed: () async {
                                       // 아이콘 버튼 실행
-                                      var status = await Permission.contacts
-                                          .status;
+                                      var status =
+                                          await Permission.contacts.status;
                                       if (status.isGranted) {
-                                        var contacts = await ContactsService
-                                            .getContacts();
+                                        var contacts =
+                                            await ContactsService.getContacts();
                                         contacts.forEach((contactsElement) {
-                                          contactsElement.phones?.forEach((
-                                              phoneNumbers) async {
+                                          contactsElement.phones
+                                              ?.forEach((phoneNumbers) async {
                                             // phoneNumbers.value;
                                             var docs = await FirebaseFirestore
-                                                .instance.collection('user')
+                                                .instance
+                                                .collection('user')
                                                 .where('phoneNumber',
-                                                isEqualTo: phoneNumbers.value)
+                                                    isEqualTo:
+                                                        phoneNumbers.value)
                                                 .get();
 
                                             if (docs.docs.isNotEmpty) {
@@ -352,38 +274,28 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                             }
                                           });
                                         });
-                                        setState(() {
-
-                                        });
-                                      }
-                                      else if (status.isDenied) {
+                                        setState(() {});
+                                      } else if (status.isDenied) {
                                         Permission.contacts.request();
                                       }
                                     },
                                   ),
-
                                   const Text('연락처로 업데이트'),
-
                                 ],
                               ),
                             ),
-
-
                           ],
                         ),
                       );
-                    }
-                );
+                    });
               },
             ),
           ),
         ),
       );
-    } catch(e){
+    } catch (e) {
       showAlertDialog(context, e.toString());
       return Text(e.toString());
     }
-
   }
 }
-

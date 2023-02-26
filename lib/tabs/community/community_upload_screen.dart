@@ -41,7 +41,7 @@ class _UploadPostState extends State<UploadPost> {
     for (var category in categoryList) {
       CategoryChip chip = CategoryChip(category: category);
       categoryChips.add(chip);
-    };
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -199,10 +199,11 @@ class _UploadPostState extends State<UploadPost> {
                               );
                             });
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const CommunityScreen()),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(builder: (context) => const CommunityScreen()),
+                            // );
+                            Navigator.pop(context);
 
                           }
 

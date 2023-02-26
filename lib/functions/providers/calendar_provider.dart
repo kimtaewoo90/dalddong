@@ -2,8 +2,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-final DateTime initialStartTime = DateTime.now().add(const Duration(hour : 1));
-final DateTime initialEndTime =  DateTime.now().add(const Duration(hour : 3));
+final DateTime initialStartTime = DateTime.now().add(const Duration(hours : 1));
+final DateTime initialEndTime =  DateTime.now().add(const Duration(hours : 3));
 final DateTime initialAlarm = DateTime.now().subtract(const Duration(minutes: 10));
 const int initialAlarmMins = 10;
 const bool initialAllDay = false;
@@ -104,51 +104,52 @@ class ColorProvider with ChangeNotifier{
 }
 
 
-// TODO: initial block dates 를 DB에서 불러온다.
 
+// class Meeting {
+//   Meeting(this.scheduleId, this.eventName, this.from, this.to, this.background,
+//       this.isAllDay, this.isAppointment);
+//
+//   String scheduleId;
+//   String eventName;
+//   DateTime from;
+//   DateTime to;
+//   String background;
+//   bool isAllDay;
+//   bool isAppointment;
+// // bool isDalddong;
+// // int alarmMins;
+// }
 
 List<DateTime> initialBlockDates = [];
-final DateTime initialDateProvider = DateTime.now();
-const Color initialBackgroudColor = Color.fromARGB(255, 255, 255, 255);
-
-
+List<dynamic> initialAppointmentDetails = [];
 class ScheduleProvider with ChangeNotifier{
 
-  DateTime _initialDate = initialDateProvider;
-  DateTime get initialDate => _initialDate;
-
-  void changeInitialDate(DateTime date) {
-    _initialDate = date;
-    notifyListeners();
-  }
-
+  List<DateTime> _blockDates = initialBlockDates;
+  List<DateTime> get blockDates => _blockDates;
   void setInitialBlockDate(List<DateTime> values){
     initialBlockDates = values;
   }
-
-  final List<DateTime> _blockDates = initialBlockDates;
-  List<DateTime> get blockDates => _blockDates;
-
-  Color _backgroundColor = initialBackgroudColor;
-  Color get backgroundColor => _backgroundColor;
-
   void changeBlockDates(DateTime date){
-
     if(_blockDates.contains(date)){
       _blockDates.removeAt(_blockDates.indexOf((date)));
-      _backgroundColor =  const Color.fromARGB(255, 255, 255, 255);
     }
     else{
       _blockDates.add(date);
-      _backgroundColor =  const Color.fromARGB(105, 105, 105, 105);
     }
     notifyListeners();
   }
 
+  List<dynamic> _appointmentDetails = initialAppointmentDetails;
+  List<dynamic> get appointmentDetails => _appointmentDetails;
+  void changeAppointmentDetails(List<dynamic> details){
+    _appointmentDetails = details;
+    notifyListeners();
+  }
+
+
+
   void resetAllScheduleData(){
-    _initialDate = initialDateProvider;
     _blockDates = initialBlockDates;
-    _backgroundColor = initialBackgroudColor;
     notifyListeners();
   }
 }

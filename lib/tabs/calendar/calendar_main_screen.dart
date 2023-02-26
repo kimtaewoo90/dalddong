@@ -1,28 +1,6 @@
 // flutter
-import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-
-// google api
-// import 'package:google_sign_in/google_sign_in.dart';
-// import 'package:googleapis/calendar/v3.dart' as googleApi;
-import 'package:http/http.dart';
-import 'package:http/io_client.dart';
-
-// calendar
-import 'package:syncfusion_flutter_calendar/calendar.dart';
-
-// location
-import 'package:easy_localization/easy_localization.dart';
-
 // firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-
-// provider
-import 'package:provider/provider.dart';
-import '../../commonScreens/config.dart';
-import '../../functions/providers/calendar_provider.dart';
 
 // screens
 import 'package:dalddong/dalddongScreens/dalddongRequest/dr_request_screen.dart';
@@ -30,12 +8,31 @@ import 'package:dalddong/tabs/calendar/schedule_modify_screen.dart';
 import 'package:dalddong/tabs/calendar/schedule_register_screen.dart';
 import 'package:dalddong/tabs/chatting/chatting_screen.dart';
 
+// location
+import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+
+// provider
+import 'package:provider/provider.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+// calendar
+import 'package:syncfusion_flutter_calendar/calendar.dart';
+
+import '../../commonScreens/config.dart';
+
 // common functions
 import '../../commonScreens/page_route_with_animation.dart';
 import '../../commonScreens/shared_app_bar.dart';
+import '../../functions/providers/calendar_provider.dart';
 
 // utility
 import '../../functions/utilities/Utility.dart';
+import 'bottom_agenda_screen.dart';
 
 class MySchedule extends StatefulWidget {
   const MySchedule({Key? key}) : super(key: key);
@@ -53,11 +50,13 @@ class _MyScheduleState extends State<MySchedule> {
   //   ],
   // );
 
-  late bool showAgenda;
-  late DateTime initialDate;
+  bool agenda = false;
   late Color backgroundColor;
   late List<DateTime> blackoutDates;
-  late List<Meeting> _appointmentDetails;
+
+  final CalendarController _calendarController = CalendarController();
+  final panelController = PanelController();
+
 
   @override
   void initState() {
@@ -68,368 +67,485 @@ class _MyScheduleState extends State<MySchedule> {
       context.read<ScheduleProvider>().resetAllScheduleData();
     });
 
+    _calendarController.selectedDate = DateTime.now();
 
-    showAgenda = false;
-    initialDate = context.read<ScheduleProvider>().initialDate;
     blackoutDates = context.read<ScheduleProvider>().blockDates;
-    backgroundColor = context.read<ScheduleProvider>().backgroundColor;
-    _appointmentDetails = <Meeting>[];
-    // print('initState calendar');
 
+    print("initialDate : ${_calendarController.selectedDate}");
   }
 
-  void calendarTapped(CalendarTapDetails calendarTapDetails) {
-    if (calendarTapDetails.targetElement == CalendarElement.calendarCell) {
-      setState(() {
-        _appointmentDetails = calendarTapDetails.appointments!.cast<Meeting>();
+  // Alarm Modal bottom sheet
+  Future showAgendaDetails(BuildContext mainContext) {
+    return showModalBottomSheet(
+      isScrollControlled: true,
+      context: mainContext,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+            builder: (BuildContext context, StateSetter mainState) {
+          return Container(
+            color: Colors.black12,
+            child: ListView.separated(
+              padding: const EdgeInsets.all(2),
+              itemCount:
+                  context.read<ScheduleProvider>().appointmentDetails.length,
+              itemBuilder: (BuildContext context, int index) {
+                return Container(
+                  padding: const EdgeInsets.all(2),
+                  height: 60,
+                  color: Color(int.parse(context
+                      .read<ScheduleProvider>()
+                      .appointmentDetails[index]
+                      .background)),
+                  child: ListTile(
+                    onTap: () async {
+                      if (context
+                              .read<ScheduleProvider>()
+                              .appointmentDetails[index]
+                              .isAppointment ==
+                          true) {
+                        print("달똥완료 페이지로 이동");
+                        // PageRouteWithAnimation pageRoute =
+                        // PageRouteWithAnimation(CompleteAccept(dalddongId: _appointmentDetails[index].scheduleId,));
+                        // Navigator.push(context, pageRoute.slideBottonToTop());
+                        var chatRoomName = await FirebaseFirestore.instance
+                            .collection('user')
+                            .doc(FirebaseAuth.instance.currentUser?.email)
+                            .collection('chatRoomList')
+                            .doc(context
+                                .read<ScheduleProvider>()
+                                .appointmentDetails[index]
+                                .scheduleId)
+                            .get()
+                            .then((value) {
+                          return value.get('chatRoomName');
+                        });
 
-        if (initialDate != calendarTapDetails.date!) {
-          initialDate = calendarTapDetails.date!;
-          showAgenda = true;
-        } else {
-          if (showAgenda == true) {
-            showAgenda = false;
-          } else {
-            showAgenda = true;
-          }
-        }
-      });
-    }
+                        PageRouteWithAnimation pageRoute =
+                            PageRouteWithAnimation(ChatScreen(
+                                context
+                                    .read<ScheduleProvider>()
+                                    .appointmentDetails[index]
+                                    .scheduleId,
+                                chatRoomName));
+                        await Navigator.push(
+                            context, pageRoute.slideBottonToTop());
+                      } else {
+                        PageRouteWithAnimation pageRoute =
+                            PageRouteWithAnimation(ModifyDeleteSchedule(
+                          meetingData: context
+                              .read<ScheduleProvider>()
+                              .appointmentDetails[index],
+                        ));
+                        Navigator.push(context, pageRoute.slideBottonToTop());
+                      }
+                    },
+                    leading: Column(
+                      children: <Widget>[
+                        Text(
+                          context
+                                  .read<ScheduleProvider>()
+                                  .appointmentDetails[index]
+                                  .isAllDay
+                              ? ''
+                              : DateFormat('hh:mm a').format(context
+                                  .read<ScheduleProvider>()
+                                  .appointmentDetails[index]
+                                  .from),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              height: 1.7),
+                        ),
+                        Text(
+                          context
+                                  .read<ScheduleProvider>()
+                                  .appointmentDetails[index]
+                                  .isAllDay
+                              ? 'All day'
+                              : '',
+                          style:
+                              const TextStyle(height: 0.5, color: Colors.white),
+                        ),
+                        Text(
+                          context
+                                  .read<ScheduleProvider>()
+                                  .appointmentDetails[index]
+                                  .isAllDay
+                              ? ''
+                              : DateFormat('hh:mm a').format(context
+                                  .read<ScheduleProvider>()
+                                  .appointmentDetails[index]
+                                  .to),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    trailing: const Icon(
+                      Icons.add,
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    title: Text(
+                        context
+                            .read<ScheduleProvider>()
+                            .appointmentDetails[index]
+                            .eventName,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                );
+              },
+              separatorBuilder: (BuildContext context, int index) =>
+                  const Divider(
+                height: 5,
+              ),
+            ),
+          );
+        });
+      },
+    );
   }
+  
 
   @override
   Widget build(BuildContext context) {
     // print('build calendar');
+    // print(initialDate);
+
+    final panelHeightClosed = MediaQuery.of(context).size.height * 0.0;
+    final panelHeightOpen = MediaQuery.of(context).size.height * 0.4;
+
     return WillPopScope(
-      onWillPop: () async{
+      onWillPop: () async {
         final value = await yesNoDialog(context, "앱을 종료하십니까?");
         return value ?? true;
       },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Scaffold(
+      child: Scaffold(
           backgroundColor: GeneralUiConfig.backgroundColor,
-            appBar: BaseAppBar(
-              appBar: AppBar(),
-              title: "켈린더",
-              backBtn: false,
-              center: false,
-            ),
-            body: StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection('user')
-                  .doc(FirebaseAuth.instance.currentUser!.email)
-                  .collection("AppointmentList")
-                  .snapshots(),
-              builder: (context, AsyncSnapshot snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Container(
-                    alignment: Alignment.center,
-                    child: const CircularProgressIndicator(),
-                  );
+          resizeToAvoidBottomInset: true,
+          appBar: BaseAppBar(
+            appBar: AppBar(),
+            title: "켈린더",
+            backBtn: false,
+            center: false,
+          ),
+          // body: _calendar(),
+          body: SizedBox(
+            // height: 500,
+            child: SlidingUpPanel(
+                backdropEnabled: false,
+                controller: panelController,
+                minHeight: panelHeightClosed,
+                maxHeight: panelHeightOpen,
+                parallaxEnabled: true,
+                parallaxOffset: 1,
+                panelSnapping: true,
+                color: Colors.white,
+                // collapsed: _calendar(),
+                body: Column(
+                  children: [
+                    Expanded(
+                        child: _calendar(MediaQuery.of(context).size.height - 80)),
+                  // child: Container()
+
+                  ],
+                ),
+              panelBuilder: (controller){
+                  return BottomAgenda(
+                    controller: controller,
+                    panelController: panelController);
                 }
-
-                return StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('user')
-                        .doc(FirebaseAuth.instance.currentUser!.email)
-                        .collection('BlockDatesList')
-                        .snapshots(),
-                    builder: (context, blockSnapshot) {
-                      if (blockSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return Container(
-                          alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
-                        );
-                      }
-
-                      List<DateTime> blockDates = [];
-                      List<int> lunchOrDinner = [];
-                      for (var element in blockSnapshot.data!.docs) {
-                        blockDates.add(DateTime.parse(element.id));
-                        lunchOrDinner.add(element.get('LunchOrDinner'));
-                      }
-                      Map<String, int> blockInfo = Map.fromIterables(blockDates, lunchOrDinner);
-                      context.read<ScheduleProvider>().setInitialBlockDate(blockDates);
-
-
-                      return Column(
-                        children: [
-                          Expanded(
-                            child: SfCalendar(
-                              view: CalendarView.month,
-                              monthViewSettings: const MonthViewSettings(
-                                appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
-                                showTrailingAndLeadingDates: false,
-                                dayFormat: 'EEE',
-                              ),
-                              // blackoutDates: blockDates,
-                              // blackoutDatesTextStyle: const TextStyle(
-                              //     backgroundColor: Colors.grey,
-                              //     decoration: TextDecoration.lineThrough
-                              // ),
-
-                              initialSelectedDate: initialDate,
-                              dataSource: MeetingDataSource(
-                                  _getDataSource(snapshot.data!.docs)),
-                              monthCellBuilder: (BuildContext buildContext, MonthCellDetails details) {
-                          
-                                if (blockDates.contains(details.date)) {
-                                  // blocked lunch
-                                  if(blockInfo[details.date] == 0){
-                                    backgroundColor = GeneralUiConfig.blockLunchColor;
-                                  }
-                                  // blocked dinner
-                                  else if (blockInfo[details.date] == 1){
-                                    backgroundColor = GeneralUiConfig.blockDinnerColor;
-                                  }
-                                  // blocked allDay
-                                  else{
-                                  backgroundColor = GeneralUiConfig.blockAlldayColor;                                
-                                  }                              
-                                }
-                                else{
-                                  backgroundColor = GeneralUiConfig.backgroundColor;
-                                }                                                             
-
-                                final Color defaultColor =
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.black54
-                                    : Colors.black54;
-                                return Container(
-                                  decoration: BoxDecoration(
-                                      color: backgroundColor,
-                                      border: Border.all(
-                                          color: defaultColor, width: 0.5)),
-                                  child: Text(
-                                    details.date.day.toString(),
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                );
-                              },
-
-                              selectionDecoration: BoxDecoration(
-                                color: Colors.transparent,
-                                border: Border.all(color: Colors.blue, width: 2),
-                                borderRadius:
-                                const BorderRadius.all(Radius.circular(4)),
-                                shape: BoxShape.rectangle,
-                              ),
-
-                              onLongPress: (CalendarLongPressDetails details) async {
-                                DateTime date = details.date!;
-
-                                if(!blackoutDates.contains(date)){
-                                  final result = await addBlockTypeDialog(context, "달똥요청을 막으시겠어요?");
-                                  await FirebaseFirestore.instance
-                                      .collection('user')
-                                      .doc(FirebaseAuth.instance.currentUser!.email)
-                                      .collection('BlockDatesList')
-                                      .doc('${details.date}')
-                                      .set({
-                                    'LunchOrDinner' : result,
-                                    'isDalddong' : false,
-                                  });
-                                }
-                                else {
-                                  final result = await yesNoDialog(context, '정말 해제하시겠어용?');
-                                  if (result == true){
-                                    await FirebaseFirestore.instance
-                                        .collection('user')
-                                        .doc(FirebaseAuth.instance.currentUser!.email)
-                                        .collection('BlockDatesList')
-                                        .doc('${details.date}')
-                                        .delete();
-                                  }
-                                }
-                                setState(() {
-                                  context.read<ScheduleProvider>().changeBlockDates(date);
-                                });
-                              },
-
-                              onTap: calendarTapped,
-
-                            ),
-                          ),
-
-                          if (showAgenda)
-                            Expanded(
-                              child: Container(
-                                color: Colors.black12,
-                                child: ListView.separated(
-                                  padding: const EdgeInsets.all(2),
-                                  itemCount: _appointmentDetails.length,
-                                  itemBuilder: (BuildContext context, int index) {
-                                    return Container(
-                                      padding: const EdgeInsets.all(2),
-                                      height: 60,
-                                      color: Color(int.parse(
-                                          _appointmentDetails[index].background)),
-                                      child: ListTile(
-                                        onTap: () async{
-                                          if(_appointmentDetails[index].isAppointment == true){
-                                            print("달똥완료 페이지로 이동");
-                                            // PageRouteWithAnimation pageRoute =
-                                            // PageRouteWithAnimation(CompleteAccept(dalddongId: _appointmentDetails[index].scheduleId,));
-                                            // Navigator.push(context, pageRoute.slideBottonToTop());
-                                            var chatRoomName = await FirebaseFirestore.instance
-                                                .collection('user')
-                                                .doc(FirebaseAuth.instance.currentUser?.email)
-                                                .collection('chatRoomList')
-                                                .doc(_appointmentDetails[index].scheduleId).get().then((value) {
-                                              return value.get('chatRoomName');
-                                            });
-
-                                            PageRouteWithAnimation pageRoute =
-                                            PageRouteWithAnimation(ChatScreen(_appointmentDetails[index].scheduleId, chatRoomName));
-                                            await Navigator.push(context, pageRoute.slideBottonToTop());
-
-                                          }
-                                          else{
-                                            PageRouteWithAnimation pageRoute =
-                                            PageRouteWithAnimation(ModifyDeleteSchedule(meetingData: _appointmentDetails[index],));
-                                            Navigator.push(context, pageRoute.slideBottonToTop());
-                                          }
-                                        },
-                                        leading: Column(
-                                          children: <Widget>[
-                                            Text(
-                                              _appointmentDetails[index].isAllDay
-                                                  ? ''
-                                                  : DateFormat('hh:mm a').format(
-                                                  _appointmentDetails[index]
-                                                      .from),
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                  height: 1.7),
-                                            ),
-                                            Text(
-                                              _appointmentDetails[index].isAllDay
-                                                  ? 'All day'
-                                                  : '',
-                                              style: const TextStyle(
-                                                  height: 0.5, color: Colors.white),
-                                            ),
-                                            Text(
-                                              _appointmentDetails[index].isAllDay
-                                                  ? ''
-                                                  : DateFormat('hh:mm a').format(
-                                                  _appointmentDetails[index]
-                                                      .to),
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white),
-                                            ),
-                                          ],
-                                        ),
-                                        trailing: const Icon(
-                                          Icons.add,
-                                          size: 30,
-                                          color: Colors.white,
-                                        ),
-                                        title: Text(
-                                            _appointmentDetails[index].eventName,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white)),
-                                      ),
-                                    );
-                                  },
-                                  separatorBuilder:
-                                      (BuildContext context, int index) =>
-                                  const Divider(
-                                    height: 5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    });
-              },
             ),
+          ),
 
-            floatingActionButton: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 0, 10, 10),
-              child: SpeedDial(
-                overlayOpacity: 0.5,
-                animatedIcon: AnimatedIcons.menu_close,
-                backgroundColor: GeneralUiConfig.floatingBtnColor,
-                // icon: Icon(Icons.edit),
+          floatingActionButton: Padding(
+            padding: const EdgeInsets.fromLTRB(0, 0, 10, 10),
+            child: SpeedDial(
+              overlayOpacity: 0.5,
+              animatedIcon: AnimatedIcons.menu_close,
+              backgroundColor: GeneralUiConfig.floatingBtnColor,
+              // icon: Icon(Icons.edit),
 
-                children: [
-                  SpeedDialChild(
-                      child: const Icon(Icons.search), label: "달똥찾기", onTap: () {}),
-                  SpeedDialChild(
-                      child: const Icon(Icons.message),
-                      label: "달똥등록",
-                      onTap: () {
-                        PageRouteWithAnimation pageRoute =
-                        PageRouteWithAnimation(const RegistrationDalddong());
-                        Navigator.push(context, pageRoute.slideBottonToTop());
-                      }),
-                  SpeedDialChild(
-                      child: const Icon(Icons.event_note),
-                      label: "일정등록",
-                      onTap: () {
-                        PageRouteWithAnimation pageRoute =
-                        PageRouteWithAnimation(const RegistrationSchedule(isModify: false,));
-                        Navigator.push(context, pageRoute.slideBottonToTop());
-                      }),
-                  SpeedDialChild(
-                      child: const Icon(Icons.event_note),
-                      label: "권한받기",
-                      onTap: () async{
-                        NotificationSettings settings =
-                        await FirebaseMessaging.instance.requestPermission(
-                          alert: true,
-                          announcement: true,
-                          badge: true,
-                          carPlay: false,
-                          criticalAlert: false,
-                          provisional: false,
-                          sound: false,
-                        );
+              children: [
+                SpeedDialChild(
+                    child: const Icon(Icons.search),
+                    label: "달똥찾기",
+                    onTap: () {}),
+                SpeedDialChild(
+                    child: const Icon(Icons.message),
+                    label: "달똥등록",
+                    onTap: () {
+                      PageRouteWithAnimation pageRoute =
+                          PageRouteWithAnimation(
+                              const RegistrationDalddong());
+                      Navigator.push(context, pageRoute.slideBottonToTop());
+                    }),
+                SpeedDialChild(
+                    child: const Icon(Icons.event_note),
+                    label: "일정등록",
+                    onTap: () {
+                      PageRouteWithAnimation pageRoute =
+                          PageRouteWithAnimation(const RegistrationSchedule(
+                        isModify: false,
+                      ));
+                      Navigator.push(context, pageRoute.slideBottonToTop());
+                    }),
+                SpeedDialChild(
+                    child: const Icon(Icons.event_note),
+                    label: "권한받기",
+                    onTap: () async {
+                      NotificationSettings settings =
+                          await FirebaseMessaging.instance.requestPermission(
+                        alert: true,
+                        announcement: true,
+                        badge: true,
+                        carPlay: false,
+                        criticalAlert: false,
+                        provisional: false,
+                        sound: false,
+                      );
 
-                        if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-                          print('User granted permission');
-                        } else if (settings.authorizationStatus ==
-                            AuthorizationStatus.provisional) {
-                          print('User granted provisional permission');
-                        } else {
-                          print('User declined or has not accepted permission');
-                        }
-                      })
-                ],
-              ),
-            )),
+                      if (settings.authorizationStatus ==
+                          AuthorizationStatus.authorized) {
+                        print('User granted permission');
+                      } else if (settings.authorizationStatus ==
+                          AuthorizationStatus.provisional) {
+                        print('User granted provisional permission');
+                      } else {
+                        print('User declined or has not accepted permission');
+                      }
+                    })
+              ],
+            ),
+          )
       ),
     );
   }
 
-  List<Meeting> _getDataSource(
-      List<QueryDocumentSnapshot<Object?>> collection) {
-    final List<Meeting> meetings = <Meeting>[];
+  Widget _calendar(double calendarHeight) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        if (details.delta.dy < 0) {
 
-    for (int index = 0; index < collection.length; index++) {
-      meetings.add(Meeting(
-        collection[index]['scheduleId'],
-        collection[index]["title"],
-        collection[index]["startDate"].toDate(),
-        collection[index]["endDate"].toDate(),
-        collection[index]['color'],
-        collection[index]['isAllDay'],
-        collection[index]['isAppointment'],
-        // collection[index]['alarmMins']
-      ));
-    }
-    return meetings;
+          // print("위로 ${panelController.isAttached }");
+          if(panelController.isAttached == true){
+            panelController.animatePanelToPosition(1);
+
+          }
+        }
+        if (details.delta.dy > 0) {
+          // print("아래로 ${panelController.isAttached }");
+          if(panelController.isAttached == true){
+            panelController.animatePanelToPosition(0);
+
+
+            // panelController.open();
+          }
+        }
+      },
+      child: StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('user')
+              .doc(FirebaseAuth.instance.currentUser!.email)
+              .collection("AppointmentList")
+              .snapshots(),
+          builder: (context, AsyncSnapshot snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                alignment: Alignment.center,
+                child: const CircularProgressIndicator(),
+              );
+            }
+            return StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('user')
+                    .doc(FirebaseAuth.instance.currentUser!.email)
+                    .collection('BlockDatesList')
+                    .snapshots(),
+                builder: (context, blockSnapshot) {
+                  if (blockSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Container(
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(),
+                    );
+                  }
+
+                  List<DateTime> blockDates = [];
+                  List<int> lunchOrDinner = [];
+                  for (var element in blockSnapshot.data!.docs) {
+                    blockDates.add(DateTime.parse(element.id));
+                    lunchOrDinner.add(element.get('LunchOrDinner'));
+                  }
+                  Map<DateTime, int> blockInfo = Map.fromIterables(blockDates, lunchOrDinner);
+                  context.read<ScheduleProvider>().setInitialBlockDate(blockDates);
+
+                  print(calendarHeight - panelController.panelPosition);
+                  return Column(children: [
+                    SizedBox(
+                      height: calendarHeight - panelController.panelPosition,
+                      child: SfCalendar(
+                        controller: _calendarController,
+                        onViewChanged:
+                            (ViewChangedDetails viewChangedDetails) {
+                          SchedulerBinding.instance
+                              .addPostFrameCallback((Duration duration) {
+                            if (viewChangedDetails.visibleDates.first.year == DateTime.now().year &&
+                                viewChangedDetails.visibleDates[0].month == DateTime.now().month) {
+                              // _calendarController.selectedDate = DateTime.now();
+                            } else {
+                              _calendarController.selectedDate = viewChangedDetails.visibleDates[0];
+                            }
+                          });
+                        },
+                        view: CalendarView.month,
+                        showNavigationArrow: true,
+                        showDatePickerButton: true,
+                        todayHighlightColor: Colors.red,
+                        monthViewSettings: const MonthViewSettings(
+                          appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
+                          showTrailingAndLeadingDates: false,
+                          dayFormat: 'EEE',
+                          navigationDirection: MonthNavigationDirection.horizontal,
+                        ),
+                        dataSource: MeetingDataSource(_getDataSource(snapshot.data!.docs)),
+                        monthCellBuilder: (BuildContext buildContext,
+                            MonthCellDetails details) {
+                          // Block Date
+                          if (blockDates.contains(details.date)) {
+                            // blocked lunch
+                            if (blockInfo[details.date] == 0) {
+                              backgroundColor = GeneralUiConfig.blockLunchColor;
+                            }
+                            // blocked dinner
+                            else if (blockInfo[details.date] == 1) {
+                              backgroundColor = GeneralUiConfig.blockDinnerColor;
+                            }
+                            // blocked allDay
+                            else {
+                              backgroundColor = GeneralUiConfig.blockAlldayColor;
+                            }
+                          }
+                          // Open Date
+                          else {
+                            backgroundColor = GeneralUiConfig.backgroundColor;
+                          }
+
+                          final Color defaultColor =
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? GeneralUiConfig.borderDarkModeColor
+                                  : GeneralUiConfig.borderWhiteModeColor;
+                          return Container(
+                            decoration: BoxDecoration(
+                                color: backgroundColor,
+                                border: Border.all(
+                                    color: defaultColor, width: 0.5)),
+                            child: Text(
+                              details.date.day.toString(),
+                              style: const TextStyle(
+                                  color: Colors.black, fontSize: 10),
+                            ),
+                          );
+                        },
+                        selectionDecoration: BoxDecoration(
+                          color: Colors.transparent,
+                          border: Border.all(color: Colors.blue, width: 2),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(4)),
+                          shape: BoxShape.rectangle,
+                        ),
+
+                        onLongPress:
+                            (CalendarLongPressDetails details) async {
+                          DateTime date = details.date!;
+                          blackoutDates =
+                              context.read<ScheduleProvider>().blockDates;
+
+                          if (!blackoutDates.contains(date)) {
+                            final result = await addBlockTypeDialog(
+                                context, "달똥요청을 막으시겠어요?");
+                            await FirebaseFirestore.instance
+                                .collection('user')
+                                .doc(FirebaseAuth
+                                    .instance.currentUser!.email)
+                                .collection('BlockDatesList')
+                                .doc('${details.date}')
+                                .set({
+                              'LunchOrDinner': result,
+                              'isDalddong': false,
+                            });
+                          } else {
+                            final result =
+                                await yesNoDialog(context, '정말 해제하시겠어용?');
+                            if (result == true) {
+                              await FirebaseFirestore.instance
+                                  .collection('user')
+                                  .doc(FirebaseAuth
+                                      .instance.currentUser!.email)
+                                  .collection('BlockDatesList')
+                                  .doc('${details.date}')
+                                  .delete();
+                            }
+                          }
+
+                          context.read<ScheduleProvider>().changeBlockDates(date);
+
+                          // setState(() {
+                          //   context.read<ScheduleProvider>().changeBlockDates(date);
+                          // });
+                        },
+                        onTap: (CalendarTapDetails calendarTapDetails) {
+
+                          _calendarController.selectedDate = calendarTapDetails.date;
+                          if (calendarTapDetails.appointments != null) {
+                            context.read<ScheduleProvider>()
+                                    .changeAppointmentDetails(
+                                      calendarTapDetails.appointments!.cast<Meeting>()
+                            );
+                            setState(() {});
+                          }
+
+                          if (calendarTapDetails.date!.month >
+                              _calendarController.displayDate!.month) {
+                            _calendarController.forward!();
+                          }
+                          else if(calendarTapDetails.date!.month <
+                              _calendarController.displayDate!.month){
+                            _calendarController.backward!();
+                          }
+                        },
+                      ),
+                    ),
+
+                    // Expanded(child: BottomAgenda()),
+                  ]);
+                });
+          }),
+    );
   }
+}
+
+List<Meeting> _getDataSource(List<QueryDocumentSnapshot<Object?>> collection) {
+  final List<Meeting> meetings = <Meeting>[];
+
+  for (int index = 0; index < collection.length; index++) {
+    meetings.add(Meeting(
+      collection[index]['scheduleId'],
+      collection[index]["title"],
+      collection[index]["startDate"].toDate(),
+      collection[index]["endDate"].toDate(),
+      collection[index]['color'],
+      collection[index]['isAllDay'],
+      collection[index]['isAppointment'],
+      // collection[index]['alarmMins']
+    ));
+  }
+  return meetings;
+}
 
 // Future<List<googleApi.Event>?> getGoogleEventsData() async {
 //   try {
@@ -462,8 +578,6 @@ class _MyScheduleState extends State<MySchedule> {
 //     return null;
 //   }
 // }
-}
-
 
 class MeetingDataSource extends CalendarDataSource {
   MeetingDataSource(List<Meeting> source) {
@@ -510,7 +624,6 @@ class Meeting {
 // bool isDalddong;
 // int alarmMins;
 }
-
 
 // class GoogleAPIClient extends IOClient {
 //   final Map<String, String>? _headers;
@@ -569,3 +682,135 @@ class Meeting {
 //         : event.summary;
 //   }
 // }
+
+class ShowBottomAgenda extends StatefulWidget {
+  final List<dynamic> details;
+
+  const ShowBottomAgenda({Key? key, required this.details}) : super(key: key);
+
+  @override
+  State<ShowBottomAgenda> createState() => _ShowBottomAgendaState();
+}
+
+class _ShowBottomAgendaState extends State<ShowBottomAgenda> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black12,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(2),
+        itemCount: context.read<ScheduleProvider>().appointmentDetails.length,
+        itemBuilder: (BuildContext context, int index) {
+          return Container(
+            padding: const EdgeInsets.all(2),
+            height: 60,
+            color: Color(int.parse(context
+                .read<ScheduleProvider>()
+                .appointmentDetails[index]
+                .background)),
+            child: ListTile(
+              onTap: () async {
+                if (context
+                        .read<ScheduleProvider>()
+                        .appointmentDetails[index]
+                        .isAppointment ==
+                    true) {
+                  print("달똥완료 페이지로 이동");
+
+                  var chatRoomName = await FirebaseFirestore.instance
+                      .collection('user')
+                      .doc(FirebaseAuth.instance.currentUser?.email)
+                      .collection('chatRoomList')
+                      .doc(context
+                          .read<ScheduleProvider>()
+                          .appointmentDetails[index]
+                          .scheduleId)
+                      .get()
+                      .then((value) {
+                    return value.get('chatRoomName');
+                  });
+
+                  PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
+                      ChatScreen(
+                          context
+                              .read<ScheduleProvider>()
+                              .appointmentDetails[index]
+                              .scheduleId,
+                          chatRoomName));
+                  await Navigator.push(context, pageRoute.slideBottonToTop());
+                } else {
+                  PageRouteWithAnimation pageRoute =
+                      PageRouteWithAnimation(ModifyDeleteSchedule(
+                    meetingData: context
+                        .read<ScheduleProvider>()
+                        .appointmentDetails[index],
+                  ));
+                  Navigator.push(context, pageRoute.slideBottonToTop());
+                }
+              },
+              leading: Column(
+                children: <Widget>[
+                  Text(
+                    context
+                            .read<ScheduleProvider>()
+                            .appointmentDetails[index]
+                            .isAllDay
+                        ? ''
+                        : DateFormat('hh:mm a').format(context
+                            .read<ScheduleProvider>()
+                            .appointmentDetails[index]
+                            .from),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        height: 1.7),
+                  ),
+                  Text(
+                    context
+                            .read<ScheduleProvider>()
+                            .appointmentDetails[index]
+                            .isAllDay
+                        ? 'All day'
+                        : '',
+                    style: const TextStyle(height: 0.5, color: Colors.white),
+                  ),
+                  Text(
+                    context
+                            .read<ScheduleProvider>()
+                            .appointmentDetails[index]
+                            .isAllDay
+                        ? ''
+                        : DateFormat('hh:mm a').format(context
+                            .read<ScheduleProvider>()
+                            .appointmentDetails[index]
+                            .to),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                ],
+              ),
+              trailing: const Icon(
+                Icons.add,
+                size: 30,
+                color: Colors.white,
+              ),
+              title: Text(
+                  context
+                      .read<ScheduleProvider>()
+                      .appointmentDetails[index]
+                      .eventName,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600, color: Colors.white)),
+            ),
+          );
+        },
+        separatorBuilder: (BuildContext context, int index) => const Divider(
+          height: 5,
+        ),
+      ),
+    );
+  }
+}

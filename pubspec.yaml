@@ -110,6 +110,7 @@ dependencies:
   contacts_service: ^0.6.3
   permission_handler: ^10.2.0
   flutter_native_timezone: ^2.0.0
+  sliding_up_panel: ^2.0.0+1
 
 
 dev_dependencies:

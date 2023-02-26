@@ -26,4 +26,7 @@ class GeneralUiConfig{
    static const Color blockLunchColor = Colors.red;
    static const Color blockDinnerColor = Colors.pink;
    static const Color blockAlldayColor = Colors.grey;
+
+   static const Color borderDarkModeColor = Colors.white;
+   static const Color borderWhiteModeColor = Colors.black12;
 }
