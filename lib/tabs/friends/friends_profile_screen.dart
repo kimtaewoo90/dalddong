@@ -146,6 +146,7 @@ class _showProfileState extends State<showProfile> {
                               IconButton(
                                 onPressed: () async {
                                   var chatroomId = await makeNewChatRoom(widget.userName!, widget.userEmail!, widget.userImage!);
+                                  Future.delayed(const Duration(seconds: 1));
                                   String title = await FirebaseFirestore.instance
                                       .collection('user')
                                       .doc(FirebaseAuth.instance.currentUser!.email)

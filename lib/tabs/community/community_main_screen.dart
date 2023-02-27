@@ -93,30 +93,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 child: Row(
                   children: [
 
-                    DropdownButton(
-                      value: selectedValue,
-                      items: valueList.map((value) {
-                        return DropdownMenuItem(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedValue = value;
-                        });
-                      },
-                    ),
+                    // DropdownButton(
+                    //   value: selectedValue,
+                    //   items: valueList.map((value) {
+                    //     return DropdownMenuItem(
+                    //       value: value,
+                    //       child: Text(value),
+                    //     );
+                    //   }).toList(),
+                    //   onChanged: (value) {
+                    //     setState(() {
+                    //       selectedValue = value;
+                    //     });
+                    //   },
+                    // ),
 
-                    const Spacer(),
-                    const Text("내 관심사만"),
+                    // const Spacer(),
+                    const Text("내 관심사만 보기"),
                     const SizedBox(width: 10,),
                     Switch(
                       value: provider.isMyFavorite,
                       onChanged: (value) {
                         provider.changeMyFavorite(value);
                       },
-                      activeColor: const Color(0xff025645),
+                      activeColor: GeneralUiConfig.floatingBtnColor,
                     ),
                   ],
                 ),
@@ -154,6 +154,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
                           return GestureDetector(
                             onTap: (){
+                              // print("tapped");
                               PageRouteWithAnimation pageRoute = PageRouteWithAnimation(WatchPost(postNumber : snapshot.data?.docs[index].id));
                               Navigator.push(context, pageRoute.slideRitghtToLeft());
                             },
@@ -182,14 +183,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.bold, fontSize: 18
+                                          fontWeight: FontWeight.bold, fontSize: 16
                                       ),
                                     ),
                                     // const Spacer(),
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 5,),
                               // Contents for this article
 
                               Padding(
@@ -204,6 +204,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           color: Colors.grey,
+                                          fontSize: 13
                                         ),
                                       ),
                                     ),
@@ -306,7 +307,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       separatorBuilder: (context, index) =>
                       const Divider(
                         thickness: 2,
-                        color: Colors.black,
+                        color: Colors.amberAccent,
                       ),
                         ),
                   );
@@ -315,10 +316,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
 
         floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color(0xff025645),
+          backgroundColor: GeneralUiConfig.floatingBtnColor,
           child: const Icon(
             Icons.edit,
-            color: Colors.white,
+            color: Colors.black,
           ),
           onPressed: (){
             Navigator.push(
@@ -364,7 +365,7 @@ class _CategoryChipState extends State<CategoryChip> {
         backgroundColor: context.read<CommunityProvider>().isSelectedCategory
             == widget.category!
             ? Colors.black
-            : Colors.grey,
+            : Colors.white,
       ),
     );
   }

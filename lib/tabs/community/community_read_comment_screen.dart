@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,7 @@ class _WatchCommentState extends State<WatchComment> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      backgroundColor: GeneralUiConfig.backgroundColor,
       resizeToAvoidBottomInset: true,
       appBar: BaseAppBar(
         appBar: AppBar(),
@@ -70,155 +72,157 @@ class _WatchCommentState extends State<WatchComment> {
                 Padding(
                   padding: const EdgeInsets.all(2.0),
                   child: Container(
-                    decoration: const BoxDecoration(color: Colors.white54),
+                    decoration: const BoxDecoration(color: GeneralUiConfig.backgroundColor),
                     child: Card(
                       color: Colors.white,
-                      child: InkWell(
-                        onTap: () {
-                          // TODO: Enter the re-comment page
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Colors.blue,
-                                    backgroundImage: NetworkImage(
-                                        widget.eachComments.get('commentUserImage') ??
-                                            "")
-                                  //ExactAssetImage('image/default_profile.png'),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: Colors.blue,
+                                  backgroundImage: NetworkImage(
+                                      widget.eachComments.get('commentUserImage') ??
+                                          "")
+                                //ExactAssetImage('image/default_profile.png'),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    widget.eachComments.get('commentUserName') ?? "",
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  getWritingTimeToString(
+                                      widget.eachComments.get('uploadCommentTime'))
+                                ],
+                              ),
+                              const Spacer(),
+                              if (widget.eachComments.get('commentUserEmail') ==
+                                  FirebaseAuth.instance.currentUser?.email)
+                                IconButton(
+                                    onPressed: () {
+                                      showCupertinoModalPopup(
+                                          context: context,
+                                          builder: (context) => commentActionSheet);
+                                    },
+                                    icon: const Icon(Icons.more_vert))
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          const Divider(),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  widget.eachComments.get('commentText') ?? "",
+                                  maxLines: 100,
                                 ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Column(
+                              )
+                            ],
+                          ),
+                          const Divider(),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                },
+                                child: Row(
                                   children: [
-                                    Text(
-                                      widget.eachComments.get('commentUserName') ?? "",
-                                    ),
+                                    const Icon(Icons.reply),
                                     const SizedBox(
-                                      height: 5,
+                                      width: 5,
                                     ),
-                                    getWritingTimeToString(
-                                        widget.eachComments.get('uploadCommentTime'))
+                                    const Text("댓글달기"),
+                                    const SizedBox(
+                                      width: 5,
+                                    ),
+                                    Text(
+                                        "${reCommentsnapshot.data?.docs.length} 개"),
                                   ],
                                 ),
-                                const Spacer(),
-                                if (widget.eachComments.get('commentUserEmail') ==
-                                    FirebaseAuth.instance.currentUser?.email)
-                                  IconButton(
-                                      onPressed: () {
-                                        showCupertinoModalPopup(
-                                            context: context,
-                                            builder: (context) => commentActionSheet);
-                                      },
-                                      icon: const Icon(Icons.more_vert))
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            const Divider(),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    widget.eachComments.get('commentText') ?? "",
-                                    maxLines: 100,
-                                  ),
-                                )
-                              ],
-                            ),
-                            const Divider(),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            Row(
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                  },
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.reply),
-                                      const SizedBox(
-                                        width: 5,
-                                      ),
-                                      const Text("댓글달기"),
-                                      const SizedBox(
-                                        width: 5,
-                                      ),
-                                      Text(
-                                          "${reCommentsnapshot.data?.docs.length} 개"),
-                                    ],
-                                  ),
-                                ),
-                                const Spacer(),
-                                StreamBuilder(
-                                    stream: FirebaseFirestore.instance
-                                        .collection('posts')
-                                        .doc(widget.postNumber)
-                                        .collection('comments')
-                                        .doc(widget.eachComments.id)
-                                        .collection('likesComments')
-                                        .snapshots(),
-                                    builder: (context, likeCommentSnapshot) {
-                                      if (likeCommentSnapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                      var isAlreadyLike = likeCommentSnapshot.data?.docs
-                                          .where((element) =>
-                                      element.id == FirebaseAuth.instance.currentUser?.email).length;
+                              ),
+                              const Spacer(),
+                              StreamBuilder(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('posts')
+                                      .doc(widget.postNumber)
+                                      .collection('comments')
+                                      .doc(widget.eachComments.id)
+                                      .collection('likesComments')
+                                      .snapshots(),
+                                  builder: (context, likeCommentSnapshot) {
+                                    if (likeCommentSnapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    var isAlreadyLike = likeCommentSnapshot.data?.docs
+                                        .where((element) =>
+                                    element.id == FirebaseAuth.instance.currentUser?.email).length;
 
-                                      return InkWell(
-                                        onTap: () async {
-                                          if (isAlreadyLike == 0) {
-                                            await FirebaseFirestore.instance
-                                                .collection('posts')
-                                                .doc(widget.postNumber)
-                                                .collection('comments')
-                                                .doc(widget.eachComments.id)
-                                                .collection('likesComments')
-                                                .doc(FirebaseAuth
-                                                .instance.currentUser?.email)
-                                                .set({"like": "like"});
-                                          } else {
-                                            await FirebaseFirestore.instance
-                                                .collection('posts')
-                                                .doc(widget.postNumber)
-                                                .collection('comments')
-                                                .doc(widget.eachComments.id)
-                                                .collection('likesComments')
-                                                .doc(FirebaseAuth
-                                                .instance.currentUser?.email)
-                                                .delete();
-                                          }
-                                        },
+                                    return InkWell(
+                                      onTap: () async {
+                                        if (isAlreadyLike == 0) {
+                                          await FirebaseFirestore.instance
+                                              .collection('posts')
+                                              .doc(widget.postNumber)
+                                              .collection('comments')
+                                              .doc(widget.eachComments.id)
+                                              .collection('likesComments')
+                                              .doc(FirebaseAuth
+                                              .instance.currentUser?.email)
+                                              .set({"like": "like"});
+                                        } else {
+                                          await FirebaseFirestore.instance
+                                              .collection('posts')
+                                              .doc(widget.postNumber)
+                                              .collection('comments')
+                                              .doc(widget.eachComments.id)
+                                              .collection('likesComments')
+                                              .doc(FirebaseAuth
+                                              .instance.currentUser?.email)
+                                              .delete();
+                                        }
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 8.0),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            const Icon(Icons.thumb_up),
-                                            const SizedBox(
+                                            if(likeCommentSnapshot.data?.docs == null)
+                                              const Icon(Icons.thumb_up)
+                                            else
+                                              likeCommentSnapshot.data!.docs.map((doc) => doc.id).contains(FirebaseAuth.instance.currentUser?.email)
+                                                  ? const Icon(Icons.thumb_up)
+                                                  : const Icon(Icons.thumb_up_alt_outlined),                                            const SizedBox(
                                               width: 5,
                                             ),
                                             Text(
                                                 "${likeCommentSnapshot.data?.docs.length}")
                                           ],
                                         ),
-                                      );
-                                    }),
-                              ],
-                            )
-                          ],
-                        ),
+                                      ),
+                                    );
+                                  }),
+                            ],
+                          )
+                        ],
                       ),
                     ),
                   ),
