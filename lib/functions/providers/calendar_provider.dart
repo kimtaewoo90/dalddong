@@ -122,6 +122,7 @@ class ColorProvider with ChangeNotifier{
 
 List<DateTime> initialBlockDates = [];
 List<dynamic> initialAppointmentDetails = [];
+bool initialShowAgenda = false;
 class ScheduleProvider with ChangeNotifier{
 
   List<DateTime> _blockDates = initialBlockDates;
@@ -146,7 +147,12 @@ class ScheduleProvider with ChangeNotifier{
     notifyListeners();
   }
 
-
+  bool _showAgenda = initialShowAgenda;
+  bool get showAgenda => _showAgenda;
+  void changeShowAgenda(bool value){
+    _showAgenda = value;
+    notifyListeners();
+  }
 
   void resetAllScheduleData(){
     _blockDates = initialBlockDates;

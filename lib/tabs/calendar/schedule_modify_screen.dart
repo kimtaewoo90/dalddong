@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 // common functions
+import '../../commonScreens/config.dart';
 import '../../commonScreens/shared_app_bar.dart';
 import '../../functions/providers/calendar_provider.dart';
 import '../../functions/utilities/utilities_schedule.dart';
@@ -96,33 +97,24 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
   }
 
   Future showSelectAlarmModal(BuildContext mainContext) {
-    bool? isChecked_10 = false;
-    bool? isChecked_60 = false;
-    bool? isChecked_1440 = false;
 
-    if(context.read<FromToProvider>().alarmMins == 10){
-      isChecked_10 = true;
-    }
-    else if (context.read<FromToProvider>().alarmMins == 60){
-      isChecked_60 = true;
-    }
-    else if (context.read<FromToProvider>().alarmMins == 1440){
-      isChecked_1440 = true;
-    }
-    else{
-      isChecked_10 = true;
-    }
 
     return showModalBottomSheet(
       context: mainContext,
       builder: (BuildContext context) {
+
+        bool? isChecked_10 =
+        context.read<FromToProvider>().alarmMins == 10 ? true : false;
+        bool? isChecked_60 =
+        context.read<FromToProvider>().alarmMins == 60 ? true : false;
+        bool? isChecked_1440 =
+        context.read<FromToProvider>().alarmMins == 1440 ? true : false;
+
         return StatefulBuilder(
             builder: (BuildContext context, StateSetter mainState) {
               return Container(
-                height: MediaQuery.of(context).size.height * 0.6,
-                // color: const Color(0xff025645),
+                height: MediaQuery.of(context).size.height * 0.4,
                 color: Colors.transparent,
-
                 child: Container(
                   decoration: const BoxDecoration(
                       borderRadius: BorderRadius.only(
@@ -140,7 +132,7 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                             width: MediaQuery.of(context).size.width * 0.9,
                             child: CheckboxListTile(
                               title: const Text("한시간 전"),
-                              activeColor: const Color(0xff025645),
+                              activeColor: GeneralUiConfig.floatingBtnColor,
                               // controlAffinity: ListTileControlAffinity.leading,
                               value: isChecked_60,
                               onChanged: (bool? value) {
@@ -148,8 +140,6 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                                 mainState(() {
                                   setState(() {
                                     isChecked_60 = value;
-                                    isChecked_10 = false;
-                                    isChecked_1440 = false;
                                   });
                                 });
                               },
@@ -162,7 +152,7 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                             width: MediaQuery.of(context).size.width * 0.9,
                             child: CheckboxListTile(
                               title: const Text("10분 전"),
-                              activeColor: const Color(0xff025645),
+                              activeColor: GeneralUiConfig.floatingBtnColor,
                               // controlAffinity: ListTileControlAffinity.leading,
                               value: isChecked_10,
                               onChanged: (bool? value) {
@@ -170,8 +160,6 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                                 mainState(() {
                                   setState(() {
                                     isChecked_10 = value;
-                                    isChecked_60 = false;
-                                    isChecked_1440 = false;
                                   });
                                 });
                               },
@@ -184,7 +172,7 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                             width: MediaQuery.of(context).size.width * 0.9,
                             child: CheckboxListTile(
                               title: const Text("하루 전"),
-                              activeColor: const Color(0xff025645),
+                              activeColor: GeneralUiConfig.floatingBtnColor,
                               // controlAffinity: ListTileControlAffinity.leading,
                               value: isChecked_1440,
                               onChanged: (bool? value) {
@@ -193,8 +181,6 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                                     .changeAlarmMins(1440);
                                 mainState(() {
                                   setState(() {
-                                    isChecked_10 = false;
-                                    isChecked_60 = false;
                                     isChecked_1440 = value;
                                   });
                                 });
@@ -205,7 +191,7 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                         ),
 
                         ElevatedButton(
-                          child: const Text('Done!'),
+                          child: const Text('저장'),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -217,7 +203,6 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
       },
     );
   }
-
   @override
   Widget build(BuildContext context) {
 
@@ -250,7 +235,7 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                   child: CircularProgressIndicator(),
                 );
               }
-              alarmMins = snapshot.data?.get('alarmMins');
+              alarmMins = snapshot.data?.get('alarm');
 
               return GestureDetector(
                 onTap: () {
@@ -460,11 +445,11 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                                 width: MediaQuery.of(context).size.width / 2 - 50,
                                 child: TextButton(
                                   onPressed: () {
-                                    show_colors(context, selectedColor);
+                                    showSelectColorModal(context);
                                   },
-                                  child: const Text(
-                                    "색상선택",
-                                    style: TextStyle(
+                                  child: Text(
+                                    context.read<ColorProvider>().color,
+                                    style: const TextStyle(
                                       color: Colors.black,
                                     ),
                                   ),
@@ -546,7 +531,7 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                     Fluttertoast.showToast(
                       msg: '수정되었습니다!',
                       gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: GeneralUiConfig.floatingBtnColor,
                       fontSize: 20,
                       textColor: Colors.white,
                       toastLength: Toast.LENGTH_SHORT,

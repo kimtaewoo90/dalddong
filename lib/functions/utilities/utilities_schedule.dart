@@ -4,7 +4,9 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 import 'package:provider/provider.dart';
 
+import '../../commonScreens/config.dart';
 import '../providers/calendar_provider.dart';
+import 'Utility.dart';
 
 
 void selectStartDate(BuildContext context) {
@@ -103,28 +105,37 @@ void show_end_times(BuildContext context){
       });
 }
 
-void show_colors(BuildContext context, String selectedColor){
-  showDialog(
-      context: context,
-      builder: (context){
-        return Dialog(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: 250,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.white,
-            ),
-
-            child: BlockPicker(
-              pickerColor: Color(int.parse(selectedColor)),
-              onColorChanged: (Color color){
-                // print(color);
-                context.read<ColorProvider>().changeColor(color.toString().substring(35,color.toString().length - 2));
-              },
-            ),
-          ),
-        );
+Future showSelectColorModal(BuildContext mainContext) {
+  return showModalBottomSheet(
+      context: mainContext,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+            builder: (BuildContext context, StateSetter mainState) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: MediaQuery.of(context).size.height * 0.6,
+                decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    )),
+                child: BlockPicker(
+                  pickerColor:
+                  Color(int.parse(context.read<ColorProvider>().color)),
+                  onColorChanged: (Color color) {
+                    // print(color);
+                    try {
+                      context.read<ColorProvider>().changeColor(color
+                          .toString()
+                          .substring(35, color.toString().length - 2));
+                      Navigator.pop(context);
+                    } catch (e) {
+                      showAlertDialog(context, e.toString());
+                    }
+                  },
+                ),
+              );
+            });
       });
 }
 

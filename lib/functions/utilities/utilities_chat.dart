@@ -8,7 +8,7 @@ import 'Utility.dart' as util;
 
 
 // Make the Dalddong Chat Room
-void makeDalddongChatRoom(String? dalddongId, List<dynamic> dalddongMembers, String chatRoomName) {
+void makeDalddongChatRoom(String? dalddongId, List<dynamic> dalddongMembers, String chatRoomName, Timestamp dalddongDate, int lunchOrDinner) {
   // make Dalddong ChatRoom
   FirebaseFirestore.instance.collection('chatrooms').doc(dalddongId).set({
     "isDalddong": true,
@@ -44,6 +44,8 @@ void makeDalddongChatRoom(String? dalddongId, List<dynamic> dalddongMembers, Str
         'latestText': "",
         'chatRoomName' : chatRoomName,
         'latestTimeString': "",
+        'dalddongDate': dalddongDate,
+        'lunchOrDinner' : lunchOrDinner,
       });
     });
   });

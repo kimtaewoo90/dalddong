@@ -315,9 +315,10 @@ void completeDalddongSchedule(
         pushManager.sendPushMsg(
             userToken: pushToken, title: title, body: body, details: details);
 
+        // print(element[''])
         FirebaseFirestore.instance
             .collection('user')
-            .doc(element['userEmail'])
+            .doc(element)
             .collection('AlarmList')
             .doc(dalddongId)
             .set({

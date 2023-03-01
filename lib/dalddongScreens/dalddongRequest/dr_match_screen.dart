@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:flutter/material.dart';
 
 import '../../../main_screen.dart';
@@ -18,128 +19,137 @@ class _CompleteAcceptState extends State<CompleteAccept> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(
+      top: false,
+      child: Scaffold(
+        backgroundColor: GeneralUiConfig.backgroundColor,
+        appBar: BaseAppBar(
+          appBar: AppBar(),
+          title: "",
+          backBtn: false,
 
-      appBar: BaseAppBar(
-        appBar: AppBar(),
-        title: "",
-        backBtn: false,
-
-      ),
-      body: Center(
-        child: Stack(
-            children:
-            [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    "짝짝짝",
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
+        ),
+        body: Center(
+          child: Stack(
+              children:
+              [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "짝짝짝",
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 20,),
-                  StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection('DalddongList')
-                          .doc(widget.dalddongId)
-                          .snapshots(),
+                    const SizedBox(height: 20,),
+                    StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('DalddongList')
+                            .doc(widget.dalddongId)
+                            .snapshots(),
 
-                      builder: (context, snapshot){
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Container(
-                            alignment: Alignment.center,
-                            child: const CircularProgressIndicator(),
+                        builder: (context, snapshot){
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Container(
+                              alignment: Alignment.center,
+                              child: const CircularProgressIndicator(),
+                            );
+                          }
+
+                          // isAllConfirmed update to true.
+                          FirebaseFirestore.instance.collection('DalddongList').doc(widget.dalddongId).update(
+                              {'isAllConfirmed' : true});
+
+                          lunchOrDinner = snapshot.data!.get('LunchOrDinner') == 0 ? "점심" : "저녁";
+
+
+                          return Text("   ${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.get('DalddongDate').seconds * 1000).year}년 "
+                              "${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.get('DalddongDate').seconds * 1000).month}월 "
+                              "${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.get('DalddongDate').seconds * 1000).day}일",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 35,
+                            ),
                           );
                         }
+                    ),
 
-                        // isAllConfirmed update to true.
-                        FirebaseFirestore.instance.collection('DalddongList').doc(widget.dalddongId).update(
-                            {'isAllConfirmed' : true});
+                    StreamBuilder(
+                        stream: FirebaseFirestore.instance.collection('DalddongList').doc(widget.dalddongId).collection('Members').snapshots(),
+                        builder: (context, snapshotMembers) {
 
-                        lunchOrDinner = snapshot.data!.get('LunchOrDinner') == 0 ? "점심" : "저녁";
+                          if(snapshotMembers.connectionState == ConnectionState.waiting){
+                            return Container(
+                              alignment: Alignment.center,
+                              child: const CircularProgressIndicator(),
+                            );
+                          }
 
+                          List<UserAccept> responseMembers = [];
+                          snapshotMembers.data?.docs.forEach((document) {
+                            UserAccept userResponse = UserAccept(document);
+                            responseMembers.add(userResponse);
+                          });
 
-                        return Text("   ${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.get('DalddongDate').seconds * 1000).year}년 "
-                            "${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.get('DalddongDate').seconds * 1000).month}월 "
-                            "${DateTime.fromMillisecondsSinceEpoch(snapshot.data?.get('DalddongDate').seconds * 1000).day}일",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 35,
-                          ),
-                        );
-                      }
-                  ),
+                          return Flexible(
+                            child: Column(
+                              children : [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                  child: ListView(
+                                    shrinkWrap: true,
+                                    children: responseMembers,
+                                  ),
+                                ),
 
-                  StreamBuilder(
-                      stream: FirebaseFirestore.instance.collection('DalddongList').doc(widget.dalddongId).collection('Members').snapshots(),
-                      builder: (context, snapshotMembers) {
+                                const SizedBox(height: 20,),
 
-                        if(snapshotMembers.connectionState == ConnectionState.waiting){
-                          return Container(
-                            alignment: Alignment.center,
-                            child: const CircularProgressIndicator(),
+                                Text('${snapshotMembers.data?.docs.length}명의 $lunchOrDinner 약속이\n'
+                                    '달력에 동그라미 되었습니다!',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 25,
+                                  ),
+                                ),
+
+                                Image.asset('images/dalddong.jpg'),
+
+                                const Spacer(),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 40,
+                                  child: ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                        MaterialStateProperty.all(GeneralUiConfig.btnColor),
+                                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(0.0),
+                                                // side: BorderSide(color: Colors.red)
+                                            )
+                                        )),
+                                    onPressed: () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => const MainScreen(),
+                                          ));
+                                    },
+                                    child: const Text("메인화면"),
+                                  ),
+                                )
+                              ],
+                            ),
                           );
                         }
-
-                        List<UserAccept> responseMembers = [];
-                        snapshotMembers.data?.docs.forEach((document) {
-                          UserAccept userResponse = UserAccept(document);
-                          responseMembers.add(userResponse);
-                        });
-
-                        return Flexible(
-                          child: Column(
-                            children : [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                                child: ListView(
-                                  shrinkWrap: true,
-                                  children: responseMembers,
-                                ),
-                              ),
-
-                              const SizedBox(height: 20,),
-
-                              Text('${snapshotMembers.data?.docs.length}명의 $lunchOrDinner 약속이\n'
-                                  '달력에 동그라미 되었습니다!',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 25,
-                                ),
-                              ),
-
-                              Image.asset('image/dalddong.jpg'),
-
-                              const Spacer(),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 40,
-                                child: ElevatedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                      MaterialStateProperty.all(const Color(0xff025645))),
-                                  onPressed: () {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => const MainScreen(),
-                                        ));
-                                  },
-                                  child: const Text("메인화면"),
-                                ),
-                              )
-                            ],
-                          ),
-                        );
-                      }
-                  )
-                ],
-              ),
-            ]
+                    )
+                  ],
+                ),
+              ]
+          ),
         ),
       ),
     );

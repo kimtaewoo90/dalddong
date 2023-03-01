@@ -112,8 +112,8 @@ class _FriendsScreenState extends State<FriendsScreen> {
                     ListTile(
                       leading: CircleAvatar(
                           radius: 25,
-                          backgroundColor: Colors.blue,
-                          backgroundImage: NetworkImage(_myImage ?? "")
+                          backgroundColor: Colors.white,
+                          backgroundImage: NetworkImage(_myImage!)
                           //ExactAssetImage('image/default_profile.png'),
                           ),
                       title: Text(
@@ -171,7 +171,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                               child: ListTile(
                                 leading: CircleAvatar(
                                     radius: 25,
-                                    backgroundColor: Colors.blue,
+                                    backgroundColor: Colors.white,
                                     backgroundImage: NetworkImage(snapshot
                                             .data?.docs[index]['userImage'] ??
                                         "")

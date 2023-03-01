@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:dalddong/commonScreens/page_route_with_animation.dart';
 import 'package:dalddong/commonScreens/shared_app_bar.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../dalddongScreens/dalddongRequest/dr_match_screen.dart';
+import '../dalddongScreens/dalddongRequest/dr_not_match_screen.dart';
 import '../dalddongScreens/dalddongRequest/dr_response_screen.dart';
 import '../dalddongScreens/dalddongVote/dv_vote_screen.dart';
 
@@ -25,11 +27,13 @@ class _AlarmScreenState extends State<AlarmScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: GeneralUiConfig.backgroundColor,
       appBar: BaseAppBar(
         appBar: AppBar(),
         title: "알람",
         backBtn: true,
         center: true,
+        hasIcon: false,
       ),
       body: Stack(children: [
         Padding(
@@ -134,7 +138,6 @@ class _AlarmScreenState extends State<AlarmScreen> {
                           voteList.add(myVoteList);
                         }
                       });
-
 
                       return Flexible(
                         fit: FlexFit.tight,
@@ -271,7 +274,7 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
             child: Container(
                 color: Colors.white54,
                 child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
                           DateTime.fromMillisecondsSinceEpoch(
@@ -282,7 +285,7 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                             "${widget.eachVotes.get('details')['hostName']}님 외 ${widget.eachVotes.get('details')['membersNum']}명의 ${widget.eachVotes['body']}",
                             style: const TextStyle(
                               color: Colors.black,
-                              fontSize: 16,
+                              fontSize: GeneralUiConfig.alarmTitleFontSize,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -381,7 +384,8 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                               });
                             },
                             child: const Text('투표현황보기'),
-                          ))
+                          )),
+                      const Divider(),
                     ])));
       },
     );
@@ -427,18 +431,17 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
               child: Container(
                   color: Colors.white54,
                   child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                            DateTime.fromMillisecondsSinceEpoch(
-                                alarmTime.seconds * 1000))),
+
                         ListTile(
-                            leading: const Icon(Icons.calendar_month),
+                            leading: Image.asset('images/dalddongRequest.png'),
+
                             title: Text(
                               "${eachEvents.get('details')['hostName']}님 외 ${eachEvents.get('details')['membersNum']}명의 ${eachEvents['body']}",
                               style: const TextStyle(
                                 color: Colors.black,
-                                fontSize: 16,
+                                fontSize: GeneralUiConfig.alarmTitleFontSize,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -536,7 +539,7 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                                   }
                                 });
                               },
-                              child: const Text('수락함'),
+                              child: const Text('매칭완료'),
                             )
                                 : ElevatedButton(
                               style: ElevatedButton.styleFrom(
@@ -546,15 +549,19 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                               onPressed: () {
                                 PageRouteWithAnimation pageRoute =
                                 PageRouteWithAnimation(
-                                    ResponseDR(
-                                      DalddongId: eachEvents
-                                          .get('details')['eventId'],
-                                    ));
+                                    const RejectedDalddong());
                                 Navigator.push(context,
                                     pageRoute.slideRitghtToLeft());
                               },
                               child: const Text('거절함'),
-                            ))
+                            )),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20.0),
+                          child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                  alarmTime.seconds * 1000))),
+                        ),
+                        const Divider(),
                       ])));
         });
   }

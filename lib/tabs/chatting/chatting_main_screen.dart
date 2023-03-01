@@ -189,8 +189,9 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                                     child: Row(
                                       children: [
                                         CircleAvatar(
-                                          radius : 30,
+                                          radius : 25,
                                           backgroundImage: NetworkImage(snapshot.data?.docs[index]['userImage']),
+                                          backgroundColor: Colors.white,
                                         ),
                                         const SizedBox(width: 10,),
                                         Flexible(
@@ -278,6 +279,7 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                               .collection('user')
                               .doc(FirebaseAuth.instance.currentUser!.email)
                               .collection('chatRoomList').where("isDalddong", isEqualTo: true)
+                              .orderBy('dalddongDate', descending: true)
                               .snapshots(),
 
                           builder: (context, dalddongSnapshot) {
@@ -285,10 +287,10 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                               return ListView.separated(
                                 scrollDirection: Axis.vertical,
                                 shrinkWrap: true,
-                                separatorBuilder: (context, index) => const Divider(),
+                                separatorBuilder: (context, int) => const Divider(color: Colors.grey,),
                                 itemCount: dalddongSnapshot.data!.docs.length,
                                 itemBuilder: (context, index) => Padding(
-                                  padding: const EdgeInsets.all(0.5),
+                                  padding: const EdgeInsets.all(8.0),
                                   child: InkWell(
                                     onTap: (){
                                       Navigator.push(
@@ -303,12 +305,14 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                                     child: Row(
                                       children: [
                                         CircleAvatar(
-                                          radius : 30,
-                                          backgroundImage: NetworkImage(dalddongSnapshot.data?.docs[index]['userImage']),
+                                          radius : 25,
+                                          backgroundColor: dalddongSnapshot.data?.docs[index].get('lunchOrDinner') == 0 ? Colors.yellowAccent : Colors.grey,
+                                          child: dalddongSnapshot.data?.docs[index].get('lunchOrDinner') == 0 ? const Text("점심") : const Text("저녁"),
                                         ),
+                                        const SizedBox(width: 10,),
                                         Flexible(
                                           child: Padding(
-                                            padding: const EdgeInsets.all(10),
+                                            padding: const EdgeInsets.all(1),
                                             child: Column(
                                               children: [
                                                 Row(
@@ -317,10 +321,11 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                                                       width: width * 0.7,
                                                       child: Text(
                                                         dalddongSnapshot.data?.docs[index]['chatRoomName'],
+                                                        overflow: TextOverflow.ellipsis,
                                                         style: const TextStyle(
-                                                          fontSize: 18,
+                                                          fontSize: 16,
                                                           fontWeight: FontWeight.bold,
-                                                          color: Colors.grey,
+                                                          color: Colors.black,
                                                         ),
                                                       ),
                                                     ),
@@ -332,28 +337,35 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                                                       child: Text(
                                                         "${dalddongSnapshot.data?.docs[index]['latestTimeString'] ?? ""}",
                                                         style: const TextStyle(
-                                                          fontSize: 15,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Colors.grey,
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.normal,
+                                                          color: Colors.black38,
                                                         ),
                                                       ),
                                                     ),
                                                   ],
                                                 ),
                                                 const SizedBox(
-                                                  height: 10,
+                                                  height: 5,
                                                 ),
                                                 // Description 길이 때매 반응형으로 (화면전환)
 
-                                                SizedBox(
-                                                  width: width,
-                                                  child: Text(
-                                                    dalddongSnapshot.data?.docs[index]['latestText'],
-                                                    style: TextStyle(
-                                                        fontSize: 15,
-                                                        color: Colors.grey[500]
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      // width: width,
+                                                      child: Text(
+                                                        dalddongSnapshot.data?.docs[index]['latestText'],
+                                                        overflow: TextOverflow.ellipsis,
+                                                        style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: Colors.grey[500]
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
+
+                                                    const Spacer(),
+                                                  ],
                                                 ),
                                               ],
                                             ),
@@ -361,7 +373,6 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                                         )
                                       ],
                                     ),
-
                                   ),
                                 ),
                               );
@@ -390,7 +401,7 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
         ),
 
         floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color(0xff025645),
+          backgroundColor: GeneralUiConfig.floatingBtnColor,
           child: const Icon(
               Icons.add),
           onPressed: (){

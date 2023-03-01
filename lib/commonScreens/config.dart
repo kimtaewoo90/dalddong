@@ -29,4 +29,8 @@ class GeneralUiConfig{
 
    static const Color borderDarkModeColor = Colors.white;
    static const Color borderWhiteModeColor = Colors.black12;
+
+   // alarm
+   static const double alarmTitleFontSize = 13;
+   static const double alarmContentFontSize = 12;
 }

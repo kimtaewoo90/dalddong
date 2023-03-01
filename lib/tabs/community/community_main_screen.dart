@@ -307,7 +307,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       separatorBuilder: (context, index) =>
                       const Divider(
                         thickness: 2,
-                        color: Colors.amberAccent,
+                        color: Colors.black,
                       ),
                         ),
                   );

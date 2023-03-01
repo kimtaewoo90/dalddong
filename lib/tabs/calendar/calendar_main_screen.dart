@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 // screens
 import 'package:dalddong/dalddongScreens/dalddongRequest/dr_request_screen.dart';
+import 'package:dalddong/tabs/calendar/bottom_agenda_screen.dart';
 import 'package:dalddong/tabs/calendar/schedule_modify_screen.dart';
 import 'package:dalddong/tabs/calendar/schedule_register_screen.dart';
 import 'package:dalddong/tabs/chatting/chatting_screen.dart';
@@ -32,7 +33,6 @@ import '../../functions/providers/calendar_provider.dart';
 
 // utility
 import '../../functions/utilities/Utility.dart';
-import 'bottom_agenda_screen.dart';
 
 class MySchedule extends StatefulWidget {
   const MySchedule({Key? key}) : super(key: key);
@@ -52,11 +52,11 @@ class _MyScheduleState extends State<MySchedule> {
 
   bool agenda = false;
   late Color backgroundColor;
+  late Widget boxDeco;
   late List<DateTime> blackoutDates;
 
   final CalendarController _calendarController = CalendarController();
   final panelController = PanelController();
-
 
   @override
   void initState() {
@@ -209,7 +209,6 @@ class _MyScheduleState extends State<MySchedule> {
       },
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -233,34 +232,53 @@ class _MyScheduleState extends State<MySchedule> {
             backBtn: false,
             center: false,
           ),
-          // body: _calendar(),
-          body: SizedBox(
-            // height: 500,
-            child: SlidingUpPanel(
-                backdropEnabled: false,
-                controller: panelController,
-                minHeight: panelHeightClosed,
-                maxHeight: panelHeightOpen,
-                parallaxEnabled: true,
-                parallaxOffset: 1,
-                panelSnapping: true,
-                color: Colors.white,
-                // collapsed: _calendar(),
-                body: Column(
-                  children: [
-                    Expanded(
-                        child: _calendar(MediaQuery.of(context).size.height - 80)),
-                  // child: Container()
+          body: _calendar(),
+          // bottomSheet: const BottomAgenda(),
 
-                  ],
-                ),
-              panelBuilder: (controller){
-                  return BottomAgenda(
-                    controller: controller,
-                    panelController: panelController);
-                }
-            ),
-          ),
+          // SizedBox(
+          //   child: DraggableHome(
+          //     headerWidget: _calendar(false),
+          //     expandedBody: _calendar(true),
+          //     body: const [
+          //       BottomAgenda(),
+          //     ],
+          //
+          //     title: const Text("calendars"),
+          //
+          //     stretchMaxHeight: 0.95,
+          //     headerExpandedHeight: 0.94,
+          //     stretchTriggerOffset: 0.5,
+          //     fullyStretchable: true,
+          //     curvedBodyRadius : 0.0,
+          //   ),
+          //  ),
+
+          // height: 500,
+          // child: SlidingUpPanel(
+          //     backdropEnabled: false,
+          //     controller: panelController,
+          //     minHeight: panelHeightClosed,
+          //     maxHeight: panelHeightOpen,
+          //     parallaxEnabled: true,
+          //     parallaxOffset: 1,
+          //     panelSnapping: true,
+          //     color: Colors.white,
+          //     // collapsed: _calendar(),
+          //     body: Column(
+          //       children: [
+          //         Expanded(
+          //             child: _calendar(MediaQuery.of(context).size.height - 80)),
+          //       // child: Container()
+          //
+          //       ],
+          //     ),
+          //   panelBuilder: (controller){
+          //       return BottomAgenda(
+          //         controller: controller,
+          //         panelController: panelController);
+          //     }
+          // ),
+          // ),
 
           floatingActionButton: Padding(
             padding: const EdgeInsets.fromLTRB(0, 0, 10, 10),
@@ -280,8 +298,7 @@ class _MyScheduleState extends State<MySchedule> {
                     label: "달똥등록",
                     onTap: () {
                       PageRouteWithAnimation pageRoute =
-                          PageRouteWithAnimation(
-                              const RegistrationDalddong());
+                          PageRouteWithAnimation(const RegistrationDalddong());
                       Navigator.push(context, pageRoute.slideBottonToTop());
                     }),
                 SpeedDialChild(
@@ -321,30 +338,24 @@ class _MyScheduleState extends State<MySchedule> {
                     })
               ],
             ),
-          )
-      ),
+          )),
     );
   }
 
-  Widget _calendar(double calendarHeight) {
+  Widget _calendar() {
     return GestureDetector(
       onPanUpdate: (details) {
         if (details.delta.dy < 0) {
-
-          // print("위로 ${panelController.isAttached }");
-          if(panelController.isAttached == true){
-            panelController.animatePanelToPosition(1);
-
-          }
+          setState(() {
+            context.read<ScheduleProvider>().changeShowAgenda(true);
+          });
+          context.read<ScheduleProvider>().changeShowAgenda(true);
         }
         if (details.delta.dy > 0) {
-          // print("아래로 ${panelController.isAttached }");
-          if(panelController.isAttached == true){
-            panelController.animatePanelToPosition(0);
-
-
-            // panelController.open();
-          }
+          setState(() {
+            context.read<ScheduleProvider>().changeShowAgenda(false);
+          });
+          context.read<ScheduleProvider>().changeShowAgenda(false);
         }
       },
       child: StreamBuilder(
@@ -381,75 +392,160 @@ class _MyScheduleState extends State<MySchedule> {
                     blockDates.add(DateTime.parse(element.id));
                     lunchOrDinner.add(element.get('LunchOrDinner'));
                   }
-                  Map<DateTime, int> blockInfo = Map.fromIterables(blockDates, lunchOrDinner);
-                  context.read<ScheduleProvider>().setInitialBlockDate(blockDates);
+                  Map<DateTime, int> blockInfo =
+                      Map.fromIterables(blockDates, lunchOrDinner);
+                  context
+                      .read<ScheduleProvider>()
+                      .setInitialBlockDate(blockDates);
 
-                  print(calendarHeight - panelController.panelPosition);
                   return Column(children: [
-                    SizedBox(
-                      height: calendarHeight - panelController.panelPosition,
+                    Expanded(
+                      // height: calendarHeight - panelController.panelPosition,
                       child: SfCalendar(
+                        // backgroundColor: GeneralUiConfig.backgroundColor,
                         controller: _calendarController,
-                        onViewChanged:
-                            (ViewChangedDetails viewChangedDetails) {
+                        onViewChanged: (ViewChangedDetails viewChangedDetails) {
                           SchedulerBinding.instance
                               .addPostFrameCallback((Duration duration) {
-                            if (viewChangedDetails.visibleDates.first.year == DateTime.now().year &&
-                                viewChangedDetails.visibleDates[0].month == DateTime.now().month) {
-                              // _calendarController.selectedDate = DateTime.now();
-                            } else {
-                              _calendarController.selectedDate = viewChangedDetails.visibleDates[0];
+                            if (viewChangedDetails.visibleDates.first.year ==
+                                    DateTime.now().year &&
+                                viewChangedDetails.visibleDates[0].month ==
+                                    DateTime.now().month) {
+                              // _calendarController.displayDate = DateTime.now();
+                            }
+                            else if (_calendarController.displayDate?.month !=
+                                _calendarController.selectedDate?.month) {
+                              _calendarController.selectedDate =
+                                  viewChangedDetails.visibleDates[0];
                             }
                           });
                         },
+
                         view: CalendarView.month,
                         showNavigationArrow: true,
                         showDatePickerButton: true,
                         todayHighlightColor: Colors.red,
-                        monthViewSettings: const MonthViewSettings(
-                          appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
+                        monthViewSettings: MonthViewSettings(
+                          appointmentDisplayMode:
+                              context.read<ScheduleProvider>().showAgenda
+                                  ? MonthAppointmentDisplayMode.indicator
+                                  : MonthAppointmentDisplayMode.appointment,
                           showTrailingAndLeadingDates: false,
                           dayFormat: 'EEE',
-                          navigationDirection: MonthNavigationDirection.horizontal,
+                          navigationDirection:
+                              MonthNavigationDirection.horizontal,
+                          // showAgenda:
+                          //     context.read<ScheduleProvider>().showAgenda,
                         ),
-                        dataSource: MeetingDataSource(_getDataSource(snapshot.data!.docs)),
+                        dataSource: MeetingDataSource(
+                            _getDataSource(snapshot.data!.docs)),
                         monthCellBuilder: (BuildContext buildContext,
                             MonthCellDetails details) {
+
+                          final Color defaultColor =
+                          Theme.of(context).brightness == Brightness.dark
+                              ? GeneralUiConfig.borderDarkModeColor
+                              : GeneralUiConfig.borderWhiteModeColor;
+
                           // Block Date
                           if (blockDates.contains(details.date)) {
                             // blocked lunch
                             if (blockInfo[details.date] == 0) {
-                              backgroundColor = GeneralUiConfig.blockLunchColor;
+                              // backgroundColor = GeneralUiConfig.blockLunchColor;
+                              boxDeco = Container(
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.grey,
+                                        Colors.grey,
+                                        Colors.white,
+                                        Colors.white,
+                                      ],
+                                    ),
+                                    // color: backgroundColor,
+                                    border: Border.all(
+                                        color: defaultColor, width: 0.5)),
+                                child: Text(
+                                  details.date.day.toString(),
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 10),
+                                ),
+                              );
+
                             }
                             // blocked dinner
                             else if (blockInfo[details.date] == 1) {
-                              backgroundColor = GeneralUiConfig.blockDinnerColor;
+                              boxDeco = Container(
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.white,
+                                        Colors.white,
+                                        Colors.grey,
+                                        Colors.grey,
+                                      ],
+                                    ),
+                                    // color: backgroundColor,
+                                    border: Border.all(
+                                        color: defaultColor, width: 0.5)),
+                                child: Text(
+                                  details.date.day.toString(),
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 10),
+                                ),
+                              );
                             }
                             // blocked allDay
                             else {
-                              backgroundColor = GeneralUiConfig.blockAlldayColor;
+                              boxDeco = Container(
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.grey,
+                                        Colors.grey,
+                                      ],
+                                    ),
+                                    // color: backgroundColor,
+                                    border: Border.all(
+                                        color: defaultColor, width: 0.5)),
+                                child: Text(
+                                  details.date.day.toString(),
+                                  style: const TextStyle(
+                                      color: Colors.black, fontSize: 10),
+                                ),
+                              );
                             }
                           }
                           // Open Date
                           else {
-                            backgroundColor = GeneralUiConfig.backgroundColor;
+                            boxDeco = Container(
+                              decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.white,
+                                      Colors.white,
+                                    ],
+                                  ),
+                                  // color: backgroundColor,
+                                  border: Border.all(
+                                      color: defaultColor, width: 0.5)),
+                              child: Text(
+                                details.date.day.toString(),
+                                style: const TextStyle(
+                                    color: Colors.black, fontSize: 10),
+                              ),
+                            );
                           }
 
-                          final Color defaultColor =
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? GeneralUiConfig.borderDarkModeColor
-                                  : GeneralUiConfig.borderWhiteModeColor;
-                          return Container(
-                            decoration: BoxDecoration(
-                                color: backgroundColor,
-                                border: Border.all(
-                                    color: defaultColor, width: 0.5)),
-                            child: Text(
-                              details.date.day.toString(),
-                              style: const TextStyle(
-                                  color: Colors.black, fontSize: 10),
-                            ),
-                          );
+                          return boxDeco;
                         },
                         selectionDecoration: BoxDecoration(
                           color: Colors.transparent,
@@ -458,9 +554,7 @@ class _MyScheduleState extends State<MySchedule> {
                               const BorderRadius.all(Radius.circular(4)),
                           shape: BoxShape.rectangle,
                         ),
-
-                        onLongPress:
-                            (CalendarLongPressDetails details) async {
+                        onLongPress: (CalendarLongPressDetails details) async {
                           DateTime date = details.date!;
                           blackoutDates =
                               context.read<ScheduleProvider>().blockDates;
@@ -470,8 +564,7 @@ class _MyScheduleState extends State<MySchedule> {
                                 context, "달똥요청을 막으시겠어요?");
                             await FirebaseFirestore.instance
                                 .collection('user')
-                                .doc(FirebaseAuth
-                                    .instance.currentUser!.email)
+                                .doc(FirebaseAuth.instance.currentUser!.email)
                                 .collection('BlockDatesList')
                                 .doc('${details.date}')
                                 .set({
@@ -484,8 +577,7 @@ class _MyScheduleState extends State<MySchedule> {
                             if (result == true) {
                               await FirebaseFirestore.instance
                                   .collection('user')
-                                  .doc(FirebaseAuth
-                                      .instance.currentUser!.email)
+                                  .doc(FirebaseAuth.instance.currentUser!.email)
                                   .collection('BlockDatesList')
                                   .doc('${details.date}')
                                   .delete();
@@ -494,34 +586,48 @@ class _MyScheduleState extends State<MySchedule> {
 
                           context.read<ScheduleProvider>().changeBlockDates(date);
 
-                          // setState(() {
-                          //   context.read<ScheduleProvider>().changeBlockDates(date);
-                          // });
                         },
                         onTap: (CalendarTapDetails calendarTapDetails) {
 
                           _calendarController.selectedDate = calendarTapDetails.date;
                           if (calendarTapDetails.appointments != null) {
-                            context.read<ScheduleProvider>()
-                                    .changeAppointmentDetails(
-                                      calendarTapDetails.appointments!.cast<Meeting>()
-                            );
+                            context
+                                .read<ScheduleProvider>()
+                                .changeAppointmentDetails(calendarTapDetails
+                                    .appointments!
+                                    .cast<Meeting>());
                             setState(() {});
                           }
+                          // if(context.read<ScheduleProvider>().showAgenda) {
+                          //   const BottomAgenda();
+                          // }
 
                           if (calendarTapDetails.date!.month >
                               _calendarController.displayDate!.month) {
                             _calendarController.forward!();
-                          }
-                          else if(calendarTapDetails.date!.month <
-                              _calendarController.displayDate!.month){
+                          } else if (calendarTapDetails.date!.month <
+                              _calendarController.displayDate!.month) {
                             _calendarController.backward!();
                           }
                         },
                       ),
                     ),
 
-                    // Expanded(child: BottomAgenda()),
+                    if(context.read<ScheduleProvider>().showAgenda)
+                      const Expanded(
+                        child: BottomAgenda(),
+                      ),
+
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _calendarController.displayDate = DateTime.now();
+                          });
+                        },
+                        child: const Text("오늘로 이동"),
+                      ),
+                    )
                   ]);
                 });
           }),

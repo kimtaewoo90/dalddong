@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,6 @@ import '../../functions/utilities/utilities_dalddong.dart';
 import '../../main_screen.dart';
 import 'dr_match_screen.dart';
 import 'dr_response_status_screen.dart';
-
 
 class ResponseDR extends StatefulWidget {
   final String? DalddongId;
@@ -22,6 +22,8 @@ class ResponseDR extends StatefulWidget {
 class _ResponseDRState extends State<ResponseDR> {
   var acceptMembers = [];
   String? chatRoomName;
+  late Timestamp dalddongDate;
+  late int lunchOrDinner;
 
   @override
   Widget build(BuildContext context) {
@@ -32,185 +34,203 @@ class _ResponseDRState extends State<ResponseDR> {
     //     .doc(FirebaseAuth.instance.currentUser?.email)
     //     .update({'currentStatus' : 1});
 
-    return Scaffold(
-      body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('DalddongList')
-              .doc(widget.DalddongId)
-              .snapshots(),
-          builder: (context, snapshots) {
-            if (snapshots.connectionState == ConnectionState.waiting) {
-              return Container(
-                alignment: Alignment.center,
-                child: const CircularProgressIndicator(),
-              );
-            }
+    return SafeArea(
+      top: false,
+      child: Scaffold(
+        backgroundColor: GeneralUiConfig.backgroundColor,
+        body: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('DalddongList')
+                .doc(widget.DalddongId)
+                .snapshots(),
+            builder: (context, snapshots) {
+              if (snapshots.connectionState == ConnectionState.waiting) {
+                return Container(
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                );
+              }
 
-            Timestamp dalddongDate = snapshots.data?.get('DalddongDate');
-            chatRoomName = " ${DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000).year}년 "
-                "${DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000).month}월 "
-                "${DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000).day}일";
+              dalddongDate = snapshots.data?.get('DalddongDate');
+              chatRoomName =
+                  " ${DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000).year}년 "
+                  "${DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000).month}월 "
+                  "${DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000).day}일";
 
-            return Center(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              lunchOrDinner = snapshots.data?.get('LunchOrDinner');
+
+              return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(
                       height: 40,
                     ),
-                    Text(
-                      "$chatRoomName",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 40,
-                      ),
+                    Expanded(
+                      flex: 2,
+                      child: Image.asset('images/dalddongResponse.png')
                     ),
+
                     const SizedBox(
                       height: 10,
                     ),
-                    StreamBuilder(
-                        stream: FirebaseFirestore.instance
-                            .collection('DalddongList')
-                            .doc(widget.DalddongId)
-                            .collection('Members')
-                            .snapshots(),
-                        builder: (context, memberSnapshot) {
-                          if (memberSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Container(
-                              alignment: Alignment.center,
-                              child: const CircularProgressIndicator(),
-                            );
-                          }
+                    Expanded(
+                      child: StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('DalddongList')
+                              .doc(widget.DalddongId)
+                              .collection('Members')
+                              .snapshots(),
+                          builder: (context, memberSnapshot) {
+                            if (memberSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Container(
+                                alignment: Alignment.center,
+                                child: const CircularProgressIndicator(),
+                              );
+                            }
 
-                          List<UserResponse> responseMembers = [];
-                          memberSnapshot.data?.docs.forEach((document) {
-                            UserResponse userResponse = UserResponse(document);
-                            responseMembers.add(userResponse);
-                          });
+                            List<UserResponse> responseMembers = [];
+                            memberSnapshot.data?.docs.forEach((document) {
+                              UserResponse userResponse =
+                                  UserResponse(document);
+                              responseMembers.add(userResponse);
+                            });
 
-                          return Column(
-                            children: [
-                              Padding(
-                                padding:
-                                const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                                child: ListView(
-                                  shrinkWrap: true,
-                                  children: responseMembers,
+                            return Column(
+                              children: [
+                                Text(
+                                  "$chatRoomName",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 25,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          );
-                        }),
+                                Expanded(
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                                    child: ListView(
+                                      shrinkWrap: true,
+                                      children: responseMembers,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                    ),
                     const SizedBox(
                       height: 40,
                     ),
-                    Text(
-                      '   와의 ${snapshots.data?.get('LunchOrDinner') == 0 ? "점심" : "저녁"}은 어떠신가요?',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 25,
+                    Expanded(
+                      child: Text(
+                        '${lunchOrDinner == 0 ? "점심" : "저녁"}달똥!\n\n 어떠신가요?',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 25,
+                        ),
                       ),
                     ),
-                  ]),
-            );
-          }),
-      bottomNavigationBar: Row(
-        children: [
-          Material(
-            color: Colors.grey,
-            child: InkWell(
-              onTap: () {
-                FirebaseFirestore.instance
-                    .collection('DalddongList')
-                    .doc(widget.DalddongId)
-                    .collection('Members')
-                    .doc(FirebaseAuth.instance.currentUser?.email)
-                    .update({'currentStatus': 3});
+                  ]);
+            }),
 
-                PageRouteWithAnimation pageRoute =
-                PageRouteWithAnimation(const MainScreen());
-                Navigator.push(context, pageRoute.slideRitghtToLeft());
-              },
-              child: const SizedBox(
-                height: kToolbarHeight,
-                width: 100,
-                child: Center(
-                  child: Text(
-                    '거절하기',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+        bottomNavigationBar: Row(
+          children: [
+            Material(
+              color: Colors.grey,
+              child: InkWell(
+                onTap: () {
+                  FirebaseFirestore.instance
+                      .collection('DalddongList')
+                      .doc(widget.DalddongId)
+                      .collection('Members')
+                      .doc(FirebaseAuth.instance.currentUser?.email)
+                      .update({'currentStatus': 3});
+
+                  PageRouteWithAnimation pageRoute =
+                      PageRouteWithAnimation(const MainScreen());
+                  Navigator.push(context, pageRoute.slideRitghtToLeft());
+                },
+                child: const SizedBox(
+                  height: kToolbarHeight,
+                  width: 100,
+                  child: Center(
+                    child: Text(
+                      '거절하기',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-              child: Material(
-                color: Colors.black,
-                child: InkWell(
-                  onTap: () async {
-                    // Change the isConfirmed = true
-                    await FirebaseFirestore.instance
-                        .collection('DalddongList')
-                        .doc(widget.DalddongId)
-                        .collection('Members')
-                        .doc(FirebaseAuth.instance.currentUser?.email)
-                        .update({'currentStatus': 2});
+            Expanded(
+                child: Material(
+              color: Colors.black,
+              child: InkWell(
+                onTap: () async {
+                  // Change the isConfirmed = true
+                  await FirebaseFirestore.instance
+                      .collection('DalddongList')
+                      .doc(widget.DalddongId)
+                      .collection('Members')
+                      .doc(FirebaseAuth.instance.currentUser?.email)
+                      .update({'currentStatus': 2});
 
-                    await FirebaseFirestore.instance
-                        .collection('DalddongList')
-                        .doc(widget.DalddongId)
-                        .collection('Members')
-                        .snapshots()
-                        .forEach((element) {
-                      element.docs.forEach((docs) {
-                        if (docs.get('currentStatus') == 2) {
-                          acceptMembers.add(docs.get('userEmail'));
-                        }
-                      });
-
-                      setState(() {});
-
-                      List accept = acceptMembers.toSet().toList();
-
-                      // 모든 참가자가 수락한 경우
-                      if (accept.length >= element.docs.length) {
-                        // 모든 참가자의 캘린더에 스케줄등록 & push notification
-                        completeDalddongSchedule(widget.DalddongId, accept);
-                        // 모든 참가자를 포함한 달똥 채팅방 생성
-                        makeDalddongChatRoom(widget.DalddongId, accept, chatRoomName!,);
-
-                        PageRouteWithAnimation pageRoute =
-                        PageRouteWithAnimation(CompleteAccept(
-                          dalddongId: widget.DalddongId,
-                        ));
-                        Navigator.push(context, pageRoute.slideRitghtToLeft());
-                      } else {
-                        PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
-                            ResponseStatus(dalddongId: widget.DalddongId));
-                        Navigator.push(context, pageRoute.slideRitghtToLeft());
+                  await FirebaseFirestore.instance
+                      .collection('DalddongList')
+                      .doc(widget.DalddongId)
+                      .collection('Members')
+                      .snapshots()
+                      .forEach((element) {
+                    element.docs.forEach((docs) {
+                      if (docs.get('currentStatus') == 2) {
+                        acceptMembers.add(docs.get('userEmail'));
                       }
                     });
-                  },
-                  child: const SizedBox(
-                    height: kToolbarHeight,
-                    width: double.infinity,
-                    child: Center(
-                      child: Text(
-                        '수락하기',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+
+                    setState(() {});
+
+                    List accept = acceptMembers.toSet().toList();
+
+                    // 모든 참가자가 수락한 경우
+                    if (accept.length >= element.docs.length) {
+                      // 모든 참가자의 캘린더에 스케줄등록 & push notification
+                      completeDalddongSchedule(widget.DalddongId, accept);
+                      // 모든 참가자를 포함한 달똥 채팅방 생성
+                      makeDalddongChatRoom(widget.DalddongId, accept, chatRoomName!, dalddongDate, lunchOrDinner);
+
+                      PageRouteWithAnimation pageRoute =
+                          PageRouteWithAnimation(CompleteAccept(
+                        dalddongId: widget.DalddongId,
+                      ));
+                      Navigator.push(context, pageRoute.slideRitghtToLeft());
+                    } else {
+                      PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
+                          ResponseStatus(dalddongId: widget.DalddongId));
+                      Navigator.push(context, pageRoute.slideRitghtToLeft());
+                    }
+                  });
+                },
+                child: const SizedBox(
+                  height: kToolbarHeight,
+                  width: double.infinity,
+                  child: Center(
+                    child: Text(
+                      '수락하기',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
-              ))
-        ],
+              ),
+            ))
+          ],
+        ),
       ),
     );
   }
@@ -255,65 +275,65 @@ class _UserResponse extends State<UserResponse> {
             ),
           ),
           trailing:
-          eachUser['currentStatus'] == 0 || eachUser['currentStatus'] == 1
-          // 대기
-              ? SizedBox(
-            height: 40,
-            width: 50,
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.circular(5)),
-              child: const Center(
-                  child: Text(
-                    '대기',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  )),
-            ),
-          )
-              : eachUser['currentStatus'] == 2
-          // 수락
-              ? SizedBox(
-            height: 40,
-            width: 50,
-            child: Container(
-              decoration: BoxDecoration(
-                  color: const Color(0xff025645),
-                  borderRadius: BorderRadius.circular(5)),
-              child: const Center(
-                  child: Text(
-                    '수락',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  )),
-            ),
-          )
-          // 거절
-              : SizedBox(
-            height: 40,
-            width: 50,
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.yellow,
-                  borderRadius: BorderRadius.circular(5)),
-              child: const Center(
-                  child: Text(
-                    '거절',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  )),
-            ),
-          )),
+              eachUser['currentStatus'] == 0 || eachUser['currentStatus'] == 1
+                  // 대기
+                  ? SizedBox(
+                      height: 40,
+                      width: 50,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            color: Colors.grey,
+                            borderRadius: BorderRadius.circular(5)),
+                        child: const Center(
+                            child: Text(
+                          '대기',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        )),
+                      ),
+                    )
+                  : eachUser['currentStatus'] == 2
+                      // 수락
+                      ? SizedBox(
+                          height: 40,
+                          width: 50,
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: const Color(0xff025645),
+                                borderRadius: BorderRadius.circular(5)),
+                            child: const Center(
+                                child: Text(
+                              '수락',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            )),
+                          ),
+                        )
+                      // 거절
+                      : SizedBox(
+                          height: 40,
+                          width: 50,
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.yellow,
+                                borderRadius: BorderRadius.circular(5)),
+                            child: const Center(
+                                child: Text(
+                              '거절',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            )),
+                          ),
+                        )),
     );
   }
 }

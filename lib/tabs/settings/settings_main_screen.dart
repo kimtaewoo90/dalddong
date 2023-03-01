@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../commonScreens/page_route_with_animation.dart';
@@ -51,10 +53,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       onWillPop: () async{
         final value = await yesNoDialog(context, "앱을 종료하십니까?");
         return value == true;
+        SystemNavigator.pop();
       },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Scaffold(
+          backgroundColor: GeneralUiConfig.backgroundColor,
           appBar: BaseAppBar(
             appBar: AppBar(),
             title: "",
@@ -281,7 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: <Widget> [
           CircleAvatar(
               radius: 40,
-              backgroundColor: Colors.blue,
+              backgroundColor: Colors.white,
               backgroundImage: NetworkImage(snapshot.data?.get('userImage'))
             //ExactAssetImage('image/default_profile.png'),
           ),

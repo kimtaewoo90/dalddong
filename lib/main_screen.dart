@@ -34,10 +34,10 @@ class _MainScreenState extends State<MainScreen> {
           backgroundColor: GeneralUiConfig.backgroundColor,
           body: const TabBarView(
             children: [
-              CommunityScreen(),
               FriendsScreen(),
-              MySchedule(),
               ChatRooms(),
+              MySchedule(),
+              CommunityScreen(),
               SettingsScreen(),
             ],
           ),
@@ -49,30 +49,29 @@ class _MainScreenState extends State<MainScreen> {
               tabs: [
                 Tab(child: Column(
                     children: const [
-                      Icon(Icons.spoke_outlined, color: Colors.black,),
-                      Expanded(child: Text('커뮤니티'))])
-                ),
-                Tab(child: Column(
-                    children: const [
                       Icon(Icons.perm_identity, color: Colors.black,),
-                      Expanded(child: Text('친구'))])
-                ),
-                Tab(child: Column(
-                    children: const [
-                      Icon(Icons.calendar_month_outlined, color: Colors.black),
-                      Expanded(child: Text('캘린더'))])
+                      FittedBox(fit: BoxFit.fitWidth, child: Text('친구'))])
                 ),
                 Tab(child: Column(
                     children: const [
                       Icon(Icons.question_answer_outlined, color: Colors.black,),
-                      Expanded(child: Text('채팅'))])
+                      FittedBox(fit: BoxFit.fitWidth, child: Text('채팅'))])
+                ),
+                Tab(child: Column(
+                    children: const [
+                      Icon(Icons.calendar_month_outlined, color: Colors.black, size: 25,),
+                      FittedBox(fit: BoxFit.fitWidth, child: Text('캘린더'))])
+                ),
+                Tab(child: Column(
+                    children: const [
+                      Icon(Icons.spoke_outlined, color: Colors.black,),
+                      FittedBox(fit: BoxFit.fitWidth, child: Text('커뮤니티'))])
                 ),
                 Tab(child: Column(
                     children: const [
                       Icon(Icons.account_circle_outlined, color: Colors.black,),
-                      Expanded(child: Text('MY'))])
+                      FittedBox(fit: BoxFit.fitWidth, child: Text('MY'))])
                 ),
-
             ],
               // indicatorColor: GeneralUiConfig.titleTextColor,
               indicatorSize: TabBarIndicatorSize.tab,

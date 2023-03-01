@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../commonScreens/shared_app_bar.dart';
 import '../../functions/providers/new_message_provider.dart';
 import '../../functions/utilities/utilities_chat.dart';
 import 'chatting_screen.dart';
@@ -160,90 +161,81 @@ class _MakeNewMessage extends State<MakeNewMessage> {
 
   @override
   Widget build(BuildContext context) {
+
+    context.watch<NewMessageProvider>().newMsgFriends;
+
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        // leading: IconButton(
-        //   icon: Image.asset("assets/images/ic_chevron_30_back.png", width: 24, height: 24,),
-        //   onPressed: () => Navigator.of(context).pop(),
-        // ),
-        automaticallyImplyLeading: true,
-        backgroundColor: const Color(0xff025645),
-        centerTitle: true,
-        title: const Text(
-          "채팅방 생성하기",
-          style: TextStyle(
-              color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.w700),
-        ),
-
-        actions: <Widget>[
-          if (context.read<NewMessageProvider>().newMsgFriends.length == 1)
-            IconButton(
-              icon: const Icon(Icons.add), // 설정 아이콘 생성
-              onPressed: () async {
-                // 아이콘 버튼 실행
-                var newMsgFriendProvider =
-                    context.read<NewMessageProvider>().newMsgFriends;
-                var chatroomId = await makeNewChatRoom(
-                    newMsgFriendProvider[0].get('userName'),
-                    newMsgFriendProvider[0].get('userEmail'),
-                    newMsgFriendProvider[0].get('userImage'));
-
-                String title = await FirebaseFirestore.instance
-                    .collection('user')
-                    .doc(FirebaseAuth.instance.currentUser!.email)
-                    .collection('chatRoomList')
-                    .doc(chatroomId)
-                    .get()
-                    .then((value) {
-                  return value.get('chatRoomName');
-
-                });
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(chatroomId, title),
-                    )).then((value) => setState(() {}));
-              },
-            ),
-          if (context.read<NewMessageProvider>().newMsgFriends.length > 1)
-            IconButton(
-              icon: const Icon(Icons.add), // 설정 아이콘 생성
-              onPressed: () async {
-                // 아이콘 버튼 실행
-                var chatroomId = await makeNewGroupChatRoom(
-                    context.read<NewMessageProvider>().newMsgFriends);
-
-                String title = await FirebaseFirestore.instance
-                    .collection('user')
-                    .doc(FirebaseAuth.instance.currentUser!.email)
-                    .collection('chatRoomList')
-                    .doc(chatroomId)
-                    .get()
-                    .then((value) {
-                  return value.get('chatRoomName');
-                });
-
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(chatroomId, title),
-                    )).then((value) => setState(() {}));
-              },
-            )
-        ],
+      backgroundColor: Colors.white,
+      appBar: BaseAppBar(
+        appBar: AppBar(),
+        title: '새로운 채팅',
+        backBtn: true,
+        hasIcon: false,
+        isCreateChatRoom: true,
       ),
+
       body: Column(
         children: <Widget>[
+          // if(context.read<NewMessageProvider>().newMsgFriends.isNotEmpty)
+
           searchText(),
           const SizedBox(
             height: 10,
           ),
           futureSearchResults == null
-              ? displayNoSearchResultScreen()
-              : displayUsersFoundScreen(),
+              ? FutureBuilder(
+              future: futureSearchResults,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                List<UserResult> friendsListResult = [];
+
+                snapshot.data?.docs.forEach((document) {
+                  // User users = document.;
+                  UserResult userResult = UserResult(document);
+                  friendsListResult.add(userResult);
+                });
+
+                return Flexible(
+                  fit: FlexFit.tight,
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: ListView(
+                      // shrinkWrap: true,
+                      children: friendsListResult,
+                    ),
+                  ),
+                );
+              })
+              : FutureBuilder(
+              future: futureSearchResults,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                List<UserResult> searchUserResult = [];
+
+                snapshot.data?.docs.forEach((document) {
+                  // User users = document.;
+                  UserResult userResult = UserResult(document);
+                  searchUserResult.add(userResult);
+                });
+
+                return Flexible(
+                  fit: FlexFit.tight,
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: ListView(
+                      // shrinkWrap: true,
+                      children: searchUserResult,
+                    ),
+                  ),
+                );
+              }),
         ],
       ),
+
     );
   }
 }
@@ -274,15 +266,12 @@ class _UserResult extends State<UserResult> {
           children: [
             GestureDetector(
               onTap: () {
-                context
-                    .read<NewMessageProvider>()
-                    .changeNewMsgFriends(eachUser);
-                // print(context.read<NewMessageProvider>().newMsgFriends.length);
+                context.read<NewMessageProvider>().changeNewMsgFriends(eachUser);
                 setState(() {});
               },
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Colors.white,
                   backgroundImage: NetworkImage(
                     eachUser['userImage'],
                   ),

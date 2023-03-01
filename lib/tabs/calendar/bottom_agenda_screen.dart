@@ -12,9 +12,9 @@ import '../../functions/providers/calendar_provider.dart';
 import '../chatting/chatting_screen.dart';
 
 class BottomAgenda extends StatefulWidget {
-  final ScrollController controller;
-  final PanelController panelController;
-  const BottomAgenda({Key? key, required this.controller, required this.panelController}) : super(key: key);
+  // final ScrollController controller;
+  // final PanelController panelController;
+  const BottomAgenda({Key? key}) : super(key: key);
 
   @override
   State<BottomAgenda> createState() => _BottomAgendaState();
@@ -23,10 +23,19 @@ class BottomAgenda extends StatefulWidget {
 class _BottomAgendaState extends State<BottomAgenda> {
   @override
   Widget build(BuildContext context) {
+    if(context.read<ScheduleProvider>().appointmentDetails.isEmpty){
+      return SizedBox(
+          height : context.read<ScheduleProvider>().showAgenda ? 500 : 0,
+          child: const Center(child: Text("일정이 없습니다!"),));
+    }
     return Container(
+      height: context.read<ScheduleProvider>().showAgenda ? 500 : 0,
       color: GeneralUiConfig.backgroundColor,
-      child: ListView.separated(
-        controller: widget.controller,
+      child:
+      ListView.separated(
+        // controller: widget.controller,
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
         padding: const EdgeInsets.all(2),
         itemCount: context.read<ScheduleProvider>().appointmentDetails.length,
         itemBuilder: (BuildContext context, int index) {
@@ -42,8 +51,7 @@ class _BottomAgendaState extends State<BottomAgenda> {
                 if (context
                     .read<ScheduleProvider>()
                     .appointmentDetails[index]
-                    .isAppointment ==
-                    true) {
+                    .isAppointment == true) {
                   print("달똥완료 페이지로 이동");
                   // PageRouteWithAnimation pageRoute =
                   // PageRouteWithAnimation(CompleteAccept(dalddongId: _appointmentDetails[index].scheduleId,));
@@ -80,7 +88,9 @@ class _BottomAgendaState extends State<BottomAgenda> {
                   Navigator.push(context, pageRoute.slideBottonToTop());
                 }
               },
-              leading: Column(
+              leading:
+              // if()
+              Column(
                 children: <Widget>[
                   Text(
                     context

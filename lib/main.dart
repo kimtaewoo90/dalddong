@@ -7,6 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+// localization
+import 'package:syncfusion_localizations/syncfusion_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+
 // notification
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -135,7 +140,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
           useMaterial3: true
       ),
-      home: HomePage(),
+      localizationsDelegates: const [
+        // AppLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        SfGlobalLocalizations.delegate
+      ],
+      supportedLocales: const [
+        Locale('ko', 'KR'),
+      ],
+      locale: const Locale('ko', 'KR'),
+      home: const HomePage(),
     );
   }
 }
@@ -160,11 +176,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state){
     if(state == AppLifecycleState.resumed){
       setActiveStatus(true);
-      print("-----$state");
     }
     else{
       setActiveStatus(false);
-      print("-----$state");
     }
   }
 

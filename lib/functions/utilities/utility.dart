@@ -98,7 +98,7 @@ Future<void> showAlertDialog(BuildContext context, String msg) async {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('점심')),
+              child: const Text('확인')),
         ],
       );
     },
