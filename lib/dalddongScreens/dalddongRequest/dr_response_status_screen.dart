@@ -49,7 +49,10 @@ class _ResponseStatusState extends State<ResponseStatus> {
                 );
               }
 
+              print("dr_response_status rebuilding");
+              
               List<String> acceptList = [];
+              List<String> rejectList = [];
               List<String> allList = [];
               List<UserResponse> responseMembers = [];
 
@@ -57,12 +60,14 @@ class _ResponseStatusState extends State<ResponseStatus> {
                 UserResponse userResponse = UserResponse(document);
                 responseMembers.add(userResponse);
                 allList.add(document.id);
-                if (document.get('currentStatus') == 2) {
-                  print("${document.get('userName')} is 수락~~~~~");
+                if (document.get('currentStatus') == 2) {          
                   acceptList.add(document.id);
                 }
+                if(document.get('currentStatus') == 3){
+                  rejectList.add(document.id);
+                }
               });
-              double response = acceptList.length / allList.length;
+              double response = (acceptList.length + rejectList.length) / allList.length;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -92,8 +97,8 @@ class _ResponseStatusState extends State<ResponseStatus> {
                                 "${dalddongSnapshot.data!['hostName']} 님아 "
                                     "${dalddongSnapshot.data!['MemberNumbers']}명 에게"
                                     "보낸일정을 검토받고 있어요!\n "
-                                    "모든 사람의 수락, 거절이 완료되면\n "
-                                    "채팅창이 만들어져요",
+                                    "모든 사람이 수락해주시면 \n "
+                                    "채팅방이 만들어져요",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,

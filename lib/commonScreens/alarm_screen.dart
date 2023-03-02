@@ -410,6 +410,11 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
 
   @override
   Widget build(BuildContext context) {
+
+    bool isMatched = false;
+    bool isMatching = false;
+    bool isRejected = false;
+
     return StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection('DalddongList')
@@ -453,93 +458,76 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                                 backgroundColor: Colors.grey,
                               ),
                               onPressed: () {
-                                var acceptMembers = [];
+                                // TODO: 이미 거절된 달똥에 대해서 처리하기.    
                                 FirebaseFirestore.instance
-                                    .collection('DalddongList')
-                                    .doc(eachEvents.get('details')['eventId'])
-                                    .collection('Members')
-                                    .snapshots()
-                                    .forEach((element) {
-                                  for (var docs in element.docs) {
-                                    if (docs.get('currentStatus') == 2) {
-                                      acceptMembers.add(docs.id);
-                                    }
-                                  }
+                                        .collection('DalddongList')
+                                        .doc(eachEvents.get('details')['eventId'])
+                                        .collection('Members')
+                                        .snapshots()
+                                        .forEach((element) {
+                                          for (var docs in element.docs) {                                        
+                                            if (docs.get('currentStatus') == 3){
+                                              isRejected = true;
+                                            }
+                                          }
+                                        });
 
-                                  if (acceptMembers.length ==
-                                      element.docs.length) {
-                                    PageRouteWithAnimation pageRoute =
-                                    PageRouteWithAnimation(
-                                        CompleteAccept(
-                                            dalddongId: eachEvents
-                                                .get('details')[
-                                            'eventId']));
-                                    Navigator.push(context,
-                                        pageRoute.slideRitghtToLeft());
-                                  } else {
-                                    PageRouteWithAnimation pageRoute =
-                                    PageRouteWithAnimation(
-                                        ResponseDR(
-                                          DalddongId: eachEvents
-                                              .get('details')['eventId'],
-                                        ));
-                                    Navigator.push(context,
-                                        pageRoute.slideRitghtToLeft());
-                                  }
-                                });
+                                if(isRejected){
+                                  PageRouteWithAnimation pageRoute =
+                                  PageRouteWithAnimation(RejectedDalddong());
+                                  Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                } 
+                                else{
+                                  PageRouteWithAnimation pageRoute =
+                                  PageRouteWithAnimation(ResponseDR(DalddongId: eachEvents.get('details')['eventId'],));
+                                  Navigator.push(context, pageRoute.slideRitghtToLeft()); 
+                                }       
+                                                                                                
                               },
-                              child: const Text('보기'),
+                              child: isRejected ? const TExt("거절됨") : const Text('보기'),
                             )
                                 : snapshotAlarm.data!.get('currentStatus') == 2
                                 ? ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.green,
-                              ),
-                              onPressed: () {
-                                var acceptMembers = [];
-                                FirebaseFirestore.instance
-                                    .collection('DalddongList')
-                                    .doc(eachEvents
-                                    .get('details')['eventId'])
-                                    .collection('Members')
-                                    .snapshots()
-                                    .forEach((element) {
-                                  for (var docs in element.docs) {
-                                    if (docs.get('currentStatus') ==
-                                        2) {
-                                      acceptMembers.add(docs.id);
-                                    }
-                                  }
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Colors.green,
+                                  ),
+                                  onPressed: () {
+                                    var acceptMembers = [];
+                                    FirebaseFirestore.instance
+                                        .collection('DalddongList')
+                                        .doc(eachEvents.get('details')['eventId'])
+                                        .collection('Members')
+                                        .snapshots()
+                                        .forEach((element) {
+                                      for (var docs in element.docs) {
+                                        if (docs.get('currentStatus') ==2) {
+                                          acceptMembers.add(docs.id);
+                                        }
+                                        if (docs.get('currentStatus') == 3){
+                                          isRejected = true;
+                                        }
+                                      }
 
-                                  if (acceptMembers.length ==
-                                      element.docs.length) {
-                                    PageRouteWithAnimation pageRoute =
-                                    PageRouteWithAnimation(
-                                        CompleteAccept(
-                                            dalddongId:
-                                            eachEvents.get(
-                                                'details')[
-                                            'eventId']));
-                                    Navigator.push(
-                                        context,
-                                        pageRoute
-                                            .slideRitghtToLeft());
-                                  } else {
-                                    PageRouteWithAnimation pageRoute =
-                                    PageRouteWithAnimation(
-                                        ResponseDR(
-                                          DalddongId: eachEvents
-                                              .get('details')['eventId'],
-                                        ));
-                                    Navigator.push(
-                                        context,
-                                        pageRoute
-                                            .slideRitghtToLeft());
-                                  }
-                                });
-                              },
-                              child: const Text('매칭완료'),
+                                      if (acceptMembers.length ==
+                                          element.docs.length) {
+                                            isMatched = true;
+                                            PageRouteWithAnimation pageRoute =
+                                            PageRouteWithAnimation(
+                                                CompleteAccept(
+                                                    dalddongId:eachEvents.get('details')['eventId']));
+                                            Navigator.push(context,pageRoute.slideRitghtToLeft());
+                                      } else {
+                                        PageRouteWithAnimation pageRoute =
+                                        PageRouteWithAnimation(
+                                            ResponseStatus(dalddongId: eachEvents.get('details')['eventId'],
+                                            ));
+                                        Navigator.push(
+                                            context,pageRoute.slideRitghtToLeft());
+                                      }
+                                    });
+                                  },
+                              child: isMatched ? const Text('매칭완료') : const Text("수락완료"),
                             )
                                 : ElevatedButton(
                               style: ElevatedButton.styleFrom(
@@ -548,13 +536,13 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                               ),
                               onPressed: () {
                                 PageRouteWithAnimation pageRoute =
-                                PageRouteWithAnimation(
-                                    const RejectedDalddong());
+                                PageRouteWithAnimation(const RejectedDalddong());
                                 Navigator.push(context,
                                     pageRoute.slideRitghtToLeft());
                               },
                               child: const Text('거절함'),
-                            )),
+                              )
+                            ),
                         Padding(
                           padding: const EdgeInsets.only(left: 20.0),
                           child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(

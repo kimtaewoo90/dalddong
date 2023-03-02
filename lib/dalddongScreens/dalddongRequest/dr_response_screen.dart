@@ -206,6 +206,7 @@ class _ResponseDRState extends State<ResponseDR> {
                           PageRouteWithAnimation(CompleteAccept(
                         dalddongId: widget.DalddongId,
                       ));
+                      
                       Navigator.push(context, pageRoute.slideRitghtToLeft());
                     } else {
                       PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
