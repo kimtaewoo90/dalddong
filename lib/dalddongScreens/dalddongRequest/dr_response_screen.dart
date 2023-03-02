@@ -38,11 +38,10 @@ class _ResponseDRState extends State<ResponseDR> {
       top: false,
       child: Scaffold(
         backgroundColor: GeneralUiConfig.backgroundColor,
-        body: StreamBuilder(
-            stream: FirebaseFirestore.instance
+        body: FutureBuilder(
+            future: FirebaseFirestore.instance
                 .collection('DalddongList')
-                .doc(widget.DalddongId)
-                .snapshots(),
+                .doc(widget.DalddongId).get(),
             builder: (context, snapshots) {
               if (snapshots.connectionState == ConnectionState.waiting) {
                 return Container(
@@ -74,12 +73,12 @@ class _ResponseDRState extends State<ResponseDR> {
                       height: 10,
                     ),
                     Expanded(
-                      child: StreamBuilder(
-                          stream: FirebaseFirestore.instance
+                      child: FutureBuilder(
+                          future: FirebaseFirestore.instance
                               .collection('DalddongList')
                               .doc(widget.DalddongId)
                               .collection('Members')
-                              .snapshots(),
+                              .get(),
                           builder: (context, memberSnapshot) {
                             if (memberSnapshot.connectionState ==
                                 ConnectionState.waiting) {
@@ -139,17 +138,19 @@ class _ResponseDRState extends State<ResponseDR> {
             Material(
               color: Colors.grey,
               child: InkWell(
-                onTap: () {
-                  FirebaseFirestore.instance
+                onTap: () async{
+                  await FirebaseFirestore.instance
                       .collection('DalddongList')
                       .doc(widget.DalddongId)
                       .collection('Members')
                       .doc(FirebaseAuth.instance.currentUser?.email)
                       .update({'currentStatus': 3});
 
-                  PageRouteWithAnimation pageRoute =
+                  if(context.mounted) {
+                    PageRouteWithAnimation pageRoute =
                       PageRouteWithAnimation(const MainScreen());
-                  Navigator.push(context, pageRoute.slideRitghtToLeft());
+                    Navigator.push(context, pageRoute.slideRitghtToLeft());
+                  }
                 },
                 child: const SizedBox(
                   height: kToolbarHeight,

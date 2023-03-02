@@ -163,6 +163,7 @@ class ScheduleProvider with ChangeNotifier{
 final DateTime initialDalddongProvider = DateTime.now();
 const bool initialDalddongLunchProvider = true;
 const bool initialDalddongDinnerProvider = false;
+const int initialLunchOrDinner = 0;
 
 List<QueryDocumentSnapshot> initialDdFriends = [];
 int _initialStarRating = 5;
@@ -174,6 +175,7 @@ class DalddongProvider with ChangeNotifier{
     _DalddongDate = initialDalddongProvider;
     _DalddongLunch = initialDalddongLunchProvider;
     _DalddongDinner = initialDalddongDinnerProvider;
+
   }
 
   DateTime _DalddongDate = initialDalddongProvider;
@@ -197,6 +199,13 @@ class DalddongProvider with ChangeNotifier{
 
   void changeDalddongDinner(bool value){
     _DalddongDinner = value;
+    notifyListeners();
+  }
+
+  int _lunchOrDinner = initialLunchOrDinner;
+  int get lunchOrDinner => _lunchOrDinner;
+  void changeLunchOrDinner(int value){
+    _lunchOrDinner = value;
     notifyListeners();
   }
 

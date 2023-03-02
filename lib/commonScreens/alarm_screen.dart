@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../dalddongScreens/dalddongRequest/dr_match_screen.dart';
 import '../dalddongScreens/dalddongRequest/dr_not_match_screen.dart';
 import '../dalddongScreens/dalddongRequest/dr_response_screen.dart';
+import '../dalddongScreens/dalddongRequest/dr_response_status_screen.dart';
 import '../dalddongScreens/dalddongVote/dv_vote_screen.dart';
 
 
@@ -415,112 +416,113 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
     bool isMatching = false;
     bool isRejected = false;
 
+    int myStatus = 0;
+    List<String> acceptMembers = [];
+
     return StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('DalddongList')
-            .doc(eachEvents.get('details')['eventId'])
-            .collection('Members')
-            .doc(FirebaseAuth.instance.currentUser!.email)
-            .snapshots(),
-        builder: (context, snapshotAlarm) {
-          if (snapshotAlarm.connectionState == ConnectionState.waiting) {
-            return Container(
-              alignment: Alignment.center,
-              child: const CircularProgressIndicator(),
-            );
+      stream: FirebaseFirestore.instance
+          .collection('DalddongList')
+          .doc(eachEvents.get('details')['eventId'])
+          .collection('Members')
+          .snapshots(),
+      builder: (context, memberSnapshot){
+        if(memberSnapshot.connectionState == ConnectionState.waiting){
+          return Container(
+            alignment: Alignment.center,
+            child: const CircularProgressIndicator(),
+          );
+        }
+
+        for (var docs in memberSnapshot.data!.docs) {
+          if (docs.get('currentStatus') ==2) {
+            acceptMembers.add(docs.id);
           }
+          if (docs.get('currentStatus') == 3){
+            isMatched = false;
+            isRejected = true;
+          }
+        }
 
-          Timestamp alarmTime = eachEvents['alarmTime'];
-          return Padding(
-              padding: const EdgeInsets.all(3),
-              child: Container(
-                  color: Colors.white54,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+        if(memberSnapshot.data?.docs.length == acceptMembers.length){
+          isMatched = true;
+        }
 
-                        ListTile(
-                            leading: Image.asset('images/dalddongRequest.png'),
+        return  StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('DalddongList')
+                .doc(eachEvents.get('details')['eventId'])
+                .collection('Members')
+                .doc(FirebaseAuth.instance.currentUser!.email)
+                .snapshots(),
+            builder: (context, snapshotAlarm) {
+              if (snapshotAlarm.connectionState == ConnectionState.waiting) {
+                return Container(
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                );
+              }
 
-                            title: Text(
-                              "${eachEvents.get('details')['hostName']}님 외 ${eachEvents.get('details')['membersNum']}명의 ${eachEvents['body']}",
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: GeneralUiConfig.alarmTitleFontSize,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            trailing: snapshotAlarm.data!.get('currentStatus') == 0 ||
-                                snapshotAlarm.data!.get('currentStatus') == 1
-                                ? ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.grey,
-                              ),
-                              onPressed: () {
-                                // TODO: 이미 거절된 달똥에 대해서 처리하기.    
-                                FirebaseFirestore.instance
-                                        .collection('DalddongList')
-                                        .doc(eachEvents.get('details')['eventId'])
-                                        .collection('Members')
-                                        .snapshots()
-                                        .forEach((element) {
-                                          for (var docs in element.docs) {                                        
-                                            if (docs.get('currentStatus') == 3){
-                                              isRejected = true;
-                                            }
-                                          }
-                                        });
+              Timestamp alarmTime = eachEvents['alarmTime'];
+              myStatus = snapshotAlarm.data?.get('currentStatus');
+              return Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: Container(
+                      color: Colors.white54,
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
 
-                                if(isRejected){
-                                  PageRouteWithAnimation pageRoute =
-                                  PageRouteWithAnimation(RejectedDalddong());
-                                  Navigator.push(context, pageRoute.slideRitghtToLeft());
-                                } 
-                                else{
-                                  PageRouteWithAnimation pageRoute =
-                                  PageRouteWithAnimation(ResponseDR(DalddongId: eachEvents.get('details')['eventId'],));
-                                  Navigator.push(context, pageRoute.slideRitghtToLeft()); 
-                                }       
-                                                                                                
-                              },
-                              child: isRejected ? const TExt("거절됨") : const Text('보기'),
-                            )
-                                : snapshotAlarm.data!.get('currentStatus') == 2
-                                ? ElevatedButton(
+                            ListTile(
+                                leading: Image.asset('images/dalddongRequest.png'),
+
+                                title: Text(
+                                  "${eachEvents.get('details')['hostName']}님 외 ${eachEvents.get('details')['membersNum']}명의 ${eachEvents['body']}",
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: GeneralUiConfig.alarmTitleFontSize,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                trailing: myStatus == 0
+                                    ? ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor: Colors.white,
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: Colors.grey,
                                   ),
                                   onPressed: () {
-                                    var acceptMembers = [];
-                                    FirebaseFirestore.instance
-                                        .collection('DalddongList')
-                                        .doc(eachEvents.get('details')['eventId'])
-                                        .collection('Members')
-                                        .snapshots()
-                                        .forEach((element) {
-                                      for (var docs in element.docs) {
-                                        if (docs.get('currentStatus') ==2) {
-                                          acceptMembers.add(docs.id);
-                                        }
-                                        if (docs.get('currentStatus') == 3){
-                                          isRejected = true;
-                                        }
-                                      }
 
-                                      if (acceptMembers.length ==
-                                          element.docs.length) {
-                                            isMatched = true;
-                                            PageRouteWithAnimation pageRoute =
-                                            PageRouteWithAnimation(
-                                                CompleteAccept(
-                                                    dalddongId:eachEvents.get('details')['eventId']));
-                                            Navigator.push(context,pageRoute.slideRitghtToLeft());
+                                    if(isRejected){
+                                      PageRouteWithAnimation pageRoute =
+                                      PageRouteWithAnimation(const RejectedDalddong());
+                                      Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                    }
+                                    else{
+                                      PageRouteWithAnimation pageRoute =
+                                      PageRouteWithAnimation(ResponseDR(DalddongId: eachEvents.get('details')['eventId'],));
+                                      Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                    }
+
+                                  },
+                                  child: isRejected ? const Text("거절됨") : const Text('보기'),
+                                )
+                                    : myStatus == 2
+                                    ? ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: isRejected ? Colors.red : isMatched ? Colors.green : Colors.yellowAccent,
+                                  ),
+                                  onPressed: () async {
+
+                                      if (isMatched) {
+                                        PageRouteWithAnimation pageRoute =
+                                        PageRouteWithAnimation(
+                                            CompleteAccept(
+                                                dalddongId:eachEvents.get('details')['eventId']));
+                                        Navigator.push(context,pageRoute.slideRitghtToLeft());
                                       } else {
                                         if(isRejected){
                                           PageRouteWithAnimation pageRoute =
-                                          PageRouteWithAnimation(RejectedDalddong());
+                                          PageRouteWithAnimation(const RejectedDalddong());
                                           Navigator.push(context, pageRoute.slideRitghtToLeft());
                                         }
                                         else{
@@ -531,34 +533,34 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                                           Navigator.push(
                                               context,pageRoute.slideRitghtToLeft());
                                         }
-                                        
                                       }
-                                    });
                                   },
-                              child: isMatched ? const Text('매칭완료') : isRejected ? const Text("거절됨") : const Text("수락완료"),
-                            )
-                                : ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.red,
-                              ),
-                              onPressed: () {
-                                PageRouteWithAnimation pageRoute =
-                                PageRouteWithAnimation(const RejectedDalddong());
-                                Navigator.push(context,
-                                    pageRoute.slideRitghtToLeft());
-                              },
-                              child: const Text('거절함'),
-                              )
+                                  child: isMatched ? const Text('매칭완료') : isRejected ? const Text("거절됨") : const Text("수락완료", style: TextStyle(color: Colors.black),),
+                                )
+                                    : ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    PageRouteWithAnimation pageRoute =
+                                    PageRouteWithAnimation(const RejectedDalddong());
+                                    Navigator.push(context,
+                                        pageRoute.slideRitghtToLeft());
+                                  },
+                                  child: const Text('거절함'),
+                                )
                             ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20.0),
-                          child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                  alarmTime.seconds * 1000))),
-                        ),
-                        const Divider(),
-                      ])));
-        });
+                            Padding(
+                              padding: const EdgeInsets.only(left: 20.0),
+                              child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      alarmTime.seconds * 1000))),
+                            ),
+                            const Divider(),
+                          ])));
+            });
+      },
+    );
   }
 }

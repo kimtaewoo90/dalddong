@@ -1,18 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/functions/pushManager/push_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dalddong/functions/pushManager/push_manager.dart';
 
 import '../providers/calendar_provider.dart';
 import 'Utility.dart';
 
-
-
 // 투표완료, 달똥일자, 스케줄 저장 및 푸쉬
-void completeDalddongVote(BuildContext context, String? chatroomId, List<QueryDocumentSnapshot> dalddongMembers) {
-
+void completeDalddongVote(BuildContext context, String? chatroomId,
+    List<QueryDocumentSnapshot> dalddongMembers) {
   List<Map<String, dynamic>> dateDic = [
     {'date': 'none', 'voted': -1}
   ];
@@ -94,9 +92,10 @@ void completeDalddongVote(BuildContext context, String? chatroomId, List<QueryDo
             .collection('AlarmList')
             .doc(chatroomId)
             .set({
-          'details' : details,
-          'alarmTime' : DateTime.now(),
-          'body': "${DateFormat('yyyy-MM-dd').format(dalddongDate)} ${hostValue.get('lunchOrDinner') == true ? "점심" : "저녁"} 약속이 확정되었습니다.",
+          'details': details,
+          'alarmTime': DateTime.now(),
+          'body':
+              "${DateFormat('yyyy-MM-dd').format(dalddongDate)} ${hostValue.get('lunchOrDinner') == true ? "점심" : "저녁"} 약속이 확정되었습니다.",
         });
       });
 
@@ -121,7 +120,7 @@ void completeDalddongVote(BuildContext context, String? chatroomId, List<QueryDo
           .set({
         'scheduleId': chatroomId,
         'title':
-        "${hostValue.get('userName')} 외 ${dalddongMembers.length}명 과의 ${hostValue.get('lunchOrDinner') == true ? '점심' : '저녁'}",
+            "${hostValue.get('userName')} 외 ${dalddongMembers.length}명 과의 ${hostValue.get('lunchOrDinner') == true ? '점심' : '저녁'}",
         'startDate': dalddongDate,
         'endDate': dalddongDate,
         'isAllDay': false,
@@ -145,7 +144,6 @@ void completeDalddongVote(BuildContext context, String? chatroomId, List<QueryDo
   });
 }
 
-
 // Suggest Dalddong Schedule
 String addDalddongList(
     BuildContext context, List<QueryDocumentSnapshot> dalddongMembers) {
@@ -168,7 +166,7 @@ String addDalddongList(
       'DalddongDate': context.read<DalddongProvider>().DalddongDate,
       'hostName': myName,
       'LunchOrDinner':
-      context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
+          context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
       'Color': "0xff025645",
       'DalddongId': DalddongId,
       'Importance': context.read<DalddongProvider>().starRating,
@@ -218,9 +216,10 @@ String addDalddongList(
           .collection('AlarmList')
           .doc(DalddongId)
           .set({
-        'details' : details,
-        'alarmTime' : DateTime.now(),
-        'body': "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
+        'details': details,
+        'alarmTime': DateTime.now(),
+        'body':
+            "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
       });
     });
 
@@ -238,7 +237,6 @@ String addDalddongList(
         'userImage': value['userImage'],
         'currentStatus': 0,
       });
-
 
       FirebaseFirestore.instance
           .collection('user')
@@ -267,18 +265,17 @@ String addDalddongList(
             .collection('AlarmList')
             .doc(DalddongId)
             .set({
-          'details' : details,
-          'alarmTime' : DateTime.now(),
-          'body': "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
+          'details': details,
+          'alarmTime': DateTime.now(),
+          'body':
+              "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
         });
       });
-
     });
   });
 
   return DalddongId;
 }
-
 
 // Register Dalddong Schedule
 void completeDalddongSchedule(
@@ -322,8 +319,8 @@ void completeDalddongSchedule(
             .collection('AlarmList')
             .doc(dalddongId)
             .set({
-          'details' : details,
-          'alarmTime' : DateTime.now(),
+          'details': details,
+          'alarmTime': DateTime.now(),
           'body': "'${dalddongValue.get('hostName')}'의 '${DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(DalddongDate.seconds * 1000))}' "
               "의 ${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'}의 약속이 매칭되었습니다.",
         });
@@ -337,7 +334,7 @@ void completeDalddongSchedule(
             .set({
           'scheduleId': dalddongId,
           'title':
-          "${dalddongValue.get('hostName')} 외 ${dalddongValue.get('MemberNumbers')}명 과의 ${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'}",
+              "${dalddongValue.get('hostName')} 외 ${dalddongValue.get('MemberNumbers')}명 과의 ${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'}",
           'startDate': dalddongValue.get('DalddongDate'),
           'endDate': dalddongValue.get('DalddongDate'),
           'isAllDay': false,
@@ -348,15 +345,35 @@ void completeDalddongSchedule(
 
         // 달똥참가 인원의 BlockDate 추가
         DateTime blockDate =
-        DateTime.fromMillisecondsSinceEpoch(DalddongDate.seconds * 1000);
+            DateTime.fromMillisecondsSinceEpoch(DalddongDate.seconds * 1000);
+
+        List<DateTime> blockDates = [];
         FirebaseFirestore.instance
             .collection('user')
             .doc(userValue.get('userEmail'))
             .collection('BlockDatesList')
-            .doc("$blockDate")
-            .set({
-          'LunchOrDinner': dalddongValue.get('LunchOrDinner'),
-          'isDalddong': true,
+            .get()
+            .then((value) {
+          bool isExistBlocked = false;
+          value.docs.forEach((element) {
+            print("$blockDate / ${DateTime.parse(element.id)}");
+            if (DateTime.parse(element.id) == blockDate) {
+              isExistBlocked = true;
+              return;
+            }
+          });
+
+          print(isExistBlocked);
+          FirebaseFirestore.instance
+              .collection('user')
+              .doc(userValue.get('userEmail'))
+              .collection('BlockDatesList')
+              .doc("$blockDate")
+              .set({
+            'LunchOrDinner':
+                isExistBlocked ? 2 : dalddongValue.get('LunchOrDinner'),
+            'isDalddong': true,
+          });
         });
       });
     });

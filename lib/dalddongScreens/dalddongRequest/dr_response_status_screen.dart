@@ -35,12 +35,12 @@ class _ResponseStatusState extends State<ResponseStatus> {
           backBtn: false,
           center: true,
         ),
-        body: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
+        body: FutureBuilder<QuerySnapshot>(
+            future: FirebaseFirestore.instance
                 .collection('DalddongList')
                 .doc(widget.dalddongId)
                 .collection('Members')
-                .snapshots(),
+                .get(),
             builder: (context, memberSnapshot) {
               if (memberSnapshot.connectionState == ConnectionState.waiting) {
                 return Container(
@@ -79,11 +79,11 @@ class _ResponseStatusState extends State<ResponseStatus> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(10, 20, 0, 0),
                         child: Center(
-                          child: StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance
+                          child: FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
                                 .collection('DalddongList')
                                 .doc(widget.dalddongId)
-                                .snapshots(),
+                                .get(),
                             builder: (context,
                                 AsyncSnapshot<DocumentSnapshot> dalddongSnapshot) {
                               if (dalddongSnapshot.connectionState == ConnectionState.waiting) {

@@ -279,11 +279,11 @@ class _ChatRoomsState extends State<ChatRooms> with TickerProviderStateMixin {
                               .collection('user')
                               .doc(FirebaseAuth.instance.currentUser!.email)
                               .collection('chatRoomList').where("isDalddong", isEqualTo: true)
-                              .orderBy('dalddongDate', descending: true)
+                              .orderBy('dalddongDate', descending: false)
                               .snapshots(),
 
                           builder: (context, dalddongSnapshot) {
-                            if (dalddongSnapshot.data != null && !dalddongSnapshot.hasError && dalddongSnapshot.data?.docs.length != 0){
+                            if (dalddongSnapshot.data != null && !dalddongSnapshot.hasError && dalddongSnapshot.data!.docs.isNotEmpty){
                               return ListView.separated(
                                 scrollDirection: Axis.vertical,
                                 shrinkWrap: true,
