@@ -518,16 +518,24 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                                                     dalddongId:eachEvents.get('details')['eventId']));
                                             Navigator.push(context,pageRoute.slideRitghtToLeft());
                                       } else {
-                                        PageRouteWithAnimation pageRoute =
-                                        PageRouteWithAnimation(
-                                            ResponseStatus(dalddongId: eachEvents.get('details')['eventId'],
-                                            ));
-                                        Navigator.push(
-                                            context,pageRoute.slideRitghtToLeft());
+                                        if(isRejected){
+                                          PageRouteWithAnimation pageRoute =
+                                          PageRouteWithAnimation(RejectedDalddong());
+                                          Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                        }
+                                        else{
+                                          PageRouteWithAnimation pageRoute =
+                                          PageRouteWithAnimation(
+                                              ResponseStatus(dalddongId: eachEvents.get('details')['eventId'],
+                                              ));
+                                          Navigator.push(
+                                              context,pageRoute.slideRitghtToLeft());
+                                        }
+                                        
                                       }
                                     });
                                   },
-                              child: isMatched ? const Text('매칭완료') : const Text("수락완료"),
+                              child: isMatched ? const Text('매칭완료') : isRejected ? const Text("거절됨") : const Text("수락완료"),
                             )
                                 : ElevatedButton(
                               style: ElevatedButton.styleFrom(
