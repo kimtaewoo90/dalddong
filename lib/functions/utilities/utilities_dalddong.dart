@@ -182,10 +182,10 @@ String addDalddongList(
         .collection("Members")
         .doc(myEmail)
         .set({
-      'userName': myName,
-      'userEmail': myEmail,
-      'userImage': myImage,
-      'currentStatus': 2,
+          'userName': myName,
+          'userEmail': myEmail,
+          'userImage': myImage,
+          'currentStatus': 2,
     });
 
     // push myself
@@ -195,7 +195,7 @@ String addDalddongList(
         .get()
         .then((pushTokenValue) {
       var userToken = pushTokenValue.get('pushToken');
-      var title = "달똥신청~!";
+      var title = "달똥요청 완료";
       var body =
           "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}을 초대하였습니다.";
       var details = {
@@ -210,17 +210,17 @@ String addDalddongList(
       pushManager.sendPushMsg(
           userToken: userToken, title: title, body: body, details: details);
 
-      FirebaseFirestore.instance
-          .collection('user')
-          .doc(myEmail)
-          .collection('AlarmList')
-          .doc(DalddongId)
-          .set({
-        'details': details,
-        'alarmTime': DateTime.now(),
-        'body':
-            "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
-      });
+      // FirebaseFirestore.instance
+      //     .collection('user')
+      //     .doc(myEmail)
+      //     .collection('AlarmList')
+      //     .doc(DalddongId)
+      //     .set({
+      //   'details': details,
+      //   'alarmTime': DateTime.now(),
+      //   'body':
+      //       "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
+      // });
     });
 
     // Member 개인DB에 저장
@@ -244,7 +244,7 @@ String addDalddongList(
           .get()
           .then((pushTokenValue) {
         var userToken = pushTokenValue.get('pushToken');
-        var title = "달똥신청~!";
+        var title = "달똥요청";
         var body =
             "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.";
         var details = {
@@ -259,17 +259,17 @@ String addDalddongList(
         pushManager.sendPushMsg(
             userToken: userToken, title: title, body: body, details: details);
 
-        FirebaseFirestore.instance
-            .collection('user')
-            .doc(value.get('userEmail'))
-            .collection('AlarmList')
-            .doc(DalddongId)
-            .set({
-          'details': details,
-          'alarmTime': DateTime.now(),
-          'body':
-              "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
-        });
+        // FirebaseFirestore.instance
+        //     .collection('user')
+        //     .doc(value.get('userEmail'))
+        //     .collection('AlarmList')
+        //     .doc(DalddongId)
+        //     .set({
+        //   'details': details,
+        //   'alarmTime': DateTime.now(),
+        //   'body':
+        //       "${DateFormat('yyyy-MM-dd').format(context.read<DalddongProvider>().DalddongDate)} ${context.read<DalddongProvider>().DalddongLunch == true ? "점심" : "저녁"}에 초대되었습니다.",
+        // });
       });
     });
   });
