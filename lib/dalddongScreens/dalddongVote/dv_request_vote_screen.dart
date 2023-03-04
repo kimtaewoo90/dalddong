@@ -84,7 +84,7 @@ class _RegistrationDalddongInChatState
       resizeToAvoidBottomInset: false,
       appBar: BaseAppBar(
         appBar: AppBar(),
-        title: "달똥하기",
+        title: "달똥투표",
         backBtn: true,
         center: false,
       ),

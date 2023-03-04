@@ -199,13 +199,14 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
     return Scaffold(
         body: Center(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 300,
                 height: 300,
                 decoration: const BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage('image/waiting.png'),
+                    image: AssetImage('images/waiting.png'),
                   ),
                 ),
               ),

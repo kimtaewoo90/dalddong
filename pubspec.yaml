@@ -113,6 +113,7 @@ dependencies:
   flutter_native_timezone: ^2.0.0
   sliding_up_panel: ^2.0.0+1
   draggable_home: ^1.0.4
+  pull_to_refresh: ^2.0.0
 
 
 dev_dependencies:
@@ -147,6 +148,7 @@ flutter:
     - images/dalddongRequest.png
     - images/dalddongResponse.png
     - images/dalddongRejected.png
+    - images/dalddongVote.png
 
 
 

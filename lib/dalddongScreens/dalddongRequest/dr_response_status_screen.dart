@@ -29,6 +29,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
     return SafeArea(
       top: false,
       child: Scaffold(
+        backgroundColor: GeneralUiConfig.backgroundColor,
         appBar: BaseAppBar(
           appBar: AppBar(),
           title: "수락대기중",
@@ -67,6 +68,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
                   rejectList.add(document.id);
                 }
               });
+              String responseText = "${acceptList.length + rejectList.length} / ${allList.length}";
               double response = (acceptList.length + rejectList.length) / allList.length;
 
               return Column(
@@ -128,11 +130,11 @@ class _ResponseStatusState extends State<ResponseStatus> {
                           width: MediaQuery.of(context).size.width - 40,
                           animation: true,
                           lineHeight: 20.0,
-                          animationDuration: 2000,
+                          animationDuration: 1000,
                           percent: response,
-                          center: Text("${(response * 100)} %", style: const TextStyle(color: Colors.white38),),
+                          center: Text(responseText, style: const TextStyle(color: Colors.white38),),
                           linearStrokeCap: LinearStrokeCap.roundAll,
-                          progressColor: const Color(0xff025645),
+                          progressColor: GeneralUiConfig.floatingBtnColor,
                         ),
                       ),
                       const SizedBox(
@@ -142,6 +144,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
                         padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                         child: SizedBox(
                           child: ListView(
+                            physics: const NeverScrollableScrollPhysics(),
                             shrinkWrap: true,
                             children: responseMembers,
                           ),

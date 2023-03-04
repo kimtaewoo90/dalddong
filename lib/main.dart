@@ -200,7 +200,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         iOS: iOSNotiDetails,
       );
 
-      if(notification != null && android != null){
+      if(notification != null && android != null){ 
         flutterLocalNotificationsPlugin.show(
             notification.hashCode,
             notification.title,
@@ -208,8 +208,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             details);
       }
 
+      print(message.data['alarmType']);
+      print('--------');
       // 알람테이블(AlarmList)에 적재
-      FirebaseFirestore.instance.collection('user')
+      if(message.data['alarmType'] != "MSG") {
+        FirebaseFirestore.instance.collection('user')
           .doc(FirebaseAuth.instance.currentUser!.email)
           .collection('AlarmList').doc(message.messageId)
           .set({
@@ -219,10 +222,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         'details' : message.data,
         'alarmTime' : DateTime.now(),
       });
+      }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       print("메시지 : $message");
+      if(message.data['alarmType'] != "MSG") {
+        FirebaseFirestore.instance.collection('user')
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .collection('AlarmList').doc(message.messageId)
+            .set({
+          'messageId' : message.messageId,
+          'title' : message.notification?.title,
+          'body' : message.notification?.body,
+          'details' : message.data,
+          'alarmTime' : DateTime.now(),
+        });
+      }
     });
 
     return Scaffold(

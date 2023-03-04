@@ -100,6 +100,7 @@ class _CompleteAcceptState extends State<CompleteAccept> {
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                                   child: ListView(
+                                    physics: const NeverScrollableScrollPhysics(),
                                     shrinkWrap: true,
                                     children: responseMembers,
                                   ),

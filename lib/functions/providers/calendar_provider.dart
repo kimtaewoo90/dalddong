@@ -120,17 +120,17 @@ class ColorProvider with ChangeNotifier{
 // // int alarmMins;
 // }
 
-List<DateTime> initialBlockDates = [];
+List<String> initialBlockDates = [];
 List<dynamic> initialAppointmentDetails = [];
 bool initialShowAgenda = false;
 class ScheduleProvider with ChangeNotifier{
 
-  List<DateTime> _blockDates = initialBlockDates;
-  List<DateTime> get blockDates => _blockDates;
-  void setInitialBlockDate(List<DateTime> values){
+  List<String> _blockDates = initialBlockDates;
+  List<String> get blockDates => _blockDates;
+  void setInitialBlockDate(List<String> values){
     initialBlockDates = values;
   }
-  void changeBlockDates(DateTime date){
+  void changeBlockDates(String date){
     if(_blockDates.contains(date)){
       _blockDates.removeAt(_blockDates.indexOf((date)));
     }

@@ -1,3 +1,17 @@
+/*
+  - generateRandomString
+  - getMyName
+  - getMyEmail
+  - getMyImage
+  - getMyNumber
+  - setActiveStatus
+  - inertFriendList
+  - showAlertDialog
+  - addBlockTypeDialog
+  - yesNoDialog
+  - signOut
+*/
+
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,11 +40,11 @@ Future<String?> getMyEmail() async{
   return prefs.getString('userEmail');
 }
 
-
 Future<String?> getMyImage() async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString('userImage');
 }
+
 Future<String> getMyNumber() async{
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return (prefs.getString('phoneNumber'))!;
@@ -61,9 +75,6 @@ void setActiveStatus(bool isActive, [String? activeChatRoom]) async {
   }
 }
 
-
-
-
 void insertFriendList(String userEmail) async{
 
 
@@ -78,7 +89,6 @@ void insertFriendList(String userEmail) async{
     'userImage' : userData.get('userImage'),
   });
 }
-
 
 Future<void> showAlertDialog(BuildContext context, String msg) async {
   return await showDialog<void>(

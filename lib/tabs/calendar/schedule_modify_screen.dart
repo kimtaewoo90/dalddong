@@ -368,10 +368,10 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                                       if (isClickStartTime == false) {
                                         isClickStartTime = true;
                                         isClickEndTime = false;
-                                        show_start_times(context);
+                                        showStartTime(context);
                                       } else {
                                         isClickStartTime = false;
-                                        show_start_times(context);
+                                        showStartTime(context);
                                       }
                                     },
                                     child: Container(
@@ -394,10 +394,10 @@ class _ModifyDeleteSchedule extends State<ModifyDeleteSchedule> {
                                       if (isClickEndTime == false) {
                                         isClickEndTime = true;
                                         isClickStartTime = false;
-                                        show_end_times(context);
+                                        showEndTime(context);
                                       } else {
                                         isClickEndTime = false;
-                                        show_end_times(context);
+                                        showEndTime(context);
                                       }
                                     },
                                     child: Container(

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 // import 'package:prokit_flutter/main.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../commonScreens/page_route_with_animation.dart';
+import '../../main_screen.dart';
+
 class RejectedDalddong extends StatefulWidget {
   const RejectedDalddong({Key? key}) : super(key: key);
 
@@ -42,13 +45,15 @@ class _RejectedDalddongState extends State<RejectedDalddong> {
                 ),
                 48.height,
                 AppButton(
-                  child: Text('HOME', style: boldTextStyle()),
                   shapeBorder: RoundedRectangleBorder(borderRadius: radius(30)),
                   elevation: 30,
                   color: white,
                   onTap: () {
-                    toast('HOME');
+                    PageRouteWithAnimation pageRoute =
+                    PageRouteWithAnimation(const MainScreen());
+                    Navigator.push(context, pageRoute.slideRitghtToLeft());
                   },
+                  child: Text('메인화면', style: boldTextStyle()),
                 ),
               ],
             ).paddingAll(32),

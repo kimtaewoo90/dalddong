@@ -395,9 +395,6 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                     const SizedBox(
                       height: 10,
                     ),
-                    // futureSearchResults == null
-                    // ? displayNoSearchResultScreen()
-                    // : displayUsersFoundScreen()
                     futureSearchResults == null
                         ? const Center(child: Text("달똥메이트가 없습니다. 추가해보세요!"))
                         : FutureBuilder(
@@ -419,6 +416,7 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                                 child: SizedBox(
                                   height: MediaQuery.of(context).size.height,
                                   child: ListView(
+                                    // physics: const NeverScrollableScrollPhysics(),
                                     shrinkWrap: true,
                                     children: friendsListResult,
                                   ),

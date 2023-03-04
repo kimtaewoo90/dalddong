@@ -1,4 +1,10 @@
-/* DatePicker 띄우기 */
+/*
+  - selectStartDate
+  - selectEndDate
+  - showStartTime
+  - showEndTime
+  - showSelectColorModal
+*/
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
@@ -50,7 +56,7 @@ void selectEndDate(BuildContext context) {
   });
 }
 
-void show_start_times(BuildContext context){
+void showStartTime(BuildContext context){
   showDialog(
       context: context,
       builder: (context){
@@ -78,7 +84,7 @@ void show_start_times(BuildContext context){
       });
 }
 
-void show_end_times(BuildContext context){
+void showEndTime(BuildContext context){
   showDialog(
       context: context,
       builder: (context){

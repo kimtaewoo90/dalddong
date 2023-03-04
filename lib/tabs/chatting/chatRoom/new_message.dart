@@ -22,7 +22,13 @@ class _NewMessageState extends State<NewMessage> {
 
   void _sendMessage() async{
 
-    final latestText = _userEnterMessage;
+    setState(() {
+      _controller.clear();
+    });
+    var latestConversation = _userEnterMessage;
+    _userEnterMessage = '';
+
+    final latestText = latestConversation;
     final user = FirebaseAuth.instance.currentUser;
     final userData = await FirebaseFirestore.instance.collection('user')
         .doc(user!.email).get();
@@ -43,7 +49,7 @@ class _NewMessageState extends State<NewMessage> {
         .doc(widget.roomId)
         .collection('conversations')
         .add({
-      'text' : _userEnterMessage,
+      'text' : latestConversation,
       'time' : Timestamp.now(),
       'userID' : user.email,
       'userName' : userData.data()!['userName'],
@@ -87,8 +93,6 @@ class _NewMessageState extends State<NewMessage> {
 
         print("$latestText------ ${element.get('userName')}의 isActive : $isActive");
 
-
-        // TODO: background 일때만 푸쉬알람
         if(isActive == false || activeChatRoom != widget.roomId){
           FirebaseFirestore.instance
               .collection('user')
@@ -100,7 +104,7 @@ class _NewMessageState extends State<NewMessage> {
             var body = latestText;
             var details = {
               'click_action' : 'FLUTTER_NOTIFICATION_CLICK',
-              'id' : "",
+              'id' : widget.roomId,
               'eventId' : widget.roomId,
               'alarmType' : "MSG"
             };
@@ -110,10 +114,7 @@ class _NewMessageState extends State<NewMessage> {
       });
     });
 
-    setState(() {
-      _controller.clear();
-    });
-    _userEnterMessage = '';
+
 
   }
 

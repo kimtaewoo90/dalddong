@@ -150,6 +150,11 @@ String addDalddongList(
   String DalddongId = generateRandomString(10);
   final pushManager = PushManager();
 
+  List<String> membersEmail = [];
+  dalddongMembers.forEach((element) {
+    membersEmail.add(element.get('userEmail'));
+  });
+
   // My DB
   String? myName;
   String? myImage;
@@ -160,6 +165,7 @@ String addDalddongList(
     myName = prefs.getString('userName');
     myImage = prefs.getString('userImage');
     myEmail = prefs.getString('userEmail');
+    membersEmail.add(myEmail!);
 
     // Main Dalddong List DB
     FirebaseFirestore.instance.collection('DalddongList').doc(DalddongId).set({
@@ -172,6 +178,7 @@ String addDalddongList(
       'Importance': context.read<DalddongProvider>().starRating,
       'CreateTime': DateTime.now(),
       'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
+      'dalddongMembers': FieldValue.arrayUnion(membersEmail),
       'MemberNumbers': dalddongMembers.length,
       'isAllConfirmed': false
     });
@@ -295,14 +302,14 @@ void completeDalddongSchedule(
           .then((dalddongValue) {
         var pushToken = userValue.get('pushToken');
         var title = "달똥 매칭 완료!";
-        Timestamp DalddongDate = dalddongValue.get('DalddongDate');
+        Timestamp dalddongDate = dalddongValue.get('DalddongDate');
         var body =
-            "'${dalddongValue.get('hostName')}'의 '${DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(DalddongDate.seconds * 1000))}' "
+            "'${dalddongValue.get('hostName')}'의 '${DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000))}' "
             "의 ${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'}의 약속이 매칭되었습니다.";
 
         var details = {
           'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-          'id': "",
+          'id': dalddongId,
           'eventId': dalddongId,
           'eventType': "CDD",
           'membersNum': dalddongMembers.length,
@@ -321,7 +328,7 @@ void completeDalddongSchedule(
             .set({
           'details': details,
           'alarmTime': DateTime.now(),
-          'body': "'${dalddongValue.get('hostName')}'의 '${DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(DalddongDate.seconds * 1000))}' "
+          'body': "'${dalddongValue.get('hostName')}'의 '${DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000))}' "
               "의 ${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'}의 약속이 매칭되었습니다.",
         });
 
@@ -344,8 +351,8 @@ void completeDalddongSchedule(
         });
 
         // 달똥참가 인원의 BlockDate 추가
-        DateTime blockDate =
-            DateTime.fromMillisecondsSinceEpoch(DalddongDate.seconds * 1000);
+        String blockDate =
+            DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(dalddongDate.seconds * 1000));
 
         List<DateTime> blockDates = [];
         FirebaseFirestore.instance
@@ -357,7 +364,7 @@ void completeDalddongSchedule(
           bool isExistBlocked = false;
           value.docs.forEach((element) {
             print("$blockDate / ${DateTime.parse(element.id)}");
-            if (DateTime.parse(element.id) == blockDate) {
+            if (element.id == blockDate) {
               isExistBlocked = true;
               return;
             }
@@ -368,7 +375,7 @@ void completeDalddongSchedule(
               .collection('user')
               .doc(userValue.get('userEmail'))
               .collection('BlockDatesList')
-              .doc("$blockDate")
+              .doc(blockDate)
               .set({
             'LunchOrDinner':
                 isExistBlocked ? 2 : dalddongValue.get('LunchOrDinner'),

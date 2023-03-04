@@ -33,6 +33,7 @@ class _MainScreenState extends State<MainScreen> {
         child: Scaffold(
           backgroundColor: GeneralUiConfig.backgroundColor,
           body: const TabBarView(
+            physics: NeverScrollableScrollPhysics(),
             children: [
               FriendsScreen(),
               ChatRooms(),

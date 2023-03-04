@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dalddong/commonScreens/config.dart';
+import 'package:dalddong/functions/utilities/Utility.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -86,14 +87,14 @@ class _DalddongListState extends State<DalddongList> {
               Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
-                  child: StreamBuilder(
-                    stream: FirebaseFirestore.instance
+                  child: FutureBuilder(
+                    future: FirebaseFirestore.instance
                         .collection('user')
                         .doc(FirebaseAuth.instance.currentUser!.email)
                         .collection('AppointmentList')
                         .where('isAppointment', isEqualTo: true)
                         .orderBy('startDate')
-                        .snapshots(),
+                        .get(),
                     builder: (context, snapshots){
                       var docs = snapshots.data?.docs.length;
                       if(docs == 0){
@@ -108,18 +109,18 @@ class _DalddongListState extends State<DalddongList> {
                             itemCount: snapshots.data?.docs.length,
                             itemBuilder: (context, index){
 
-                              return StreamBuilder(
-                                  stream: FirebaseFirestore.instance
+                              return FutureBuilder(
+                                  future: FirebaseFirestore.instance
                                       .collection('DalddongList')
                                       .doc(snapshots.data?.docs[index].get('scheduleId'))
-                                      .snapshots(),
+                                      .get(),
                                   builder: (context, dalddongSnapshot) {
-                                    return StreamBuilder(
-                                        stream: FirebaseFirestore.instance
+                                    return FutureBuilder(
+                                        future: FirebaseFirestore.instance
                                             .collection('DalddongList')
                                             .doc(snapshots.data?.docs[index].get('scheduleId'))
                                             .collection('Members')
-                                            .snapshots(),
+                                            .get(),
                                         builder: (context, memberSnapshot) {
                                           if(memberSnapshot.connectionState == ConnectionState.waiting){
                                             return const Center(
@@ -229,9 +230,154 @@ class _DalddongListState extends State<DalddongList> {
 
             // 진행중인 달똥
             if(isDone == false)
-              const Center(
-                child: Text("테이블을 바꿔야하나~"),
-              )
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: FutureBuilder(
+                    future: FirebaseFirestore.instance
+                        .collection('DalddongList')
+                        .where('isAllConfirmed', isEqualTo: false)
+                        // .orderBy('startDate')
+                        .get(),
+                    builder: (context, ingSnapshot){
+                      var myIngDalddong = [];
+                      ingSnapshot.data?.docs.forEach((element) {
+                        if(List.from(element.get('dalddongMembers')).contains(FirebaseAuth.instance.currentUser?.email)){
+                          myIngDalddong.add(element);
+                        }
+                      });
+                      var docsCount = myIngDalddong.length;
+                      if(docsCount == 0){
+                        return const Center(
+                          child: Text("진행중인 달똥이 없습니다."),
+                        );
+                      }
+
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.75,
+                        child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: myIngDalddong.length,
+                            itemBuilder: (context, index){
+
+                              return FutureBuilder(
+                                  future: FirebaseFirestore.instance
+                                      .collection('DalddongList')
+                                      .doc(myIngDalddong[index].get('DalddongId'))
+                                      .get(),
+                                  builder: (context, dalddongSnapshot) {
+                                    return FutureBuilder(
+                                        future: FirebaseFirestore.instance
+                                            .collection('DalddongList')
+                                            .doc(myIngDalddong[index].get('DalddongId'))
+                                            .collection('Members')
+                                            .get(),
+                                        builder: (context, memberSnapshot) {
+                                          if(memberSnapshot.connectionState == ConnectionState.waiting){
+                                            return const Center(
+                                              child: CircularProgressIndicator(),
+                                            );
+                                          }
+
+                                          List<MembersImage> membersImage = [];
+                                          memberSnapshot.data?.docs.forEach((element) {
+                                            MembersImage image = MembersImage(memberInfo: element);
+                                            membersImage.add(image);
+                                          });
+
+                                          Timestamp startDateTimeStamp = myIngDalddong[index].get('DalddongDate');
+                                          var startDate = DateTime.fromMillisecondsSinceEpoch(startDateTimeStamp.seconds * 1000);
+                                          if(startDate.month != comparedMonth){
+                                            chiped = true;
+                                            comparedMonth = startDate.month;
+                                          }
+                                          else{
+                                            chiped = false;
+                                          }
+
+
+                                          return Column(
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              if(chiped)
+                                                ActionChip(
+                                                  visualDensity: const VisualDensity(horizontal: 4.0, vertical: -4),
+                                                  label: Text('${startDate.year}년 ${startDate.month}월'),
+                                                  backgroundColor: Colors.lightBlueAccent,
+                                                ),
+
+                                              const SizedBox(height: 5,),
+                                              Card(
+                                                child: InkWell(
+                                                  onTap: (){},
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(5.0),
+                                                    child: SizedBox(
+                                                      height: 90,
+                                                      child: Column(
+                                                        children: [
+                                                          Row(
+                                                            mainAxisAlignment: MainAxisAlignment.start,
+                                                            children: [
+                                                              SizedBox(
+                                                                width : 80,
+                                                                height: 75,
+                                                                child: CircleAvatar(
+                                                                  child: Text(
+                                                                    "${startDate.day}",
+                                                                    style: const TextStyle(
+                                                                        fontSize: 25
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ),
+
+                                                              const SizedBox(width: 30,),
+                                                              Expanded(
+                                                                child: SizedBox(
+                                                                  height: 75,
+                                                                  width: 80,
+                                                                  child: ListView(
+                                                                    shrinkWrap: true,
+                                                                    scrollDirection: Axis.horizontal,
+                                                                    children: membersImage,
+                                                                  ),
+                                                                ),
+                                                              ),
+
+
+                                                              Expanded(
+                                                                child: Text(
+                                                                  "${DateFormat("yyyy년 MM월 dd일").format(startDate)}\n "
+                                                                      "${myIngDalddong[index].get('LunchOrDinner') == 0 ? "점심" : "저녁"}",
+                                                                  style: const TextStyle(
+                                                                      fontSize: 13
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+
+                                              // const SizedBox(height: 10,),
+                                            ],
+                                          );
+
+                                        }
+                                    );
+                                  }
+                              );
+                            }),
+                      );
+                    },
+                  ),
+                ),
+              ),
           ],
         ),
       ),

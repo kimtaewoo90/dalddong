@@ -53,7 +53,7 @@ class _MyScheduleState extends State<MySchedule> {
   bool agenda = false;
   late Color backgroundColor;
   late Widget boxDeco;
-  late List<DateTime> blackoutDates;
+  late List<String> blackoutDates;
 
   final CalendarController _calendarController = CalendarController();
   final panelController = PanelController();
@@ -103,10 +103,7 @@ class _MyScheduleState extends State<MySchedule> {
                               .appointmentDetails[index]
                               .isAppointment ==
                           true) {
-                        print("달똥완료 페이지로 이동");
-                        // PageRouteWithAnimation pageRoute =
-                        // PageRouteWithAnimation(CompleteAccept(dalddongId: _appointmentDetails[index].scheduleId,));
-                        // Navigator.push(context, pageRoute.slideBottonToTop());
+
                         var chatRoomName = await FirebaseFirestore.instance
                             .collection('user')
                             .doc(FirebaseAuth.instance.currentUser?.email)
@@ -120,15 +117,18 @@ class _MyScheduleState extends State<MySchedule> {
                           return value.get('chatRoomName');
                         });
 
-                        PageRouteWithAnimation pageRoute =
+                        if(context.mounted) {
+                          PageRouteWithAnimation pageRoute =
                             PageRouteWithAnimation(ChatScreen(
                                 context
                                     .read<ScheduleProvider>()
                                     .appointmentDetails[index]
                                     .scheduleId,
                                 chatRoomName));
-                        await Navigator.push(
-                            context, pageRoute.slideBottonToTop());
+                          await Navigator.push(
+                              context, pageRoute.slideBottonToTop());
+                        }
+
                       } else {
                         PageRouteWithAnimation pageRoute =
                             PageRouteWithAnimation(ModifyDeleteSchedule(
@@ -212,11 +212,6 @@ class _MyScheduleState extends State<MySchedule> {
 
   @override
   Widget build(BuildContext context) {
-    // print('build calendar');
-    // print(initialDate);
-
-    final panelHeightClosed = MediaQuery.of(context).size.height * 0.0;
-    final panelHeightOpen = MediaQuery.of(context).size.height * 0.4;
 
     return WillPopScope(
       onWillPop: () async {
@@ -386,17 +381,18 @@ class _MyScheduleState extends State<MySchedule> {
                     );
                   }
 
-                  List<DateTime> blockDates = [];
+                  List<String> blockDates = [];
                   List<int> lunchOrDinner = [];
                   for (var element in blockSnapshot.data!.docs) {
-                    blockDates.add(DateTime.parse(element.id));
+                    blockDates.add(element.id.substring(0,10));
                     lunchOrDinner.add(element.get('LunchOrDinner'));
                   }
-                  Map<DateTime, int> blockInfo =
+                  Map<String, int> blockInfo =
                       Map.fromIterables(blockDates, lunchOrDinner);
                   context
                       .read<ScheduleProvider>()
                       .setInitialBlockDate(blockDates);
+                  // print(blockInfo);
 
                   return Column(children: [
                     Expanded(
@@ -448,9 +444,11 @@ class _MyScheduleState extends State<MySchedule> {
                               : GeneralUiConfig.borderWhiteModeColor;
 
                           // Block Date
-                          if (blockDates.contains(details.date)) {
+                          // print(DateFormat('yyyy-MM-dd').format(details.date));
+                          if (blockDates.contains(DateFormat('yyyy-MM-dd').format(details.date))) {
+
                             // blocked lunch
-                            if (blockInfo[details.date] == 0) {
+                            if (blockInfo[DateFormat('yyyy-MM-dd').format(details.date)] == 0) {
                               // backgroundColor = GeneralUiConfig.blockLunchColor;
                               boxDeco = Container(
                                 decoration: BoxDecoration(
@@ -476,7 +474,7 @@ class _MyScheduleState extends State<MySchedule> {
 
                             }
                             // blocked dinner
-                            else if (blockInfo[details.date] == 1) {
+                            else if (blockInfo[DateFormat('yyyy-MM-dd').format(details.date)] == 1) {
                               boxDeco = Container(
                                 decoration: BoxDecoration(
                                     gradient: const LinearGradient(
@@ -554,15 +552,17 @@ class _MyScheduleState extends State<MySchedule> {
                               const BorderRadius.all(Radius.circular(4)),
                           shape: BoxShape.rectangle,
                         ),
+
                         onLongPress: (CalendarLongPressDetails details) async {
-                          DateTime date = details.date!;
-                          blackoutDates =
-                              context.read<ScheduleProvider>().blockDates;
+                          String date = DateFormat('yyyy-MM-dd').format(details.date!);
+                          blackoutDates = context.read<ScheduleProvider>().blockDates;
 
                           if (!blackoutDates.contains(date)) {
+                            // print('blocked');
                             final result = await addBlockTypeDialog(
                                 context, "달똥요청을 막으시겠어요?");
-                            await FirebaseFirestore.instance
+                            if(context.mounted) {
+                              await FirebaseFirestore.instance
                                 .collection('user')
                                 .doc(FirebaseAuth.instance.currentUser!.email)
                                 .collection('BlockDatesList')
@@ -571,20 +571,28 @@ class _MyScheduleState extends State<MySchedule> {
                               'LunchOrDinner': result,
                               'isDalddong': false,
                             });
+                              if(context.mounted) {
+                                context.read<ScheduleProvider>().changeBlockDates(date);
+                              }
+                            }
                           } else {
-                            final result =
-                                await yesNoDialog(context, '정말 해제하시겠어용?');
+                            final result = await yesNoDialog(context, '정말 해제하시겠어용?');
                             if (result == true) {
+                              // print("삭제");
                               await FirebaseFirestore.instance
                                   .collection('user')
                                   .doc(FirebaseAuth.instance.currentUser!.email)
                                   .collection('BlockDatesList')
                                   .doc('${details.date}')
                                   .delete();
+
+                              if(context.mounted) {
+                                context.read<ScheduleProvider>().changeBlockDates(date);
+                              }
                             }
                           }
 
-                          context.read<ScheduleProvider>().changeBlockDates(date);
+
 
                         },
                         onTap: (CalendarTapDetails calendarTapDetails) {
@@ -821,7 +829,6 @@ class _ShowBottomAgendaState extends State<ShowBottomAgenda> {
                         .appointmentDetails[index]
                         .isAppointment ==
                     true) {
-                  print("달똥완료 페이지로 이동");
 
                   var chatRoomName = await FirebaseFirestore.instance
                       .collection('user')
@@ -836,14 +843,13 @@ class _ShowBottomAgendaState extends State<ShowBottomAgenda> {
                     return value.get('chatRoomName');
                   });
 
-                  PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
+                  if(context.mounted) {
+                    PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
                       ChatScreen(
-                          context
-                              .read<ScheduleProvider>()
-                              .appointmentDetails[index]
-                              .scheduleId,
+                          context.read<ScheduleProvider>().appointmentDetails[index].scheduleId,
                           chatRoomName));
-                  await Navigator.push(context, pageRoute.slideBottonToTop());
+                    await Navigator.push(context, pageRoute.slideBottonToTop());
+                  }
                 } else {
                   PageRouteWithAnimation pageRoute =
                       PageRouteWithAnimation(ModifyDeleteSchedule(
