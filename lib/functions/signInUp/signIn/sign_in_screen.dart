@@ -105,7 +105,7 @@ class _SignInState extends State<SignIn> {
 
                               const SizedBox(height: 10,),
 
-                              // email 
+                              // email
                               TextFormField(
                                 key: const ValueKey(1),
                                 validator: (value){

@@ -245,7 +245,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body:  StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot){
-          if(snapshot.hasData){
+          if(snapshot.hasData || snapshot.data?.email != null){
             // Main Page.
             return const MainScreen();
           }
