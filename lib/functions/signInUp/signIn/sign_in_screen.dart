@@ -65,14 +65,15 @@ class _SignInState extends State<SignIn> {
         resizeToAvoidBottomInset: false,
         backgroundColor: const Color(0xff025645),
 
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: ModalProgressHUD(
-            inAsyncCall: showSpinner,
-            child: GestureDetector(
-              onTap: (){
-                FocusScope.of(context).unfocus();
-              },
+        body: GestureDetector(
+          onTap: (){
+            FocusScope.of(context).unfocus();
+
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: ModalProgressHUD(
+              inAsyncCall: showSpinner,
               child: SizedBox(
                 height: MediaQuery.of(context).size.height,
                 child: Column(
@@ -104,7 +105,7 @@ class _SignInState extends State<SignIn> {
 
                               const SizedBox(height: 10,),
 
-                              // email
+                              // email 
                               TextFormField(
                                 key: const ValueKey(1),
                                 validator: (value){
@@ -446,8 +447,8 @@ class _SignInState extends State<SignIn> {
 
                 ),
               ),
-            ),
 
+            ),
           ),
         ),
       ),

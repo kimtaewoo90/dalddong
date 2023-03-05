@@ -200,7 +200,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         iOS: iOSNotiDetails,
       );
 
-      if(notification != null && android != null){ 
+      if(notification != null && android != null){
         flutterLocalNotificationsPlugin.show(
             notification.hashCode,
             notification.title,

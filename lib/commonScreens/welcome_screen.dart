@@ -1,3 +1,4 @@
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:dalddong/commonScreens/page_route_with_animation.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +18,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      bottom: false,
       top: false,
 
       child: Scaffold(
@@ -109,7 +109,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 child: ElevatedButton(
                   style: ButtonStyle(
                       backgroundColor:
-                      MaterialStateProperty.all(Colors.orangeAccent)),
+                      MaterialStateProperty.all(GeneralUiConfig.floatingBtnColor)),
                   onPressed: () {
                     PageRouteWithAnimation pageRoute = PageRouteWithAnimation(const SignIn());
                     Navigator.push(context, pageRoute.slideBottonToTop());
