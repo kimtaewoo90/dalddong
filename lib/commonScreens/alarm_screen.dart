@@ -173,7 +173,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
                       voteSnapshot.data?.docs.forEach((document) {
                         // 투표 알람
-                        if (document.get('details')['eventType'] == "DDV") {
+                        if (document.get('details')['eventType'] == "DDV" ||
+                            document.get('details')['eventType'] == "CDDV") {
                           DalddongVoteAlarm myVoteList = DalddongVoteAlarm(eachVotes: document);
                           voteList.add(myVoteList);
                         }
@@ -254,11 +255,9 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance
-          .collection('chatrooms')
+          .collection('DalddongList')
           .doc(widget.eachVotes.get('details')['eventId'])
-          .collection('dalddong')
-          .doc(widget.eachVotes.get('details')['eventId'])
-          .collection('dalddongMembers')
+          .collection('Members')
           .doc(FirebaseAuth.instance.currentUser!.email)
           .snapshots(),
       builder: (context, voteMySnapshot) {
@@ -299,11 +298,9 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                             onPressed: () {
                               var acceptMembers = [];
                               FirebaseFirestore.instance
-                                  .collection('chatrooms')
+                                  .collection('DalddongList')
                                   .doc(widget.eachVotes.get('details')['eventId'])
-                                  .collection('dalddong')
-                                  .doc(widget.eachVotes.get('details')['eventId'])
-                                  .collection('dalddongMembers')
+                                  .collection('Members')
                                   .snapshots()
                                   .forEach((element) {
                                 for (var docs in element.docs) {
@@ -333,8 +330,7 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                                   PageRouteWithAnimation(
                                       VoteScreen(
                                         voteDates: widget.eachVotes.get('details')['voteDates'],
-                                        chatroomId: widget.eachVotes.get('details')['eventId'],
-                                        dalddongMembers: element.docs,
+                                        dalddongId: widget.eachVotes.get('details')['eventId'],
                                       ));
                                   Navigator.push(context, pageRoute.slideRitghtToLeft());
                                 }
@@ -350,12 +346,10 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                             onPressed: () {
                               var acceptMembers = [];
                               FirebaseFirestore.instance
-                                  .collection('chatrooms')
-                                  .doc(widget.eachVotes.get('details')['eventId'])
-                                  .collection('dalddong')
-                                  .doc(widget.eachVotes.get('details')['eventId'])
-                                  .collection('dalddongMembers')
-                                  .snapshots()
+                                  .collection('DalddongList')
+                                      .doc(widget.eachVotes.get('details')['eventId'])
+                                      .collection('Members')
+                                      .snapshots()
                                   .forEach((element) {
                                 for (var docs in element.docs) {
                                   if (docs.get('currentStatus') == 1) {
@@ -413,7 +407,6 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
   Widget build(BuildContext context) {
 
     bool isMatched = false;
-    bool isMatching = false;
     bool isRejected = false;
 
     int myStatus = 0;
@@ -447,13 +440,13 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
           isMatched = true;
         }
 
-        return  StreamBuilder(
-            stream: FirebaseFirestore.instance
+        return FutureBuilder(
+            future: FirebaseFirestore.instance
                 .collection('DalddongList')
                 .doc(eachEvents.get('details')['eventId'])
                 .collection('Members')
                 .doc(FirebaseAuth.instance.currentUser!.email)
-                .snapshots(),
+                .get(),
             builder: (context, snapshotAlarm) {
               if (snapshotAlarm.connectionState == ConnectionState.waiting) {
                 return Container(
@@ -462,7 +455,9 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                 );
               }
 
+
               Timestamp alarmTime = eachEvents['alarmTime'];
+
               myStatus = snapshotAlarm.data?.get('currentStatus');
               return Padding(
                   padding: const EdgeInsets.all(3),

@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/functions/utilities/Utility.dart';
+import 'package:dalddong/functions/utilities/utilities_dalddong.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -301,7 +303,6 @@ class _RegistrationDalddongInChatState
                         return Flexible(
                           fit: FlexFit.tight,
                           child: SizedBox(
-                            // height: MediaQuery.of(context).size.height * 0.8,
                             height: 10,
                             child: ListView(
                               shrinkWrap: true,
@@ -350,41 +351,27 @@ class _RegistrationDalddongInChatState
               style: ButtonStyle(
                   backgroundColor:
                   MaterialStateProperty.all(const Color(0xff025645))),
-              onPressed: () {
+              onPressed: () async {
                 // 기존 맴버 provider에 추가
                 widget.chatMembers?.forEach((element) {
                   context.read<DalddongProvider>().changeNewDdFriends(element);
                 });
 
                 if (context.read<DalddongProvider>().newDdFriends.isNotEmpty) {
-                  SharedPreferences.getInstance().then((value) {
-                    SharedPreferences prefs = value;
+                  var myName = await getMyName();
 
-                    // Save the HostInfo
-                    FirebaseFirestore.instance
-                        .collection('chatrooms')
-                        .doc(widget.chatroomId)
-                        .collection('dalddong')
-                        .doc(widget.chatroomId)
-                        .collection('hostInfo')
-                        .doc('hostInfo')
-                        .set({
-                      "userName"  : prefs.getString('userName'),
-                      "userImage" : prefs.getString('picked_image'),
-                      "userEmail" : prefs.getString('email'),
-                      "lunchOrDinner" : context.read<DalddongProvider>().DalddongLunch,
-                    });
-
+                  if(context.mounted) {
+                    var dalddongId = addDalddongVoteList(context, context.read<DalddongProvider>().newDdFriends);
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => WaitCalculateDates(
-                            dalddongMembers: context.read<DalddongProvider>().newDdFriends,
-                            chatroomId: widget.chatroomId,
-                            hostName: prefs.getString('userName'),
+                              dalddongMembers: context.read<DalddongProvider>().newDdFriends,
+                              dalddongId: dalddongId,
+                              hostName: myName!
                           ),
                         ));
-                  });
+                  }
                 }
               },
               child: const Text("날짜 찾기", style: TextStyle(color: Colors.white),),

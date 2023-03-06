@@ -203,10 +203,6 @@ class _UploadPostState extends State<UploadPost> {
                                 );
                               });
 
-                              // Navigator.push(
-                              //   context,
-                              //   MaterialPageRoute(builder: (context) => const CommunityScreen()),
-                              // );
                               Navigator.pop(context);
 
                             }

@@ -49,8 +49,6 @@ class _ResponseStatusState extends State<ResponseStatus> {
                   child: const CircularProgressIndicator(),
                 );
               }
-
-              print("dr_response_status rebuilding");
               
               List<String> acceptList = [];
               List<String> rejectList = [];
@@ -96,7 +94,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
                               }
 
                               return Text(
-                                "${dalddongSnapshot.data!['hostName']} 님아 "
+                                "${dalddongSnapshot.data!['hostName']} 님께서 "
                                     "${dalddongSnapshot.data!['MemberNumbers']}명 에게"
                                     "보낸일정을 검토받고 있어요!\n "
                                     "모든 사람이 수락해주시면 \n "

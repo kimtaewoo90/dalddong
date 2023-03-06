@@ -24,6 +24,8 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
   Future<QuerySnapshot>? futureSearchResults;
   bool isError = false;
   bool isMyBlockDate = false;
+  bool isMyDalddongIngDate = false;
+  bool isDalddongIngDate = false;
 
   @override
   void initState() {
@@ -466,7 +468,6 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0.0),
-                      // side: BorderSide(color: Colors.red)
                     ))),
                 onPressed: () async {
                   isError = false;
@@ -488,76 +489,130 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                     return;
                   }
 
-                  isMyBlockDate = await FirebaseFirestore.instance
-                      .collection('user')
-                      .doc(FirebaseAuth.instance.currentUser?.email)
-                      .collection('BlockDatesList')
-                      .get()
-                      .then((value) {
-                    bool myTemp = false;
-                    value.docs.forEach((docs) {
-                      if (DateTime.parse(docs.id) ==
-                              context.read<DalddongProvider>().DalddongDate &&
-                          (docs.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
-                              docs.get('LunchOrDinner') == 2)) {
-                        print(context.read<DalddongProvider>().lunchOrDinner);
-                        myTemp = true;
-                        showAlertDialog(
-                            context,
-                            "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
-                            " ${docs.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 존재합니다. 날짜를 바꿔보세요!!!' : docs.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 존재합니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 존재합니다. 날짜를 바꿔보세요!!'}");
-                        return;
-                      }
-                    });
-                    return myTemp;
-                  });
-
-                  if (context.mounted) {
-                    if (isMyBlockDate == false) {
-                      context
-                          .read<DalddongProvider>()
-                          .newDdFriends
-                          .forEach((eachUser) async {
-                        bool temp = false;
-                        isError = await FirebaseFirestore.instance
-                            .collection('user')
-                            .doc(eachUser.get('userEmail'))
-                            .collection('BlockDatesList')
-                            .get()
-                            .then((value) {
-                          value.docs.forEach((blockDate) {
-                            if (DateTime.parse(blockDate.id) == context.read<DalddongProvider>().DalddongDate &&
-                                (blockDate.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
-                                    blockDate.get('LunchOrDinner') == 2)) {
-                              print((blockDate.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
-                                  blockDate.get('LunchOrDinner') == 2));
-                              showAlertDialog(
-                                  context,
-                                  "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
-                                  " ${blockDate.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!!' : blockDate.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!'}");
-                              temp = true;
-                              return;
-                            }
-                          });
-                          return temp;
-                        });
-                      });
-
-                      if (context.mounted) {
-                        if (!isError) {
-                          var dalddongId = addDalddongList(context,
-                              context.read<DalddongProvider>().newDdFriends);
-                          Navigator.push(
+                  try{
+                    isMyBlockDate = await FirebaseFirestore.instance
+                        .collection('user')
+                        .doc(FirebaseAuth.instance.currentUser?.email)
+                        .collection('BlockDatesList')
+                        .get()
+                        .then((value) {
+                      bool myTemp = false;
+                      value.docs.forEach((docs) {
+                        if (DateTime.parse(docs.id) ==
+                            context.read<DalddongProvider>().DalddongDate &&
+                            (docs.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
+                                docs.get('LunchOrDinner') == 2)) {
+                          myTemp = true;
+                          showAlertDialog(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => ResponseStatus(
-                                  dalddongId: dalddongId,
-                                ),
-                              ));
+                              "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
+                                  " ${docs.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 존재합니다. 날짜를 바꿔보세요!!!' : docs.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 존재합니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 존재합니다. 날짜를 바꿔보세요!!'}");
+                          return;
+                        }
+                      });
+                      return myTemp;
+                    });
+
+                    if (context.mounted) {
+                      if (isMyBlockDate == false) {
+                        // 해당날짜에 진행중인 달똥이 있을 경우
+                        context
+                            .read<DalddongProvider>()
+                            .newDdFriends.forEach((eachUser) async{
+                              bool ingTemp = false;
+                              isDalddongIngDate = await FirebaseFirestore.instance
+                                  .collection('DalddongList')
+                                  .where('isAllConfirmed', isEqualTo: false)
+                              .get()
+                              .then((value) {
+                                value.docs.forEach((element) {
+                                  if(ingTemp){
+                                    print("ingTemp is true");
+                                    return;
+                                  }
+
+                                  // 내가 진행중인 달똥이 있을 경우
+                                  if(List.from(element.get('dalddongMembers')).contains(FirebaseAuth.instance.currentUser?.email) &&
+                                      element.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner &&
+                                      DateTime.fromMillisecondsSinceEpoch(element.get('DalddongDate').seconds * 1000) == context.read<DalddongProvider>().DalddongDate
+                                  ){
+                                    showAlertDialog(
+                                        context,
+                                        "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
+                                            " ${element.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : element.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!'}");
+                                    ingTemp = true;
+                                    return;
+                                  }
+
+                                  // 상대가 진행중인 달똥이 있을 경우
+                                  if(List.from(element.get('dalddongMembers')).contains(eachUser.get('userEmail')) &&
+                                      element.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner &&
+                                      DateTime.fromMillisecondsSinceEpoch(element.get('DalddongDate').seconds * 1000) == context.read<DalddongProvider>().DalddongDate
+                                  ){
+                                    showAlertDialog(
+                                        context,
+                                        "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
+                                            " ${element.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : element.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!'}");
+                                    ingTemp = true;
+                                    return;
+                                  }
+                                });
+                                return ingTemp;
+                              });
+                              if(isDalddongIngDate){
+                                return;
+                              }
+
+                              return;
+
+                        });
+                        
+                        // 해당날짜에 블락한 인원이 있을 경우
+                        context.read<DalddongProvider>().newDdFriends
+                            .forEach((eachUser) async {
+                          bool temp = false;
+                          isError = await FirebaseFirestore.instance
+                              .collection('user')
+                              .doc(eachUser.get('userEmail'))
+                              .collection('BlockDatesList')
+                              .get()
+                              .then((value) {
+                            value.docs.forEach((blockDate) {
+                              if (DateTime.parse(blockDate.id) == context.read<DalddongProvider>().DalddongDate &&
+                                  (blockDate.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
+                                      blockDate.get('LunchOrDinner') == 2)) {
+                                showAlertDialog(
+                                    context,
+                                    "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
+                                        " ${blockDate.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!!' : blockDate.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!'}");
+                                temp = true;
+                                return;
+                              }
+                            });
+                            return temp;
+                          });
+                        });
+
+                        if (context.mounted) {
+                          if (!isError && !isDalddongIngDate) {
+                            var dalddongId = addDalddongList(context,
+                                context.read<DalddongProvider>().newDdFriends);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResponseStatus(
+                                    dalddongId: dalddongId,
+                                  ),
+                                ));
+                          }
                         }
                       }
                     }
+                  } catch(e){
+                    showAlertDialog(context, e.toString());
+                    print(e.toString());
                   }
+
                 },
                 child: const Text("달력에 동그라미"),
               ),

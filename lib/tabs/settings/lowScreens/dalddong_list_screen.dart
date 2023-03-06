@@ -102,127 +102,127 @@ class _DalddongListState extends State<DalddongList> {
                           child: Text("아직 활동을 시작한 달똥이 없습니다."),
                         );
                       }
-                      return SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.75,
-                        child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: snapshots.data?.docs.length,
-                            itemBuilder: (context, index){
+                      else{
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.75,
+                          child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: snapshots.data?.docs.length,
+                              itemBuilder: (context, index){
 
-                              return FutureBuilder(
-                                  future: FirebaseFirestore.instance
-                                      .collection('DalddongList')
-                                      .doc(snapshots.data?.docs[index].get('scheduleId'))
-                                      .get(),
-                                  builder: (context, dalddongSnapshot) {
-                                    return FutureBuilder(
-                                        future: FirebaseFirestore.instance
-                                            .collection('DalddongList')
-                                            .doc(snapshots.data?.docs[index].get('scheduleId'))
-                                            .collection('Members')
-                                            .get(),
-                                        builder: (context, memberSnapshot) {
-                                          if(memberSnapshot.connectionState == ConnectionState.waiting){
-                                            return const Center(
-                                              child: CircularProgressIndicator(),
-                                            );
-                                          }
+                                return FutureBuilder(
+                                    future: FirebaseFirestore.instance
+                                        .collection('DalddongList')
+                                        .doc(snapshots.data?.docs[index].get('scheduleId'))
+                                        .get(),
+                                    builder: (context, dalddongSnapshot) {
+                                      return FutureBuilder(
+                                          future: FirebaseFirestore.instance
+                                              .collection('DalddongList')
+                                              .doc(snapshots.data?.docs[index].get('scheduleId'))
+                                              .collection('Members')
+                                              .get(),
+                                          builder: (context, memberSnapshot) {
+                                            if(memberSnapshot.connectionState == ConnectionState.waiting){
+                                              return const Center(
+                                                child: CircularProgressIndicator(),
+                                              );
+                                            }
 
-                                          List<MembersImage> membersImage = [];
-                                          memberSnapshot.data?.docs.forEach((element) {
-                                            MembersImage image = MembersImage(memberInfo: element);
-                                            membersImage.add(image);
-                                          });
+                                            List<MembersImage> membersImage = [];
+                                            memberSnapshot.data?.docs.forEach((element) {
+                                              MembersImage image = MembersImage(memberInfo: element);
+                                              membersImage.add(image);
+                                            });
 
-                                          Timestamp startDateTimeStamp = snapshots.data?.docs[index].get('startDate');
-                                          var startDate = DateTime.fromMillisecondsSinceEpoch(startDateTimeStamp.seconds * 1000);
-                                          if(startDate.month != comparedMonth){
-                                            chiped = true;
-                                            comparedMonth = startDate.month;
-                                          }
-                                          else{
-                                            chiped = false;
-                                          }
+                                            Timestamp startDateTimeStamp = snapshots.data?.docs[index].get('startDate');
+                                            var startDate = DateTime.fromMillisecondsSinceEpoch(startDateTimeStamp.seconds * 1000);
+                                            if(startDate.month != comparedMonth){
+                                              chiped = true;
+                                              comparedMonth = startDate.month;
+                                            }
+                                            else{
+                                              chiped = false;
+                                            }
 
 
-                                          return Column(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              if(chiped)
-                                                ActionChip(
-                                                  visualDensity: const VisualDensity(horizontal: 4.0, vertical: -4),
-                                                  label: Text('${startDate.year}년 ${startDate.month}월'),
-                                                  backgroundColor: Colors.lightBlueAccent,
-                                                ),
+                                            return Column(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                if(chiped)
+                                                  ActionChip(
+                                                    visualDensity: const VisualDensity(horizontal: 4.0, vertical: -4),
+                                                    label: Text('${startDate.year}년 ${startDate.month}월'),
+                                                    backgroundColor: Colors.lightBlueAccent,
+                                                  ),
 
-                                              const SizedBox(height: 5,),
-                                              Card(
-                                                child: InkWell(
-                                                  onTap: (){},
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(5.0),
-                                                    child: SizedBox(
-                                                      height: 90,
-                                                      child: Column(
-                                                        children: [
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.start,
-                                                            children: [
-                                                              SizedBox(
-                                                                width : 80,
-                                                                height: 75,
-                                                                child: CircleAvatar(
+                                                const SizedBox(height: 5,),
+                                                Card(
+                                                  child: InkWell(
+                                                    onTap: (){},
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.all(5.0),
+                                                      child: SizedBox(
+                                                        height: 90,
+                                                        child: Column(
+                                                          children: [
+                                                            Row(
+                                                              mainAxisAlignment: MainAxisAlignment.start,
+                                                              children: [
+                                                                CircleAvatar(
+                                                                  radius: 25.3,
                                                                   child: Text(
                                                                     "${startDate.day}",
                                                                     style: const TextStyle(
-                                                                        fontSize: 25
+                                                                        fontSize: 20
                                                                     ),
                                                                   ),
                                                                 ),
-                                                              ),
 
-                                                              const SizedBox(width: 30,),
-                                                              Expanded(
-                                                                child: SizedBox(
-                                                                  height: 75,
-                                                                  width: 80,
-                                                                  child: ListView(
-                                                                    shrinkWrap: true,
-                                                                    scrollDirection: Axis.horizontal,
-                                                                    children: membersImage,
+                                                                const SizedBox(width: 30,),
+                                                                Expanded(
+                                                                  child: SizedBox(
+                                                                    height: 75,
+                                                                    width: 80,
+                                                                    child: ListView(
+                                                                      shrinkWrap: true,
+                                                                      scrollDirection: Axis.horizontal,
+                                                                      children: membersImage,
+                                                                    ),
                                                                   ),
                                                                 ),
-                                                              ),
 
 
-                                                              Expanded(
-                                                                child: Text(
-                                                                  "${DateFormat("yyyy년 MM월 dd일").format(startDate)}\n "
-                                                                      "${dalddongSnapshot.data?.get('LunchOrDinner') == 0 ? "점심" : "저녁"}",
-                                                                  style: const TextStyle(
-                                                                      fontSize: 13
+                                                                Expanded(
+                                                                  child: Text(
+                                                                    "${DateFormat("yyyy년 MM월 dd일").format(startDate)}\n "
+                                                                        "${dalddongSnapshot.data?.get('LunchOrDinner') == 0 ? "점심" : "저녁"}",
+                                                                    style: const TextStyle(
+                                                                        fontSize: 13
+                                                                    ),
                                                                   ),
                                                                 ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
 
-                                              // const SizedBox(height: 10,),
-                                            ],
-                                          );
+                                                // const SizedBox(height: 10,),
+                                              ],
+                                            );
 
-                                        }
-                                    );
-                                  }
-                              );
-                            }),
-                      );
+                                          }
+                                      );
+                                    }
+                                );
+                              }),
+                        );
+                      }
+
                     },
                   ),
                 ),
@@ -237,7 +237,7 @@ class _DalddongListState extends State<DalddongList> {
                     future: FirebaseFirestore.instance
                         .collection('DalddongList')
                         .where('isAllConfirmed', isEqualTo: false)
-                        // .orderBy('startDate')
+                        // .orderBy('DalddongDate')
                         .get(),
                     builder: (context, ingSnapshot){
                       var myIngDalddong = [];
@@ -252,128 +252,196 @@ class _DalddongListState extends State<DalddongList> {
                           child: Text("진행중인 달똥이 없습니다."),
                         );
                       }
+                      else{
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.75,
+                          child: ListView.builder(
+                              shrinkWrap: true,
+                              itemCount: myIngDalddong.length,
+                              itemBuilder: (context, index){
 
-                      return SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.75,
-                        child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: myIngDalddong.length,
-                            itemBuilder: (context, index){
+                                return FutureBuilder(
+                                    future: FirebaseFirestore.instance
+                                        .collection('DalddongList')
+                                        .doc(myIngDalddong[index].get('DalddongId'))
+                                        .get(),
+                                    builder: (context, dalddongSnapshot) {
+                                      return FutureBuilder(
+                                          future: FirebaseFirestore.instance
+                                              .collection('DalddongList')
+                                              .doc(myIngDalddong[index].get('DalddongId'))
+                                              .collection('Members')
+                                              .get(),
+                                          builder: (context, memberSnapshot) {
+                                            if(memberSnapshot.connectionState == ConnectionState.waiting){
+                                              return const Center(
+                                                child: CircularProgressIndicator(),
+                                              );
+                                            }
 
-                              return FutureBuilder(
-                                  future: FirebaseFirestore.instance
-                                      .collection('DalddongList')
-                                      .doc(myIngDalddong[index].get('DalddongId'))
-                                      .get(),
-                                  builder: (context, dalddongSnapshot) {
-                                    return FutureBuilder(
-                                        future: FirebaseFirestore.instance
-                                            .collection('DalddongList')
-                                            .doc(myIngDalddong[index].get('DalddongId'))
-                                            .collection('Members')
-                                            .get(),
-                                        builder: (context, memberSnapshot) {
-                                          if(memberSnapshot.connectionState == ConnectionState.waiting){
-                                            return const Center(
-                                              child: CircularProgressIndicator(),
-                                            );
-                                          }
+                                            List<MembersImage> membersImage = [];
+                                            memberSnapshot.data?.docs.forEach((element) {
+                                              MembersImage image = MembersImage(memberInfo: element);
+                                              membersImage.add(image);
+                                            });
 
-                                          List<MembersImage> membersImage = [];
-                                          memberSnapshot.data?.docs.forEach((element) {
-                                            MembersImage image = MembersImage(memberInfo: element);
-                                            membersImage.add(image);
-                                          });
-
-                                          Timestamp startDateTimeStamp = myIngDalddong[index].get('DalddongDate');
-                                          var startDate = DateTime.fromMillisecondsSinceEpoch(startDateTimeStamp.seconds * 1000);
-                                          if(startDate.month != comparedMonth){
-                                            chiped = true;
-                                            comparedMonth = startDate.month;
-                                          }
-                                          else{
-                                            chiped = false;
-                                          }
-
-
-                                          return Column(
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              if(chiped)
-                                                ActionChip(
-                                                  visualDensity: const VisualDensity(horizontal: 4.0, vertical: -4),
-                                                  label: Text('${startDate.year}년 ${startDate.month}월'),
-                                                  backgroundColor: Colors.lightBlueAccent,
-                                                ),
-
-                                              const SizedBox(height: 5,),
-                                              Card(
-                                                child: InkWell(
-                                                  onTap: (){},
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(5.0),
-                                                    child: SizedBox(
-                                                      height: 90,
-                                                      child: Column(
-                                                        children: [
-                                                          Row(
-                                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            if(myIngDalddong[index].get('DalddongDate') == null){
+                                              return Column(
+                                                children: [
+                                                  Card(
+                                                    child: InkWell(
+                                                      onTap: (){},
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.all(5.0),
+                                                        child: SizedBox(
+                                                          height: 90,
+                                                          child: Column(
                                                             children: [
-                                                              SizedBox(
-                                                                width : 80,
-                                                                height: 75,
-                                                                child: CircleAvatar(
-                                                                  child: Text(
-                                                                    "${startDate.day}",
-                                                                    style: const TextStyle(
-                                                                        fontSize: 25
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                                children: [
+                                                                  const CircleAvatar(
+                                                                    radius: 25.3,
+                                                                    child: Text(
+                                                                      "투표",
+                                                                      style: TextStyle(
+                                                                          fontSize: 20
+                                                                      ),
                                                                     ),
                                                                   ),
-                                                                ),
-                                                              ),
 
-                                                              const SizedBox(width: 30,),
-                                                              Expanded(
-                                                                child: SizedBox(
-                                                                  height: 75,
-                                                                  width: 80,
-                                                                  child: ListView(
-                                                                    shrinkWrap: true,
-                                                                    scrollDirection: Axis.horizontal,
-                                                                    children: membersImage,
+                                                                  const SizedBox(width: 30,),
+                                                                  Expanded(
+                                                                    child: SizedBox(
+                                                                      height: 75,
+                                                                      width: 90,
+                                                                      child: ListView(
+                                                                        shrinkWrap: true,
+                                                                        scrollDirection: Axis.horizontal,
+                                                                        children: membersImage,
+                                                                      ),
+                                                                    ),
                                                                   ),
-                                                                ),
-                                                              ),
 
-
-                                                              Expanded(
-                                                                child: Text(
-                                                                  "${DateFormat("yyyy년 MM월 dd일").format(startDate)}\n "
-                                                                      "${myIngDalddong[index].get('LunchOrDinner') == 0 ? "점심" : "저녁"}",
-                                                                  style: const TextStyle(
-                                                                      fontSize: 13
+                                                                  const SizedBox(
+                                                                    width: 20,
                                                                   ),
-                                                                ),
+
+                                                                  Expanded(
+                                                                    child: Text(
+                                                                      "${myIngDalddong[index].get('LunchOrDinner') == 0 ? "점심" : "저녁"} 투표중",
+                                                                      style: const TextStyle(
+                                                                          fontSize: 13
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                               ),
                                                             ],
                                                           ),
-                                                        ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
+                                                ],
+                                              );
+                                            }
+                                            else{
+                                              Timestamp startDateTimeStamp = myIngDalddong[index].get('DalddongDate');
+                                              var startDate = DateTime.fromMillisecondsSinceEpoch(startDateTimeStamp.seconds * 1000);
+                                              if(startDate.month != comparedMonth){
+                                                chiped = true;
+                                                comparedMonth = startDate.month;
+                                              }
+                                              else{
+                                                chiped = false;
+                                              }
+                                              return Column(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  if(chiped)
+                                                    ActionChip(
+                                                      visualDensity: const VisualDensity(horizontal: 4.0, vertical: -4),
+                                                      label: Text('${startDate.year}년 ${startDate.month}월'),
+                                                      backgroundColor: Colors.lightBlueAccent,
+                                                    ),
 
-                                              // const SizedBox(height: 10,),
-                                            ],
-                                          );
+                                                  const SizedBox(height: 5,),
+                                                  Card(
+                                                    child: InkWell(
+                                                      onTap: (){},
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.all(5.0),
+                                                        child: SizedBox(
+                                                          height: 90,
+                                                          child: Column(
+                                                            children: [
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.start,
+                                                                children: [
+                                                                  CircleAvatar(
+                                                                    radius: 25.3,
+                                                                    child: Text(
+                                                                      "${startDate.day}",
+                                                                      style: const TextStyle(
+                                                                          fontSize: 20
+                                                                      ),
+                                                                    ),
+                                                                  ),
 
-                                        }
-                                    );
-                                  }
-                              );
-                            }),
-                      );
+                                                                  const SizedBox(width: 30,),
+                                                                  Expanded(
+                                                                    child: SizedBox(
+                                                                      height: 75,
+                                                                      width: 90,
+                                                                      child: ListView(
+                                                                        shrinkWrap: true,
+                                                                        scrollDirection: Axis.horizontal,
+                                                                        children: membersImage,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+
+                                                                  const SizedBox(
+                                                                    width: 20,
+                                                                  ),
+
+                                                                  Expanded(
+                                                                    child: Text(
+                                                                      "${DateFormat("yyyy년 MM월 dd일").format(startDate)}\n "
+                                                                          "${myIngDalddong[index].get('LunchOrDinner') == 0 ? "점심" : "저녁"}",
+                                                                      style: const TextStyle(
+                                                                          fontSize: 13
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+
+                                                  // const SizedBox(height: 10,),
+                                                ],
+                                              );
+                                            }
+
+
+
+
+
+                                          }
+                                      );
+                                    }
+                                );
+                              }),
+                        );
+                      }
+
+
                     },
                   ),
                 ),

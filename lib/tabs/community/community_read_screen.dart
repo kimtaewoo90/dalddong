@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import '../../commonScreens/page_route_with_animation.dart';
 import '../../functions/utilities/Utility.dart';
 import 'community_read_comment_screen.dart';
+import 'package:dalddong/functions/pushManager/push_manager.dart';
+
 
 
 Text getWritingTimeToString(Timestamp uploadedTime) {
@@ -107,9 +109,8 @@ class _WatchPostState extends State<WatchPost> {
                 );
               }
               return Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 60),
                 child: SingleChildScrollView(
-                  // height: MediaQuery.of(context).size.height,
                   child: Column(
                     // child: Column(
                     //   mainAxisAlignment: MainAxisAlignment.start,
@@ -345,7 +346,7 @@ class _WatchPostState extends State<WatchPost> {
                               .collection('posts')
                               .doc(widget.postNumber)
                               .collection('comments')
-                              .orderBy('uploadCommentTime', descending: true)
+                              .orderBy('uploadCommentTime', descending: false)
                               .snapshots(),
                           builder: (context, commentSnapshot) {
                             if (commentSnapshot.connectionState ==
@@ -395,11 +396,17 @@ class _WriteCommentsState extends State<WriteComments> {
 
   final _controller = TextEditingController();
   var _userEnterMessage = '';
+  final _pushManager = PushManager();
+
 
   void _sendComment() async {
-    FocusScope.of(context).unfocus();
 
-    // SharedPreferences prefs = await utils.getSharedPreferences();
+    FocusScope.of(context).unfocus();
+    var comment = _userEnterMessage.trim();
+    setState(() {
+      _controller.clear();
+      _userEnterMessage = "";
+    });
 
     await FirebaseFirestore.instance
         .collection('posts')
@@ -409,16 +416,24 @@ class _WriteCommentsState extends State<WriteComments> {
       'commentUserName': await getMyName(),
       'commentUserEmail': await getMyEmail(),
       'commentUserImage': await getMyImage(),
-      'commentText': _userEnterMessage.trim(),
+      'commentText': comment,
       'uploadCommentTime': DateTime.now(),
     });
-
-    setState(() {
-      _controller.clear();
-      _userEnterMessage = "";
-    });
+    
+    var writer = await FirebaseFirestore.instance.collection('posts').doc(widget.postNumber).get().then((value) => value.get('writerEmail'));
+    var title = await FirebaseFirestore.instance.collection('posts').doc(widget.postNumber).get().then((value) => value.get('title'));
+    var userToken = await FirebaseFirestore.instance.collection('user').doc(writer).get().then((value) => value.get('pushToken'));
+    var body = "$title 게시물, ${await getMyName()}님의 댓글 : $comment";
+    var details = {
+      'click_action' : 'FLUTTER_NOTIFICATION_CLICK',
+      'id' : widget.postNumber,
+      'eventId' : widget.postNumber,
+      'alarmType' : "POST"
+    };
+    _pushManager.sendPushMsg(userToken: userToken, title: title, body: body, details: details);
 
   }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -430,11 +445,7 @@ class _WriteCommentsState extends State<WriteComments> {
               maxLines: null,
               controller: _controller,
               decoration: const InputDecoration(labelText: '댓글을 입력해주세요'),
-              // onSubmitted: (value){
-              //   setState(() {
-              //
-              //   });
-              // },
+
               onChanged: (value) {
                 setState(() {
                   _userEnterMessage = value;
@@ -480,7 +491,7 @@ class _CommentsDataState extends State<CommentsData> {
             .collection('comments')
             .doc(widget.eachComments.id)
             .collection('reComments')
-            .orderBy('uploadCommentTime', descending: true)
+            .orderBy('uploadCommentTime', descending: false)
             .snapshots(),
         builder: (context, reCommentsnapshot) {
           if (reCommentsnapshot.connectionState == ConnectionState.waiting) {

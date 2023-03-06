@@ -39,10 +39,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CommunityProvider>().resetAllProviderParameters();
     });
-
     _onRefresh();
-
-
   }
 
   // final RefreshController _refreshController = RefreshController(initialRefresh: false);
@@ -109,43 +106,43 @@ class _CommunityScreenState extends State<CommunityScreen> {
               // const Divider(),
 
               const SizedBox(height: 10,),
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-                  child: Row(
-                    children: [
-
-                      // DropdownButton(
-                      //   value: selectedValue,
-                      //   items: valueList.map((value) {
-                      //     return DropdownMenuItem(
-                      //       value: value,
-                      //       child: Text(value),
-                      //     );
-                      //   }).toList(),
-                      //   onChanged: (value) {
-                      //     setState(() {
-                      //       selectedValue = value;
-                      //     });
-                      //   },
-                      // ),
-
-                      // const Spacer(),
-                      const Text("내 관심사만 보기"),
-                      const SizedBox(width: 10,),
-                      Switch(
-                        value: provider.isMyFavorite,
-                        onChanged: (value) {
-                          provider.changeMyFavorite(value);
-                        },
-                        activeColor: GeneralUiConfig.floatingBtnColor,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10,),
+              // Expanded(
+              //   flex: 1,
+              //   child: Padding(
+              //     padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+              //     child: Row(
+              //       children: [
+              //
+              //         // DropdownButton(
+              //         //   value: selectedValue,
+              //         //   items: valueList.map((value) {
+              //         //     return DropdownMenuItem(
+              //         //       value: value,
+              //         //       child: Text(value),
+              //         //     );
+              //         //   }).toList(),
+              //         //   onChanged: (value) {
+              //         //     setState(() {
+              //         //       selectedValue = value;
+              //         //     });
+              //         //   },
+              //         // ),
+              //
+              //         // const Spacer(),
+              //         // const Text("내 관심사만 보기"),
+              //         // const SizedBox(width: 10,),
+              //         // Switch(
+              //         //   value: provider.isMyFavorite,
+              //         //   onChanged: (value) {
+              //         //     provider.changeMyFavorite(value);
+              //         //   },
+              //         //   activeColor: GeneralUiConfig.floatingBtnColor,
+              //         // ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(height: 10,),
 
               const Divider(),
 
@@ -182,7 +179,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
                             return GestureDetector(
                               onTap: (){
-                                // print("tapped");
                                 PageRouteWithAnimation pageRoute = PageRouteWithAnimation(WatchPost(postNumber : snapshot.data?.docs[index].id));
                                 Navigator.push(context, pageRoute.slideRitghtToLeft());
                               },

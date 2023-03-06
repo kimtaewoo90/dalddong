@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,12 +15,10 @@ import 'dv_vote_status_screen.dart';
 class VoteScreen extends StatefulWidget {
   const VoteScreen({Key? key,
     required this.voteDates,
-    required this.chatroomId,
-    required this.dalddongMembers}) : super(key: key);
+    required this.dalddongId}) : super(key: key);
 
   final List<DateTime> voteDates;
-  final String chatroomId;
-  final List<QueryDocumentSnapshot>? dalddongMembers;
+  final String dalddongId;
 
   @override
   State<VoteScreen> createState() => _VoteScreenState();
@@ -34,213 +33,189 @@ class _VoteScreenState extends State<VoteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: BaseAppBar(
-          appBar: AppBar(),
-          title: "투표하기",
-          backBtn: false,
-          center: true,
-        ),
-        body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('chatrooms')
-              .doc(widget.chatroomId)
-              .collection('dalddong')
-              .doc(widget.chatroomId)
-              .collection('hostInfo')
-              .doc('hostInfo')
-              .snapshots(),
-          builder: (context, hostSnapshot){
-            return StreamBuilder(
-              stream: FirebaseFirestore.instance
-                  .collection('chatrooms')
-                  .doc(widget.chatroomId)
-                  .collection('dalddong')
-                  .doc(widget.chatroomId)
-                  .collection('dalddongMembers')
-                  .snapshots(),
-              builder: (context, memberSnapshot){
-                return StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('chatrooms')
-                        .doc(widget.chatroomId)
-                        .collection('dalddong')
-                        .doc(widget.chatroomId)
-                        .collection('voteDates')
-                        .snapshots(),
-                    builder: (context, datesSnapshot){
+    return SafeArea(
+      top: false,
+      child: Scaffold(
+        backgroundColor: GeneralUiConfig.backgroundColor,
+          appBar: BaseAppBar(
+            appBar: AppBar(),
+            title: "투표하기",
+            backBtn: false,
+            center: true,
+          ),
+          body: StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('DalddongList')
+                .doc(widget.dalddongId)
+                .snapshots(),
+            builder: (context, dalddongSnapshot){
 
-                      List<VoteDatesCheckBoxList> datesList = [];
-                      datesSnapshot.data?.docs.forEach((element) {
-                        VoteDatesCheckBoxList dateBox = VoteDatesCheckBoxList(voteDatesList: element, chatroomId: widget.chatroomId,);
-                        datesList.add(dateBox);
-                      });
+              Timestamp expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
+              print(expiredTime);
+              return StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('DalddongList')
+                    .doc(widget.dalddongId)
+                    .collection('Members')
+                    .snapshots(),
+                builder: (context, memberSnapshot){
+                  return StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('DalddongList')
+                          .doc(widget.dalddongId)
+                          .collection('voteDates')
+                          .snapshots(),
+                      builder: (context, datesSnapshot){
 
-                      return Column(
-                        children: [
-                          const SizedBox(height: 30,),
+                        List<VoteDatesCheckBoxList> datesList = [];
+                        datesSnapshot.data?.docs.forEach((element) {
+                          VoteDatesCheckBoxList dateBox = VoteDatesCheckBoxList(voteDatesList: element, dalddongId: widget.dalddongId,);
+                          datesList.add(dateBox);
+                        });
 
-                          Text("${hostSnapshot.data?.get('userName')} 님이 모으는 "
-                              "${memberSnapshot.data?.docs[0].get('userName')}님 ${memberSnapshot.data?.docs[1].get('userName')}님 등 ${memberSnapshot.data?.docs.length}명과의 \n"
-                              "${hostSnapshot.data?.get('lunchOrDinner') == true ? "점심" : "저녁"} 날짜들을 뽑아왔어요! \n"
-                              "원하는 날짜를 골라주세요!"),
+                        return Column(
+                          children: [
+                            const SizedBox(height: 30,),
 
-                          Flexible(
-                            fit: FlexFit.tight,
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.8,
-                              child: ListView(
-                                children: datesList,
+                            Text("${dalddongSnapshot.data?.get('hostName')} 님이 ${memberSnapshot.data?.docs.length}명에게 \n"
+                                "${dalddongSnapshot.data?.get('LunchOrDinner') == true ? "점심" : "저녁"} 날짜 투표를 요청했습니다! \n"
+                                "원하는 날짜를 골라주세요!"),
+
+                            Flexible(
+                              fit: FlexFit.tight,
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                child: ListView(
+                                  children: datesList,
+                                ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(height: 10,),
+                            const SizedBox(height: 10,),
 
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              StreamBuilder<DocumentSnapshot>(
-                                  stream: FirebaseFirestore.instance
-                                      .collection('chatrooms')
-                                      .doc(widget.chatroomId)
-                                      .collection('dalddong')
-                                      .doc(widget.chatroomId)
-                                      .collection('ExpiredTime')
-                                      .doc('ExpiredTime')
-                                      .snapshots(),
-                                  builder: (context, expiredSnapshot){
-                                    if(expiredSnapshot.connectionState == ConnectionState.waiting){
-                                      return Container(
-                                        alignment: Alignment.center,
-                                        child: const CircularProgressIndicator(),
-                                      );
-                                    }
-
-                                    Timestamp ExpiredTime =
-                                    expiredSnapshot.data?.get("ExpiredTime");
-
-                                    return TimerBuilder.periodic(
-                                      const Duration(minutes: 1),
-                                      builder: (context) {
-                                        diffHour = (DateTime.fromMillisecondsSinceEpoch(
-                                            ExpiredTime.seconds * 1000)
-                                            .difference(DateTime.now())
-                                            .inMinutes / 60).floor();
-
-                                        diffMin = (DateTime.fromMillisecondsSinceEpoch(
-                                            ExpiredTime.seconds * 1000)
-                                            .difference(DateTime.now())
-                                            .inMinutes % 60);
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
 
 
-                                        if (diffHour! >= 0 && diffMin! > 0) {
-                                          return Padding(
-                                            padding:
-                                            const EdgeInsets.fromLTRB(0, 0, 20, 0),
-                                            child: Text(
-                                              "$diffHour 시간 $diffMin 분전",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
+
+                                TimerBuilder.periodic(
+                                        const Duration(minutes: 1),
+                                        builder: (context) {
+                                          diffHour = (DateTime.fromMillisecondsSinceEpoch(expiredTime.seconds * 1000)
+                                              .difference(DateTime.now())
+                                              .inMinutes / 60).floor();
+
+                                          diffMin = (DateTime.fromMillisecondsSinceEpoch(expiredTime.seconds * 1000)
+                                              .difference(DateTime.now())
+                                              .inMinutes % 60);
+
+
+                                          if (diffHour! >= 0 && diffMin! > 0) {
+                                            return Padding(
+                                              padding:
+                                              const EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                              child: Text(
+                                                "$diffHour 시간 $diffMin 분전",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        }
+                                            );
+                                          }
 
-                                        // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제.
-                                        else {
-                                          return const Padding(
-                                            padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
-                                            child: Text(
-                                              "만료된 투표..입니다",
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
+                                          // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제.
+                                          else {
+                                            return const Padding(
+                                              padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                              child: Text(
+                                                "만료된 투표..입니다",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    );
-                                  }),
-
-                              const SizedBox(
-                                height: 10,
-                              ),
-
-                              SizedBox(
-                                width: double.infinity,
-                                height: 40,
-                                child: ElevatedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                      MaterialStateProperty.all(const Color(0xff025645))),
-                                  onPressed: () async {
-
-                                    await FirebaseFirestore.instance
-                                        .collection('chatrooms')
-                                        .doc(widget.chatroomId)
-                                        .collection('dalddong')
-                                        .doc(widget.chatroomId)
-                                        .collection('dalddongMembers')
-                                        .doc(FirebaseAuth.instance.currentUser!.email)
-                                        .update({'currentStatus' : 1});
-
-                                    await FirebaseFirestore.instance
-                                        .collection('chatrooms')
-                                        .doc(widget.chatroomId)
-                                        .collection('dalddong')
-                                        .doc(widget.chatroomId)
-                                        .collection('dalddongMembers')
-                                        .snapshots().forEach((element) {
-                                      element.docs.forEach((docs) {
-                                        if (docs.get('currentStatus') == 1){
-                                          votedMembers.add(docs.get('userEmail'));
-                                        }
-                                      });
-                                      setState(() {});
-
-                                      List voted = votedMembers.toSet().toList();
-
-                                      if (voted.length >= element.docs.length){
-                                        if (kDebugMode){
-                                          print("모든 맴버 투표완료");
-                                        }
-                                        completeDalddongVote(context, widget.chatroomId, element.docs);
-
-                                        PageRouteWithAnimation pageRoute =
-                                        PageRouteWithAnimation(CompleteAccept(dalddongId: widget.chatroomId,));
-                                        Navigator.push(context, pageRoute.slideRitghtToLeft());
-
-                                      }
-                                      else{
-                                        if (kDebugMode) {
-                                          print("개인 투표완료~~");
-                                        }
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => VoteStatus(eventId: widget.chatroomId),
-                                            ));
-                                      }
+                                            );
+                                          }
+                                        },
+                                      ),
 
 
-                                    });
-                                  },
-                                  child: const Text("투표완료"),
+                                const SizedBox(
+                                  height: 10,
                                 ),
-                              )
-                            ],
 
-                          )
-                        ],
-                      );
-                    });
-              },
-            );
-          },
-        )
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 40,
+                                  child: ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                        MaterialStateProperty.all(const Color(0xff025645))),
+                                    onPressed: () async {
+
+
+                                      await FirebaseFirestore.instance
+                                          .collection('DalddongList')
+                                          .doc(widget.dalddongId)
+                                          .collection('Members')
+                                          .doc(FirebaseAuth.instance.currentUser!.email)
+                                          .update({'currentStatus' : 1});
+
+                                      if(context.mounted){
+                                        var votedMember = await FirebaseFirestore.instance
+                                            .collection('DalddongList')
+                                            .doc(widget.dalddongId)
+                                            .collection('Members').where('currentStatus', isEqualTo: 1)
+                                            .get().then((value) {
+                                              return value.docs;
+                                        });
+
+                                        var totalMembers = await FirebaseFirestore.instance
+                                            .collection('DalddongList')
+                                            .doc(widget.dalddongId)
+                                            .collection('Members')
+                                            .get().then((value) {
+                                              return value.docs;
+                                        });
+
+                                        if(context.mounted){
+                                          if(votedMember.length == totalMembers.length){
+                                            completeDalddongVote(context, widget.dalddongId, votedMember);
+
+                                            PageRouteWithAnimation pageRoute =
+                                            PageRouteWithAnimation(CompleteAccept(dalddongId: widget.dalddongId,));
+                                            Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                          }
+                                          else{
+                                            if (kDebugMode) {
+                                              print("개인 투표완료~~");
+                                            }
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => VoteStatus(dalddongId: widget.dalddongId),
+                                                ));
+                                          }
+                                        }
+
+                                      }
+                                    },
+                                    child: const Text("투표완료"),
+                                  ),
+                                )
+                              ],
+
+                            )
+                          ],
+                        );
+                      });
+                },
+              );
+            },
+          )
+      ),
     );
   }
 }
@@ -250,10 +225,10 @@ class _VoteScreenState extends State<VoteScreen> {
 class VoteDatesCheckBoxList extends StatefulWidget {
 
   final QueryDocumentSnapshot voteDatesList;
-  final String? chatroomId;
+  final String? dalddongId;
   const VoteDatesCheckBoxList({Key? key,
     required this.voteDatesList,
-    required this.chatroomId}) : super(key: key);
+    required this.dalddongId}) : super(key: key);
 
   @override
   State<VoteDatesCheckBoxList> createState() => _VoteDatesCheckBoxListState();
@@ -278,22 +253,19 @@ class _VoteDatesCheckBoxListState extends State<VoteDatesCheckBoxList> {
           ),
           child: GestureDetector(
             onTap: (){
+              print(widget.voteDatesList.id);
               FirebaseFirestore.instance
-                  .collection('chatrooms')
-                  .doc(widget.chatroomId)
-                  .collection('dalddong')
-                  .doc(widget.chatroomId)
+                  .collection('DalddongList')
+                  .doc(widget.dalddongId)
                   .collection('voteDates')
                   .doc(widget.voteDatesList.id)
                   .get().then((value) {
 
                 if(List.from(value.get('votedMembers')).contains(FirebaseAuth.instance.currentUser?.email)){
                   FirebaseFirestore.instance
-                      .collection('chatrooms')
-                      .doc(widget.chatroomId)
-                      .collection('dalddong')
-                      .doc(widget.chatroomId)
-                      .collection('voteDates')
+                      .collection('DalddongList')
+                          .doc(widget.dalddongId)
+                          .collection('voteDates')
                       .doc(widget.voteDatesList.id)
                       .update({"votedMembers" : FieldValue.arrayRemove([FirebaseAuth.instance.currentUser?.email])});
                   selected = false;
@@ -302,19 +274,15 @@ class _VoteDatesCheckBoxListState extends State<VoteDatesCheckBoxList> {
                 else{
                   try{
                     FirebaseFirestore.instance
-                        .collection('chatrooms')
-                        .doc(widget.chatroomId)
-                        .collection('dalddong')
-                        .doc(widget.chatroomId)
+                        .collection('DalddongList')
+                        .doc(widget.dalddongId)
                         .collection('voteDates')
                         .doc(widget.voteDatesList.id)
                         .update({"votedMembers" : FieldValue.arrayUnion([FirebaseAuth.instance.currentUser?.email])});
                   } catch (e){
                     FirebaseFirestore.instance
-                        .collection('chatrooms')
-                        .doc(widget.chatroomId)
-                        .collection('dalddong')
-                        .doc(widget.chatroomId)
+                        .collection('DalddongList')
+                        .doc(widget.dalddongId)
                         .collection('voteDates')
                         .doc(widget.voteDatesList.id)
                         .update({"votedMembers" : FieldValue.arrayUnion([FirebaseAuth.instance.currentUser?.email])});
@@ -325,18 +293,14 @@ class _VoteDatesCheckBoxListState extends State<VoteDatesCheckBoxList> {
 
                 // update 'voted' number
                 FirebaseFirestore.instance
-                    .collection('chatrooms')
-                    .doc(widget.chatroomId)
-                    .collection('dalddong')
-                    .doc(widget.chatroomId)
+                    .collection('DalddongList')
+                    .doc(widget.dalddongId)
                     .collection('voteDates')
                     .doc(widget.voteDatesList.id).get().then((value) {
                   var votedNumber = List.from(value.get('votedMembers')).length;
                   FirebaseFirestore.instance
-                      .collection('chatrooms')
-                      .doc(widget.chatroomId)
-                      .collection('dalddong')
-                      .doc(widget.chatroomId)
+                      .collection('DalddongList')
+                      .doc(widget.dalddongId)
                       .collection('voteDates')
                       .doc(widget.voteDatesList.id)
                       .update({'voted' : votedNumber});

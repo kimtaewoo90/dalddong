@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import '../../commonScreens/shared_app_bar.dart';
 import '../../functions/utilities/Utility.dart';
 import 'community_read_screen.dart';
+import 'package:dalddong/functions/pushManager/push_manager.dart';
+
 
 class WatchComment extends StatefulWidget {
   final QueryDocumentSnapshot eachComments;
@@ -347,12 +349,16 @@ class _WriteReCommentsState extends State<WriteReComments> {
 
   final _controller = TextEditingController();
   var _userEnterMessage = "";
+  final _pushManager = PushManager();
+
 
   void _registerComment() async {
     FocusScope.of(context).unfocus();
-
-    // SharedPreferences prefs = await utils.getSharedPreferences();
-
+    var reComment = _userEnterMessage.trim();
+    setState(() {
+      _controller.clear();
+      _userEnterMessage = "";
+    });
     await FirebaseFirestore.instance
         .collection('posts')
         .doc(widget.postNumber)
@@ -363,14 +369,26 @@ class _WriteReCommentsState extends State<WriteReComments> {
       'reCommentUserName': await getMyName(),
       'reCommentUserEmail': await getMyEmail(),
       'reCommentUserImage': await getMyImage(),
-      'reCommentText': _userEnterMessage.trim(),
+      'reCommentText': reComment,
       'uploadCommentTime': DateTime.now(),
     });
 
-    setState(() {
-      _controller.clear();
-      _userEnterMessage = "";
-    });
+    var commentUser = await FirebaseFirestore.instance.collection('posts').doc(widget.postNumber).collection('comments')
+        .doc(widget.commentsId).get().then((value) => value.get('commentUserEmail'));
+    var comment = await FirebaseFirestore.instance.collection('posts').doc(widget.postNumber).collection('comments')
+        .doc(widget.commentsId).get().then((value) => value.get('commentText'));
+    var userToken = await FirebaseFirestore.instance.collection('user').doc(commentUser).get().then((value) => value.get('pushToken'));
+    var title = "$comment 에 댓글이 달렸습니다";
+    var body = "$comment 에 대한 ${await getMyName()}님의 댓글 : $reComment";
+    var details = {
+      'click_action' : 'FLUTTER_NOTIFICATION_CLICK',
+      'id' : widget.commentsId,
+      'eventId' : widget.commentsId,
+      'alarmType' : "POST"
+    };
+    _pushManager.sendPushMsg(userToken: userToken, title: title, body: body, details: details);
+
+
 
   }
   @override

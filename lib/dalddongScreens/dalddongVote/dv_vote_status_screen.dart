@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
 import '../../../../main_screen.dart';
+import '../../commonScreens/config.dart';
 import '../../commonScreens/shared_app_bar.dart';
 
 class VoteStatus extends StatefulWidget {
-  final String? eventId;
+  final String? dalddongId;
 
-  const VoteStatus({Key? key, required this.eventId}) : super(key: key);
+  const VoteStatus({Key? key, required this.dalddongId}) : super(key: key);
 
   @override
   State<VoteStatus> createState() => _VoteStatusState();
@@ -18,89 +19,97 @@ class _VoteStatusState extends State<VoteStatus> {
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      appBar: BaseAppBar(
-        appBar: AppBar(),
-        title: "투표현황",
-        backBtn: false,
-        center: true,
-      ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('chatrooms')
-            .doc(widget.eventId)
-            .collection('dalddong')
-            .doc(widget.eventId)
-            .collection('voteDates')
-            .snapshots(),
-        builder: (context, voteDateSnapshot) {
-          if (voteDateSnapshot.connectionState == ConnectionState.waiting) {
-            return Container(
-              alignment: Alignment.center,
-              child: const CircularProgressIndicator(),
-            );
-          }
+    return SafeArea(
+      top: false,
+      child: Scaffold(
+        backgroundColor: GeneralUiConfig.backgroundColor,
+        appBar: BaseAppBar(
+          appBar: AppBar(),
+          title: "투표현황",
+          backBtn: false,
+          center: true,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('DalddongList')
+                    .doc(widget.dalddongId)
+                    .collection('voteDates')
+                    .snapshots(),
+                builder: (context, voteDateSnapshot) {
+                  if (voteDateSnapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(),
+                    );
+                  }
 
-          return StreamBuilder(
-            stream: FirebaseFirestore.instance
-                .collection('chatrooms')
-                .doc(widget.eventId)
-                .collection('dalddong')
-                .doc(widget.eventId)
-                .collection('dalddongMembers').snapshots(),
-            builder: (context, memberSnapshot){
+                  return StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('DalddongList')
+                        .doc(widget.dalddongId)
+                        .collection('Members').snapshots(),
+                    builder: (context, memberSnapshot){
 
-              if(memberSnapshot.connectionState == ConnectionState.waiting){
-                return Container(
-                  alignment: Alignment.center,
-                  child: const CircularProgressIndicator(),
-                );
-              }
+                      if(memberSnapshot.connectionState == ConnectionState.waiting){
+                        return Container(
+                          alignment: Alignment.center,
+                          child: const CircularProgressIndicator(),
+                        );
+                      }
 
-              var voteMembers = memberSnapshot.data?.docs.length;
-              List<VoteDateStatus> eachVoteDate = [];
-              voteDateSnapshot.data?.docs.forEach((element) {
-                VoteDateStatus eachDateStatus =
-                VoteDateStatus(voteDatesList: element, dalddongMembers: voteMembers,);
-                eachVoteDate.add(eachDateStatus);
-              });
+                      var voteMembers = memberSnapshot.data?.docs.length;
+                      List<VoteDateStatus> eachVoteDate = [];
+                      voteDateSnapshot.data?.docs.forEach((element) {
+                        VoteDateStatus eachDateStatus =
+                        VoteDateStatus(voteDatesList: element, dalddongMembers: voteMembers,);
+                        eachVoteDate.add(eachDateStatus);
+                      });
 
-              return Column(children: [
-                const SizedBox(
-                  height: 30,
-                ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  width: MediaQuery.of(context).size.width,
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: eachVoteDate,
-                  ),
-                ),
+                      return Column(children: [
+                        const SizedBox(
+                          height: 30,
+                        ),
+                        Expanded(
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.5,
+                            width: MediaQuery.of(context).size.width,
+                            child: ListView(
+                              shrinkWrap: true,
+                              children: eachVoteDate,
+                            ),
+                          ),
+                        ),
 
-                const SizedBox(height: 10,),
+                        const SizedBox(height: 10,),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 40,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(const Color(0xff025645)),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const MainScreen(),
-                          ));
+                        SizedBox(
+                          width: double.infinity,
+                          height: 40,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(const Color(0xff025645)),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainScreen(),
+                                  ));
+                            },
+                            child: const Text('메인화면'),
+                          ),
+                        )
+                      ]);
                     },
-                    child: const Text('메인화면'),
-                  ),
-                )
-              ]);
-            },
-          );
-        },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
