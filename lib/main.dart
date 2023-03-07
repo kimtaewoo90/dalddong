@@ -1,4 +1,5 @@
 // flutter
+import 'package:dalddong/tabs/chatting/chatting_screen.dart';
 import 'package:flutter/material.dart';
 
 // firebase
@@ -6,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/scheduler.dart';
 
 // localization
 import 'package:syncfusion_localizations/syncfusion_localizations.dart';
@@ -17,6 +19,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 // providers
 import 'package:provider/provider.dart';
+import 'commonScreens/globalVariable.dart';
+import 'commonScreens/page_route_with_animation.dart';
 import 'commonScreens/welcome_screen.dart';
 import 'firebase_options.dart';
 import 'functions/providers/calendar_provider.dart';
@@ -35,7 +39,14 @@ import 'main_screen.dart';
 // Utility
 import 'functions/utilities/Utility.dart';
 
+Future<void> pushClickHandler(NotificationResponse response) async {
+  print(" pushClickHandler! ");
+}
 
+
+Future<void> pushBackgroundHandler(NotificationResponse response) async {
+  print(" pushBackgroundHandler! ");
+}
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
@@ -96,8 +107,18 @@ void main() async {
   );
 
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    // onSelectNotification :
+      initializationSettings,
+
+      onDidReceiveNotificationResponse: (NotificationResponse details) async { // 여기서 핸들링!
+        print('Foreground onDidReceiveNotificationResponse');
+        print(details.notificationResponseType);
+        print(details.actionId);
+        print(details.id);
+        print(details.input);
+        print(details.payload);
+      },
+      onDidReceiveBackgroundNotificationResponse: pushBackgroundHandler,
+
   );
 
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
@@ -209,17 +230,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             notification.hashCode,
             notification.title,
             notification.body,
-            details);
+            details
+        );
       }
 
       if(message.data['alarmType'] == "MSG"){
-        var chatroomId = message.data['eventId'];
-        var chatroomName = message.data['chatroomName'];
-        Navigator.of(GlobalVariable.navState.currnetContext!)
-        .push(MaterialPageRoute(builder:(context) => ChatScreen(chatroomId, chatroomName),));
+          var chatroomId = message.data['eventId'];
+          var chatroomName = message.data['chatroomName'];
+        PageRouteWithAnimation pageRoute =
+        PageRouteWithAnimation(
+            ChatScreen(chatroomId, chatroomName));
+        Navigator.push(context, pageRoute.slideBottonToTop());
       }
 
- 
       // 알람테이블(AlarmList)에 적재
       if(message.data['alarmType'] != "MSG") {
         FirebaseFirestore.instance.collection('user')
@@ -242,10 +265,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       if(message.data['alarmType'] == "MSG"){
         var chatroomId = message.data['eventId'];
         var chatroomName = message.data['chatroomName'];
-        SchedulerBinding.instance!.addPostFrameCallback((_){
-          Navigator.of(GlobalVariable.navState.currnetContext!)
+        // var chatroomName = '테스트3';
+        SchedulerBinding.instance.addPostFrameCallback((_){
+          Navigator.of(GlobalVariable.navState.currentContext!)
         .push(MaterialPageRoute(builder:(context) => ChatScreen(chatroomId, chatroomName),));
-        })     
+        });
       }
 
       if(message.data['alarmType'] != "MSG") {

@@ -13,6 +13,7 @@ import '../../functions/utilities/Utility.dart';
 
 // screens
 import '../../dalddongScreens/dalddongVote/dv_request_vote_screen.dart';
+import '../../main_screen.dart';
 import '../friends/friends_profile_screen.dart';
 import 'chatRoom/message.dart';
 import 'chatRoom/new_message.dart';
@@ -67,9 +68,12 @@ class _ChatScreenState extends State<ChatScreen>  {
     return WillPopScope(
       onWillPop: () async {
         setState(() {
-          activeChatRoom = "";
-          setActiveStatus(true, activeChatRoom);
+          setActiveStatus(true);
         });
+
+        PageRouteWithAnimation pageRoute = PageRouteWithAnimation(const MainScreen(initialIndex: 1,));
+        Navigator.push(context, pageRoute.slideRitghtToLeft());
+
 
         return true;
       },

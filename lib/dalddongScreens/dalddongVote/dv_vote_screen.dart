@@ -43,21 +43,23 @@ class _VoteScreenState extends State<VoteScreen> {
             backBtn: false,
             center: true,
           ),
-          body: StreamBuilder(
-            stream: FirebaseFirestore.instance
+          body: FutureBuilder(
+            future: FirebaseFirestore.instance
                 .collection('DalddongList')
                 .doc(widget.dalddongId)
-                .snapshots(),
+                .get(),
             builder: (context, dalddongSnapshot){
 
-              Timestamp expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
-              print(expiredTime);
-              return StreamBuilder(
-                stream: FirebaseFirestore.instance
+              var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
+              print('expiredTime $expiredTime............');
+              print(dalddongSnapshot.data?.get('CreateTime'));
+              // print(DateTime.fromMillisecondsSinceEpoch(expiredTime.seconds * 1000));
+              return FutureBuilder(
+                future: FirebaseFirestore.instance
                     .collection('DalddongList')
                     .doc(widget.dalddongId)
                     .collection('Members')
-                    .snapshots(),
+                    .get(),
                 builder: (context, memberSnapshot){
                   return StreamBuilder(
                       stream: FirebaseFirestore.instance

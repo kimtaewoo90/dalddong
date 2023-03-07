@@ -33,7 +33,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
         appBar: BaseAppBar(
           appBar: AppBar(),
           title: "수락대기중",
-          backBtn: false,
+          backBtn: false, 
           center: true,
         ),
         body: FutureBuilder<QuerySnapshot>(
@@ -275,7 +275,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const MainScreen(),
+                              builder: (context) => MainScreen(),
                             ));
                       },
                       child: const Text("메인화면"),

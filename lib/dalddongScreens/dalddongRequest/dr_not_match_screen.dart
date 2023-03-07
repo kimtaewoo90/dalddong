@@ -50,7 +50,7 @@ class _RejectedDalddongState extends State<RejectedDalddong> {
                   color: white,
                   onTap: () {
                     PageRouteWithAnimation pageRoute =
-                    PageRouteWithAnimation(const MainScreen());
+                    PageRouteWithAnimation(MainScreen());
                     Navigator.push(context, pageRoute.slideRitghtToLeft());
                   },
                   child: Text('메인화면', style: boldTextStyle()),

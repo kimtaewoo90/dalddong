@@ -136,7 +136,7 @@ class _CompleteAcceptState extends State<CompleteAccept> {
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => const MainScreen(),
+                                            builder: (context) => MainScreen(),
                                           ));
                                     },
                                     child: const Text("메인화면"),

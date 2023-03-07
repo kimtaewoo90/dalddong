@@ -193,10 +193,12 @@ class _SignupPhoneState extends State<SignupPhone> {
                                 prefs.setString('userImage', widget.userImage);
                                 prefs.setString('phoneNumber', phoneNumber);
 
-                                PageRouteWithAnimation pageRoute =
+                                if(context.mounted) {
+                                  PageRouteWithAnimation pageRoute =
                                 PageRouteWithAnimation(
-                                    const MainScreen());
-                                Navigator.push(context, pageRoute.slideBottonToTop());
+                                     const MainScreen());
+                                  Navigator.push(context, pageRoute.slideBottonToTop());
+                                }
 
                               } on FirebaseAuthException catch (e){
                                 if (kDebugMode) {

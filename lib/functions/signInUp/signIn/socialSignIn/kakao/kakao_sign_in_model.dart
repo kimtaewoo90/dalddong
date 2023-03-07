@@ -62,7 +62,7 @@ class KakaoLoginModel {
             print("The supplied token is for a different Firebase project.");
             break;
           default:
-            print("Unkown error. \n $e");
+            print("Unknown error. \n $e");
         }
       }
 

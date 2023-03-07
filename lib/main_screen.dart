@@ -13,7 +13,8 @@ import 'commonScreens/config.dart';
 
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  final int? initialIndex;
+  const MainScreen( {Key? key, this.initialIndex = 2} ) : super(key: key);
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -22,14 +23,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
-    // PushNotification.();
 
     return SafeArea(
       bottom: true,
       top: false,
       child: DefaultTabController(
         length: 5,
-        initialIndex: 2,
+        initialIndex: widget.initialIndex!,
         child: Scaffold(
           backgroundColor: GeneralUiConfig.backgroundColor,
           body: const TabBarView(

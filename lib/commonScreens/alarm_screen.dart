@@ -12,6 +12,7 @@ import '../dalddongScreens/dalddongRequest/dr_not_match_screen.dart';
 import '../dalddongScreens/dalddongRequest/dr_response_screen.dart';
 import '../dalddongScreens/dalddongRequest/dr_response_status_screen.dart';
 import '../dalddongScreens/dalddongVote/dv_vote_screen.dart';
+import '../dalddongScreens/dalddongVote/dv_vote_status_screen.dart';
 
 
 class AlarmScreen extends StatefulWidget {
@@ -253,6 +254,7 @@ class DalddongVoteAlarm extends StatefulWidget {
 class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
   @override
   Widget build(BuildContext context) {
+    print(widget.eachVotes.get('details')['voteDates']);
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('DalddongList')
@@ -302,7 +304,7 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                                   .doc(widget.eachVotes.get('details')['eventId'])
                                   .collection('Members')
                                   .snapshots()
-                                  .forEach((element) {
+                                  .forEach((element) async {
                                 for (var docs in element.docs) {
                                   if (docs.get('currentStatus') == 1) {
                                     acceptMembers.add(docs.id);
@@ -324,12 +326,14 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                                 // 투표하러 가기
                                 else {
                                   if (kDebugMode) {
-                                    print("${acceptMembers.length} / ${element.docs.length}");
+                                    // print("${acceptMembers.length} / ${element.docs.length}");
+                                    // print("${List.from(widget.eachVotes.get('details')['voteDates'])}-----");
                                   }
+                                  var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(widget.eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
                                   PageRouteWithAnimation pageRoute =
                                   PageRouteWithAnimation(
                                       VoteScreen(
-                                        voteDates: widget.eachVotes.get('details')['voteDates'],
+                                        voteDates: List.from(voteDates),
                                         dalddongId: widget.eachVotes.get('details')['eventId'],
                                       ));
                                   Navigator.push(context, pageRoute.slideRitghtToLeft());
@@ -344,6 +348,7 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                               backgroundColor: Colors.green,
                             ),
                             onPressed: () {
+                              print("my status = 1");
                               var acceptMembers = [];
                               FirebaseFirestore.instance
                                   .collection('DalddongList')
@@ -372,9 +377,9 @@ class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
                                   if (kDebugMode) {
                                     print("${acceptMembers.length} / ${element.docs.length}");
                                   }
-                                  // PageRouteWithAnimation pageRoute =
-                                  // PageRouteWithAnimation(AcceptOrReject(DalddongId: eachEvents.get('details')['eventId'],));
-                                  // Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                  PageRouteWithAnimation pageRoute =
+                                  PageRouteWithAnimation(VoteStatus(dalddongId: widget.eachVotes.get('details')['eventId'],));
+                                  Navigator.push(context, pageRoute.slideRitghtToLeft());
                                 }
                               });
                             },

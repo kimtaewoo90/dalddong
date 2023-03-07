@@ -260,7 +260,7 @@ class _SignInState extends State<SignIn> {
                                           });
                                         });
 
-                                        PageRouteWithAnimation pageRoute = PageRouteWithAnimation(const MainScreen());
+                                        PageRouteWithAnimation pageRoute = PageRouteWithAnimation(MainScreen());
                                         Navigator.push(context, pageRoute.slideBottonToTop());
 
                                       }
@@ -335,7 +335,7 @@ class _SignInState extends State<SignIn> {
                                       else{
                                         // reset page state after login with kakao.
                                         setState(() {showSpinner = false;});
-                                        PageRouteWithAnimation pageRoute = PageRouteWithAnimation(const MainScreen());
+                                        PageRouteWithAnimation pageRoute = PageRouteWithAnimation(MainScreen());
                                         Navigator.push(context, pageRoute.slideBottonToTop());
                                       }
                                     }

@@ -361,13 +361,12 @@ class _RegistrationDalddongInChatState
                   var myName = await getMyName();
 
                   if(context.mounted) {
-                    var dalddongId = addDalddongVoteList(context, context.read<DalddongProvider>().newDdFriends);
+                    // var dalddongId = addDalddongVoteList(context, context.read<DalddongProvider>().newDdFriends);
                     Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => WaitCalculateDates(
                               dalddongMembers: context.read<DalddongProvider>().newDdFriends,
-                              dalddongId: dalddongId,
                               hostName: myName!
                           ),
                         ));

@@ -51,20 +51,8 @@ Future<String> getMyNumber() async{
 }
 
 void setActiveStatus(bool isActive, [String? activeChatRoom]) async {
-  // print("setActiveStatus");
 
-  // String? activeChatRoom = isActive == true ? widget.room_id : "";
-
-  // print(activeChatRoom);
-  if (activeChatRoom == null){
-    await FirebaseFirestore.instance
-        .collection('user')
-        .doc(FirebaseAuth.instance.currentUser?.email)
-        .update({
-      'isActive' : isActive,
-    });
-  }
-  else{
+  if (FirebaseAuth.instance.currentUser?.email != null){
     await FirebaseFirestore.instance
         .collection('user')
         .doc(FirebaseAuth.instance.currentUser?.email)

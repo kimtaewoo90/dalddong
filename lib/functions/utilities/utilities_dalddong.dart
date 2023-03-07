@@ -106,7 +106,7 @@ void completeDalddongVote(BuildContext context, String? dalddongId,
 
 }
 
-String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dalddongMembers){
+String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dalddongMembers, List<DateTime> voteList){
   String dalddongId = generateRandomString(15);
   final pushManager = PushManager();
 
@@ -117,7 +117,6 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
 
   // My DB
   String? myName;
-
 
   SharedPreferences.getInstance().then((value) {
     SharedPreferences prefs = value;
@@ -136,8 +135,11 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
       'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
       'dalddongMembers': FieldValue.arrayUnion(membersEmail),
       'MemberNumbers': dalddongMembers.length,
+      'voteDates': FieldValue.arrayUnion(voteList),
       'isAllConfirmed': false
     });
+    print("done insert main dalddong list to db");
+    print(dalddongId);
 
 
     // Member 개인DB에 저장
@@ -154,6 +156,7 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
         'userImage': value['userImage'],
         'currentStatus': 0,
       });
+      print('${value['userName']} 를 Members에 추가 완료');
     });
   });
 

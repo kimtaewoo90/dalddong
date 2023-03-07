@@ -104,7 +104,7 @@ class _DalddongListState extends State<DalddongList> {
                       }
                       else{
                         return SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.75,
+                          height: MediaQuery.of(context).size.height * 0.8,
                           child: ListView.builder(
                               shrinkWrap: true,
                               itemCount: snapshots.data?.docs.length,
@@ -113,13 +113,13 @@ class _DalddongListState extends State<DalddongList> {
                                 return FutureBuilder(
                                     future: FirebaseFirestore.instance
                                         .collection('DalddongList')
-                                        .doc(snapshots.data?.docs[index].get('scheduleId'))
+                                        .doc(snapshots.data?.docs[index].get('DalddongId'))
                                         .get(),
                                     builder: (context, dalddongSnapshot) {
                                       return FutureBuilder(
                                           future: FirebaseFirestore.instance
                                               .collection('DalddongList')
-                                              .doc(snapshots.data?.docs[index].get('scheduleId'))
+                                              .doc(snapshots.data?.docs[index].get('DalddongId'))
                                               .collection('Members')
                                               .get(),
                                           builder: (context, memberSnapshot) {

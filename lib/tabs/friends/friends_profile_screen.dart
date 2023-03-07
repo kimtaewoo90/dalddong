@@ -153,11 +153,13 @@ class _showProfileState extends State<showProfile> {
                                       .collection('chatRoomList')
                                       .doc(chatroomId).get().then((value) {return value.get('chatRoomName');});
 
-                                  Navigator.push(
+                                  if(context.mounted) {
+                                    Navigator.push(
                                       context,
                                       MaterialPageRoute(builder: (context)  =>
                                           ChatScreen(chatroomId, title),
                                       )).then((value) => setState((){}));
+                                  }
 
                                   setState(() {});
                                 },

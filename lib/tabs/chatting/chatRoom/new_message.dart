@@ -28,17 +28,18 @@ class _NewMessageState extends State<NewMessage> {
     var latestConversation = _userEnterMessage;
     _userEnterMessage = '';
 
-    final chatroomName = await FirebaseFirestore.instance
-          .collection('chatrooms')
-          .doc(widget.roomId)
-          .get().then((value) => return value.get('chatRoomName'));
     final latestText = latestConversation;
     final user = FirebaseAuth.instance.currentUser;
     final userData = await FirebaseFirestore.instance.collection('user')
         .doc(user!.email).get();
 
-    final opponentData = await FirebaseFirestore.instance.collection('user')
-        .doc(user.email).collection("chatRoomList").doc(widget.roomId).get();
+    final chatroomName = await FirebaseFirestore.instance
+        .collection('user')
+        .doc(user.email)
+        .collection('chatRoomList')
+        .doc(widget.roomId)
+        .get().then((value) => value.get('chatRoomName'));
+
 
     var AMorPM = DateTime.now().hour ~/ 12 == 0 ? "오전" : "오후";
 
@@ -94,8 +95,6 @@ class _NewMessageState extends State<NewMessage> {
             .get().then((value){
           return value.get('activeChatRoom');
         });
-
-        // print("$latestText------ ${element.get('userName')}의 isActive : $isActive");
 
         if(isActive == false || activeChatRoom != widget.roomId){
           FirebaseFirestore.instance
