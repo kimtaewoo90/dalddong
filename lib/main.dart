@@ -137,6 +137,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return MaterialApp(
+      navigatorKey: GlobalVariable.navState,
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
           useMaterial3: true
       ),
@@ -185,7 +187,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
 
+    // Foreground
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       var androidNotiDetails = AndroidNotificationDetails(
@@ -208,8 +212,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             details);
       }
 
-      print(message.data['alarmType']);
-      print('--------');
+      if(message.data['alarmType'] == "MSG"){
+        var chatroomId = message.data['eventId'];
+        var chatroomName = message.data['chatroomName'];
+        Navigator.of(GlobalVariable.navState.currnetContext!)
+        .push(MaterialPageRoute(builder:(context) => ChatScreen(chatroomId, chatroomName),));
+      }
+
+ 
       // 알람테이블(AlarmList)에 적재
       if(message.data['alarmType'] != "MSG") {
         FirebaseFirestore.instance.collection('user')
@@ -225,8 +235,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       }
     });
 
+    // background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      print("메시지 : $message");
+      
+      // rendering for MSG push
+      if(message.data['alarmType'] == "MSG"){
+        var chatroomId = message.data['eventId'];
+        var chatroomName = message.data['chatroomName'];
+        SchedulerBinding.instance!.addPostFrameCallback((_){
+          Navigator.of(GlobalVariable.navState.currnetContext!)
+        .push(MaterialPageRoute(builder:(context) => ChatScreen(chatroomId, chatroomName),));
+        })     
+      }
+
       if(message.data['alarmType'] != "MSG") {
         FirebaseFirestore.instance.collection('user')
             .doc(FirebaseAuth.instance.currentUser!.email)

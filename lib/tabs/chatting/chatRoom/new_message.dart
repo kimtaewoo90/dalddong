@@ -28,6 +28,10 @@ class _NewMessageState extends State<NewMessage> {
     var latestConversation = _userEnterMessage;
     _userEnterMessage = '';
 
+    final chatroomName = await FirebaseFirestore.instance
+          .collection('chatrooms')
+          .doc(widget.roomId)
+          .get().then((value) => return value.get('chatRoomName'));
     final latestText = latestConversation;
     final user = FirebaseAuth.instance.currentUser;
     final userData = await FirebaseFirestore.instance.collection('user')
@@ -91,7 +95,7 @@ class _NewMessageState extends State<NewMessage> {
           return value.get('activeChatRoom');
         });
 
-        print("$latestText------ ${element.get('userName')}의 isActive : $isActive");
+        // print("$latestText------ ${element.get('userName')}의 isActive : $isActive");
 
         if(isActive == false || activeChatRoom != widget.roomId){
           FirebaseFirestore.instance
@@ -106,6 +110,7 @@ class _NewMessageState extends State<NewMessage> {
               'click_action' : 'FLUTTER_NOTIFICATION_CLICK',
               'id' : widget.roomId,
               'eventId' : widget.roomId,
+              'chatroomName': chatroomName,
               'alarmType' : "MSG"
             };
             _pushManager.sendPushMsg(userToken: userToken, title: title, body: body, details: details);
