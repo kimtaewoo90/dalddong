@@ -40,30 +40,9 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
     super.initState();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Future<void> asyncableFunction(List<DateTime> blockedDates) async {
 
-
-    // add Members
-    widget.dalddongMembers?.forEach((element) async {
-
-      // get BlockDatesList among members
-      await FirebaseFirestore.instance
-          .collection('user')
-          .doc(element.get('userEmail'))
-          .collection('BlockDatesList') //.where('isDalddong', isEqualTo: true)
-          .snapshots()
-          .forEach((blockedCollection) {
-        blockedCollection.docs.forEach((blocked) {
-          blockedDates.add(DateTime.parse(blocked.id));
-        });
-      });
-    });
-
-      blockedDates = blockedDates.toSet().toList();
-      // Timer(const Duration(seconds: 1), () {
-
-        while (true) {
+    while (true) {
           DateTime today = DateTime(
               DateTime
                   .now()
@@ -80,8 +59,7 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
 
             print("투표날짜 계산 완료");
             dalddongId = addDalddongVoteList(context, widget.dalddongMembers!, voteDates);
-
-            voteDates.forEach((element) async{
+             voteDates.forEach((element) async{
               await FirebaseFirestore.instance
                   .collection('DalddongList')
                   .doc(dalddongId)
@@ -120,17 +98,13 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
 
             });
             break;
-          }else {
+        }
+        else {
             addedDate += 1;
           }
         }
 
-      // });
-
-
-      // 계산된 투표날짜 리스트 insert
-      // makeTheFirebaseCollection(voteDates);
-      try{
+        try{
         if(context.mounted) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             print(dalddongId);
@@ -147,7 +121,34 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
         }
       } catch(e){
         print("Error: ${e.toString()}");
-      }
+      }       
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+
+    // add Members
+    widget.dalddongMembers?.forEach((element) async {
+
+      // get BlockDatesList among members
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(element.get('userEmail'))
+          .collection('BlockDatesList') //.where('isDalddong', isEqualTo: true)
+          .snapshots()
+          .forEach((blockedCollection) {
+        blockedCollection.docs.forEach((blocked) {
+          blockedDates.add(DateTime.parse(blocked.id));
+        });
+      });
+    });
+
+      blockedDates = blockedDates.toSet().toList();
+      // Timer(const Duration(seconds: 1), () {
+      await asyncableFunction(blockedDates); 
+        
+      
 
 
 
