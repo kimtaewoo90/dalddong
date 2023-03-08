@@ -40,7 +40,7 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
     super.initState();
   }
 
-  Future<void> asyncableFunction(List<DateTime> blockedDates) async {
+  Future<void> asyncableFunction(List<QueryDocumentSnapshot>? dalddongMembers, List<DateTime> blockedDates) async {
 
     while (true) {
           DateTime today = DateTime(
@@ -58,9 +58,9 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
           if(voteDates.length == 5){
 
             print("투표날짜 계산 완료");
-            dalddongId = addDalddongVoteList(context, widget.dalddongMembers!, voteDates);
-             voteDates.forEach((element) async{
-              await FirebaseFirestore.instance
+            dalddongId = addDalddongVoteList(context, dalddongMembers!, voteDates);
+             voteDates.forEach((element) {
+              FirebaseFirestore.instance
                   .collection('DalddongList')
                   .doc(dalddongId)
                   .collection('voteDates')
@@ -70,7 +70,9 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
                 'votedMembers': FieldValue.arrayUnion([]),
               });
             });
-            widget.dalddongMembers?.forEach((element) {
+
+            print("푸시알람 완료");
+            dalddongMembers?.forEach((element) {
               FirebaseFirestore.instance
                   .collection('user')
                   .doc(element.get('userEmail'))
@@ -95,8 +97,8 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
                     details: details);
                 print("send To ${element.get('userName')}");
               });
-
             });
+
             break;
         }
         else {
@@ -105,18 +107,18 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
         }
 
         try{
-        if(context.mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          if(context.mounted) {
+            
             print(dalddongId);
             Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          VoteScreen(
-                              voteDates: voteDates,
-                              dalddongId: dalddongId
-                          )));
-          });
+              context,
+              MaterialPageRoute(builder: (context) =>
+              VoteScreen(
+                  voteDates: voteDates,
+                  dalddongId: dalddongId)
+              )
+            );
+        
 
         }
       } catch(e){
@@ -145,12 +147,7 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
     });
 
       blockedDates = blockedDates.toSet().toList();
-      // Timer(const Duration(seconds: 1), () {
-      await asyncableFunction(blockedDates); 
-        
-      
-
-
+      await asyncableFunction(widget.dalddongMembers, blockedDates);       
 
     return Scaffold(
         body: Center(
