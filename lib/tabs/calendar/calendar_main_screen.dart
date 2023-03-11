@@ -228,52 +228,6 @@ class _MyScheduleState extends State<MySchedule> {
             center: false,
           ),
           body: _calendar(),
-          // bottomSheet: const BottomAgenda(),
-
-          // SizedBox(
-          //   child: DraggableHome(
-          //     headerWidget: _calendar(false),
-          //     expandedBody: _calendar(true),
-          //     body: const [
-          //       BottomAgenda(),
-          //     ],
-          //
-          //     title: const Text("calendars"),
-          //
-          //     stretchMaxHeight: 0.95,
-          //     headerExpandedHeight: 0.94,
-          //     stretchTriggerOffset: 0.5,
-          //     fullyStretchable: true,
-          //     curvedBodyRadius : 0.0,
-          //   ),
-          //  ),
-
-          // height: 500,
-          // child: SlidingUpPanel(
-          //     backdropEnabled: false,
-          //     controller: panelController,
-          //     minHeight: panelHeightClosed,
-          //     maxHeight: panelHeightOpen,
-          //     parallaxEnabled: true,
-          //     parallaxOffset: 1,
-          //     panelSnapping: true,
-          //     color: Colors.white,
-          //     // collapsed: _calendar(),
-          //     body: Column(
-          //       children: [
-          //         Expanded(
-          //             child: _calendar(MediaQuery.of(context).size.height - 80)),
-          //       // child: Container()
-          //
-          //       ],
-          //     ),
-          //   panelBuilder: (controller){
-          //       return BottomAgenda(
-          //         controller: controller,
-          //         panelController: panelController);
-          //     }
-          // ),
-          // ),
 
           floatingActionButton: Padding(
             padding: const EdgeInsets.fromLTRB(0, 0, 10, 10),
@@ -333,7 +287,8 @@ class _MyScheduleState extends State<MySchedule> {
                     })
               ],
             ),
-          )),
+          )
+      ),
     );
   }
 
@@ -344,13 +299,11 @@ class _MyScheduleState extends State<MySchedule> {
           setState(() {
             context.read<ScheduleProvider>().changeShowAgenda(true);
           });
-          context.read<ScheduleProvider>().changeShowAgenda(true);
         }
         if (details.delta.dy > 0) {
           setState(() {
             context.read<ScheduleProvider>().changeShowAgenda(false);
           });
-          context.read<ScheduleProvider>().changeShowAgenda(false);
         }
       },
       child: StreamBuilder(
@@ -401,12 +354,9 @@ class _MyScheduleState extends State<MySchedule> {
                         // backgroundColor: GeneralUiConfig.backgroundColor,
                         controller: _calendarController,
                         onViewChanged: (ViewChangedDetails viewChangedDetails) {
-                          SchedulerBinding.instance
-                              .addPostFrameCallback((Duration duration) {
-                            if (viewChangedDetails.visibleDates.first.year ==
-                                    DateTime.now().year &&
-                                viewChangedDetails.visibleDates[0].month ==
-                                    DateTime.now().month) {
+                          SchedulerBinding.instance.addPostFrameCallback((Duration duration) {
+                            if (viewChangedDetails.visibleDates.first.year == DateTime.now().year &&
+                                viewChangedDetails.visibleDates[0].month == DateTime.now().month) {
                               // _calendarController.displayDate = DateTime.now();
                             }
                             else if (_calendarController.displayDate?.month !=
@@ -430,29 +380,23 @@ class _MyScheduleState extends State<MySchedule> {
                           dayFormat: 'EEE',
                           navigationDirection:
                               MonthNavigationDirection.horizontal,
-                          // showAgenda:
-                          //     context.read<ScheduleProvider>().showAgenda,
                         ),
                         dataSource: MeetingDataSource(
                             _getDataSource(snapshot.data!.docs)),
                         monthCellBuilder: (BuildContext buildContext,
                             MonthCellDetails details) {
-
                           final Color defaultColor =
                           Theme.of(context).brightness == Brightness.dark
                               ? GeneralUiConfig.borderDarkModeColor
                               : GeneralUiConfig.borderWhiteModeColor;
 
                           // Block Date
-                          // print(DateFormat('yyyy-MM-dd').format(details.date));
                           if (blockDates.contains(DateFormat('yyyy-MM-dd').format(details.date))) {
-
                             // blocked lunch
                             if (blockInfo[DateFormat('yyyy-MM-dd').format(details.date)] == 0) {
-                              // backgroundColor = GeneralUiConfig.blockLunchColor;
                               boxDeco = Container(
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
@@ -462,9 +406,21 @@ class _MyScheduleState extends State<MySchedule> {
                                         Colors.white,
                                       ],
                                     ),
-                                    // color: backgroundColor,
-                                    border: Border.all(
-                                        color: defaultColor, width: 0.5)),
+                                    border: Border(
+                                      left: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                      right: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                      top: BorderSide(
+                                          color: GeneralUiConfig.borderWhiteModeColor,
+                                      ),
+                                      bottom: BorderSide(
+                                        color: GeneralUiConfig.borderWhiteModeColor,
+                                    ),
+                                    ),
+                                ),
                                 child: Text(
                                   details.date.day.toString(),
                                   style: const TextStyle(
@@ -476,8 +432,8 @@ class _MyScheduleState extends State<MySchedule> {
                             // blocked dinner
                             else if (blockInfo[DateFormat('yyyy-MM-dd').format(details.date)] == 1) {
                               boxDeco = Container(
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
@@ -487,9 +443,21 @@ class _MyScheduleState extends State<MySchedule> {
                                         Colors.grey,
                                       ],
                                     ),
-                                    // color: backgroundColor,
-                                    border: Border.all(
-                                        color: defaultColor, width: 0.5)),
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: Colors.transparent,
+                                    ),
+                                    right: BorderSide(
+                                      color: Colors.transparent,
+                                    ),
+                                    top: BorderSide(
+                                      color: GeneralUiConfig.borderWhiteModeColor,
+                                    ),
+                                    bottom: BorderSide(
+                                      color: GeneralUiConfig.borderWhiteModeColor,
+                                    ),
+                                  ),
+                                ),
                                 child: Text(
                                   details.date.day.toString(),
                                   style: const TextStyle(
@@ -500,8 +468,8 @@ class _MyScheduleState extends State<MySchedule> {
                             // blocked allDay
                             else {
                               boxDeco = Container(
-                                decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
+                                decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
@@ -510,8 +478,20 @@ class _MyScheduleState extends State<MySchedule> {
                                       ],
                                     ),
                                     // color: backgroundColor,
-                                    border: Border.all(
-                                        color: defaultColor, width: 0.5)),
+                                  border: Border(
+                                    left: BorderSide(
+                                      color: Colors.transparent,
+                                    ),
+                                    right: BorderSide(
+                                      color: Colors.transparent,
+                                    ),
+                                    top: BorderSide(
+                                      color: GeneralUiConfig.borderWhiteModeColor,
+                                    ),
+                                    bottom: BorderSide(
+                                      color: GeneralUiConfig.borderWhiteModeColor,
+                                    ),
+                                  ),),
                                 child: Text(
                                   details.date.day.toString(),
                                   style: const TextStyle(
@@ -523,8 +503,8 @@ class _MyScheduleState extends State<MySchedule> {
                           // Open Date
                           else {
                             boxDeco = Container(
-                              decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
+                              decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
@@ -533,8 +513,20 @@ class _MyScheduleState extends State<MySchedule> {
                                     ],
                                   ),
                                   // color: backgroundColor,
-                                  border: Border.all(
-                                      color: defaultColor, width: 0.5)),
+                                border: Border(
+                                  left: BorderSide(
+                                    color: Colors.transparent,
+                                  ),
+                                  right: BorderSide(
+                                    color: Colors.transparent,
+                                  ),
+                                  top: BorderSide(
+                                    color: GeneralUiConfig.borderWhiteModeColor,
+                                  ),
+                                  bottom: BorderSide(
+                                    color: GeneralUiConfig.borderWhiteModeColor,
+                                  ),
+                                ),),
                               child: Text(
                                 details.date.day.toString(),
                                 style: const TextStyle(
@@ -560,13 +552,13 @@ class _MyScheduleState extends State<MySchedule> {
                           if (!blackoutDates.contains(date)) {
                             // print('blocked');
                             final result = await addBlockTypeDialog(
-                                context, "달똥요청을 막으시겠어요?");
-                            if(context.mounted) {
+                                context, "언제 달똥요청을 막으시겠어요?");
+                            if(context.mounted && result != null) {
                               await FirebaseFirestore.instance
                                 .collection('user')
                                 .doc(FirebaseAuth.instance.currentUser!.email)
                                 .collection('BlockDatesList')
-                                .doc('${details.date}')
+                                .doc(DateFormat('yyyy-MM-dd').format(details.date!))
                                 .set({
                               'LunchOrDinner': result,
                               'isDalddong': false,
@@ -576,7 +568,7 @@ class _MyScheduleState extends State<MySchedule> {
                               }
                             }
                           } else {
-                            final result = await yesNoDialog(context, '정말 해제하시겠어용?');
+                            final result = await yesNoDialog(context, '정말 해제하시겠어요?');
                             if (result == true) {
                               // print("삭제");
                               await FirebaseFirestore.instance
@@ -599,16 +591,9 @@ class _MyScheduleState extends State<MySchedule> {
 
                           _calendarController.selectedDate = calendarTapDetails.date;
                           if (calendarTapDetails.appointments != null) {
-                            context
-                                .read<ScheduleProvider>()
-                                .changeAppointmentDetails(calendarTapDetails
-                                    .appointments!
-                                    .cast<Meeting>());
+                            context.read<ScheduleProvider>().changeAppointmentDetails(calendarTapDetails.appointments!.cast<Meeting>());
                             setState(() {});
                           }
-                          // if(context.read<ScheduleProvider>().showAgenda) {
-                          //   const BottomAgenda();
-                          // }
 
                           if (calendarTapDetails.date!.month >
                               _calendarController.displayDate!.month) {
@@ -630,6 +615,7 @@ class _MyScheduleState extends State<MySchedule> {
                       child: ElevatedButton(
                         onPressed: () {
                           setState(() {
+                            _calendarController.selectedDate = DateTime.now();
                             _calendarController.displayDate = DateTime.now();
                           });
                         },
@@ -735,8 +721,6 @@ class Meeting {
   String background;
   bool isAllDay;
   bool isAppointment;
-// bool isDalddong;
-// int alarmMins;
 }
 
 // class GoogleAPIClient extends IOClient {
@@ -797,132 +781,128 @@ class Meeting {
 //   }
 // }
 
-class ShowBottomAgenda extends StatefulWidget {
-  final List<dynamic> details;
-
-  const ShowBottomAgenda({Key? key, required this.details}) : super(key: key);
-
-  @override
-  State<ShowBottomAgenda> createState() => _ShowBottomAgendaState();
-}
-
-class _ShowBottomAgendaState extends State<ShowBottomAgenda> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black12,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(2),
-        itemCount: context.read<ScheduleProvider>().appointmentDetails.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Container(
-            padding: const EdgeInsets.all(2),
-            height: 60,
-            color: Color(int.parse(context
-                .read<ScheduleProvider>()
-                .appointmentDetails[index]
-                .background)),
-            child: ListTile(
-              onTap: () async {
-                if (context
-                        .read<ScheduleProvider>()
-                        .appointmentDetails[index]
-                        .isAppointment ==
-                    true) {
-
-                  var chatRoomName = await FirebaseFirestore.instance
-                      .collection('user')
-                      .doc(FirebaseAuth.instance.currentUser?.email)
-                      .collection('chatRoomList')
-                      .doc(context
-                          .read<ScheduleProvider>()
-                          .appointmentDetails[index]
-                          .scheduleId)
-                      .get()
-                      .then((value) {
-                    return value.get('chatRoomName');
-                  });
-
-                  if(context.mounted) {
-                    PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
-                      ChatScreen(
-                          context.read<ScheduleProvider>().appointmentDetails[index].scheduleId,
-                          chatRoomName));
-                    await Navigator.push(context, pageRoute.slideBottonToTop());
-                  }
-                } else {
-                  PageRouteWithAnimation pageRoute =
-                      PageRouteWithAnimation(ModifyDeleteSchedule(
-                    meetingData: context
-                        .read<ScheduleProvider>()
-                        .appointmentDetails[index],
-                  ));
-                  Navigator.push(context, pageRoute.slideBottonToTop());
-                }
-              },
-              leading: Column(
-                children: <Widget>[
-                  Text(
-                    context
-                            .read<ScheduleProvider>()
-                            .appointmentDetails[index]
-                            .isAllDay
-                        ? ''
-                        : DateFormat('hh:mm a').format(context
-                            .read<ScheduleProvider>()
-                            .appointmentDetails[index]
-                            .from),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        height: 1.7),
-                  ),
-                  Text(
-                    context
-                            .read<ScheduleProvider>()
-                            .appointmentDetails[index]
-                            .isAllDay
-                        ? 'All day'
-                        : '',
-                    style: const TextStyle(height: 0.5, color: Colors.white),
-                  ),
-                  Text(
-                    context
-                            .read<ScheduleProvider>()
-                            .appointmentDetails[index]
-                            .isAllDay
-                        ? ''
-                        : DateFormat('hh:mm a').format(context
-                            .read<ScheduleProvider>()
-                            .appointmentDetails[index]
-                            .to),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
-                ],
-              ),
-              trailing: const Icon(
-                Icons.add,
-                size: 30,
-                color: Colors.white,
-              ),
-              title: Text(
-                  context
-                      .read<ScheduleProvider>()
-                      .appointmentDetails[index]
-                      .eventName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, color: Colors.white)),
-            ),
-          );
-        },
-        separatorBuilder: (BuildContext context, int index) => const Divider(
-          height: 5,
-        ),
-      ),
-    );
-  }
-}
+// class ShowBottomAgenda extends StatefulWidget {
+//   final List<dynamic> details;
+//
+//   const ShowBottomAgenda({Key? key, required this.details}) : super(key: key);
+//
+//   @override
+//   State<ShowBottomAgenda> createState() => _ShowBottomAgendaState();
+// }
+//
+// class _ShowBottomAgendaState extends State<ShowBottomAgenda> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       color: Colors.black12,
+//       child: ListView.separated(
+//         padding: const EdgeInsets.all(2),
+//         itemCount: context.read<ScheduleProvider>().appointmentDetails.length,
+//         itemBuilder: (BuildContext context, int index) {
+//           return Container(
+//             padding: const EdgeInsets.all(2),
+//             height: 60,
+//             color: Color(int.parse(context.read<ScheduleProvider>().appointmentDetails[index].background)),
+//             child: ListTile(
+//               onTap: () async {
+//                 if (context
+//                         .read<ScheduleProvider>()
+//                         .appointmentDetails[index]
+//                         .isAppointment == true) {
+//
+//                   var chatRoomName = await FirebaseFirestore.instance
+//                       .collection('user')
+//                       .doc(FirebaseAuth.instance.currentUser?.email)
+//                       .collection('chatRoomList')
+//                       .doc(context
+//                           .read<ScheduleProvider>()
+//                           .appointmentDetails[index]
+//                           .scheduleId)
+//                       .get()
+//                       .then((value) {
+//                     return value.get('chatRoomName');
+//                   });
+//
+//                   if(context.mounted) {
+//                     PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
+//                       ChatScreen(
+//                           context.read<ScheduleProvider>().appointmentDetails[index].scheduleId,
+//                           chatRoomName));
+//                     await Navigator.push(context, pageRoute.slideBottonToTop());
+//                   }
+//                 } else {
+//                   PageRouteWithAnimation pageRoute =
+//                       PageRouteWithAnimation(ModifyDeleteSchedule(
+//                     meetingData: context
+//                         .read<ScheduleProvider>()
+//                         .appointmentDetails[index],
+//                   ));
+//                   Navigator.push(context, pageRoute.slideBottonToTop());
+//                 }
+//               },
+//               leading: Column(
+//                 children: <Widget>[
+//                   Text(
+//                     context
+//                             .read<ScheduleProvider>()
+//                             .appointmentDetails[index]
+//                             .isAllDay
+//                         ? ''
+//                         : DateFormat('hh:mm a').format(context
+//                             .read<ScheduleProvider>()
+//                             .appointmentDetails[index]
+//                             .from),
+//                     textAlign: TextAlign.center,
+//                     style: const TextStyle(
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.white,
+//                         height: 1.7),
+//                   ),
+//                   Text(
+//                     context
+//                             .read<ScheduleProvider>()
+//                             .appointmentDetails[index]
+//                             .isAllDay
+//                         ? 'All day'
+//                         : '',
+//                     style: const TextStyle(height: 0.5, color: Colors.white),
+//                   ),
+//                   Text(
+//                     context
+//                             .read<ScheduleProvider>()
+//                             .appointmentDetails[index]
+//                             .isAllDay
+//                         ? ''
+//                         : DateFormat('hh:mm a').format(context
+//                             .read<ScheduleProvider>()
+//                             .appointmentDetails[index]
+//                             .to),
+//                     textAlign: TextAlign.center,
+//                     style: const TextStyle(
+//                         fontWeight: FontWeight.w600, color: Colors.white),
+//                   ),
+//                 ],
+//               ),
+//               trailing: const Icon(
+//                 Icons.add,
+//                 size: 30,
+//                 color: Colors.white,
+//               ),
+//               title: Text(
+//                   context
+//                       .read<ScheduleProvider>()
+//                       .appointmentDetails[index]
+//                       .eventName,
+//                   textAlign: TextAlign.center,
+//                   style: const TextStyle(
+//                       fontWeight: FontWeight.w600, color: Colors.white)),
+//             ),
+//           );
+//         },
+//         separatorBuilder: (BuildContext context, int index) => const Divider(
+//           height: 5,
+//         ),
+//       ),
+//     );
+//   }
+// }

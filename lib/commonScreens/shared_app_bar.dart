@@ -65,7 +65,7 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: const Icon(Icons.exit_to_app),
           ),
 
-        if(hasLogout && hasIcon)
+        if(!hasLogout && hasIcon)
           IconButton(
           icon: const Icon(
             Icons.add_alert,
@@ -77,7 +77,7 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
           },
         ),
 
-        if(hasLogout && hasIcon)
+        if(!hasLogout && hasIcon)
           IconButton(
           icon: const Icon(
             Icons.settings,

@@ -72,7 +72,7 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
             });
 
             print("푸시알람 완료");
-            dalddongMembers?.forEach((element) {
+            dalddongMembers.forEach((element) {
               FirebaseFirestore.instance
                   .collection('user')
                   .doc(element.get('userEmail'))
@@ -99,42 +99,40 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
               });
             });
 
+            try{
+              if(context.mounted) {
+
+                print(dalddongId);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) =>
+                        VoteScreen(
+                            voteDates: voteDates,
+                            dalddongId: dalddongId)
+                    )
+                );
+              }
+            } catch(e){
+              print("Error: ${e.toString()}");
+            }
+
             break;
         }
         else {
             addedDate += 1;
           }
         }
-
-        try{
-          if(context.mounted) {
-            
-            print(dalddongId);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) =>
-              VoteScreen(
-                  voteDates: voteDates,
-                  dalddongId: dalddongId)
-              )
-            );
-        
-
-        }
-      } catch(e){
-        print("Error: ${e.toString()}");
-      }       
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context)  {
 
 
     // add Members
-    widget.dalddongMembers?.forEach((element) async {
+    widget.dalddongMembers?.forEach((element) {
 
       // get BlockDatesList among members
-      await FirebaseFirestore.instance
+      FirebaseFirestore.instance
           .collection('user')
           .doc(element.get('userEmail'))
           .collection('BlockDatesList') //.where('isDalddong', isEqualTo: true)
@@ -147,7 +145,88 @@ class _WaitCalculateDatesState extends State<WaitCalculateDates> {
     });
 
       blockedDates = blockedDates.toSet().toList();
-      await asyncableFunction(widget.dalddongMembers, blockedDates);       
+    while (true) {
+      DateTime today = DateTime(
+          DateTime
+              .now()
+              .year, DateTime
+          .now()
+          .month, DateTime
+          .now()
+          .day);
+      DateTime candidateDate = today.add(Duration(days: addedDate));
+      if (blockedDates.contains(candidateDate) == false) {
+        voteDates.add(candidateDate);
+      }
+      if(voteDates.length == 5){
+
+        print("투표날짜 계산 완료");
+        dalddongId = addDalddongVoteList(context, widget.dalddongMembers!, voteDates);
+        voteDates.forEach((element) {
+          FirebaseFirestore.instance
+              .collection('DalddongList')
+              .doc(dalddongId)
+              .collection('voteDates')
+              .doc(DateFormat('yyyy-MM-dd').format(element))
+              .set({
+            'voted': 0,
+            'votedMembers': FieldValue.arrayUnion([]),
+          });
+        });
+
+        widget.dalddongMembers?.forEach((element) {
+          FirebaseFirestore.instance
+              .collection('user')
+              .doc(element.get('userEmail'))
+              .get()
+              .then((value) {
+            var userToken = value.get('pushToken');
+            var title = "달똥 날짜 투표";
+            var body = "${widget.hostName} 님께서 달똥 날짜투표를 보내셨습니다.";
+            var details = {
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'id': dalddongId,
+              'eventId': dalddongId,
+              'eventType': "DDV",
+              'membersNum': widget.dalddongMembers?.length,
+              'hostName': widget.hostName,
+
+            };
+            _pushManager.sendPushMsg(
+                userToken: userToken,
+                title: title,
+                body: body,
+                details: details);
+            print("send To ${element.get('userName')}");
+          });
+        });
+        print("푸시알람 완료");
+
+        try{
+          if(context.mounted) {
+
+            print("push to voteScreen");
+            Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>
+                    VoteScreen(
+                        voteDates: voteDates,
+                        dalddongId: dalddongId)
+                )
+            );
+          }
+        } catch(e){
+          print("Error: ${e.toString()}");
+        }
+
+        break;
+      }
+      else {
+        addedDate += 1;
+      }
+    }
+
+      // asyncableFunction(widget.dalddongMembers, blockedDates);
 
     return Scaffold(
         body: Center(

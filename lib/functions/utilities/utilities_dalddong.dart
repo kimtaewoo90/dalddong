@@ -85,7 +85,7 @@ void completeDalddongVote(BuildContext context, String? dalddongId,
           'endDate': dalddongDate,
           'isAllDay': false,
           'isAppointment': true,
-          'color': '0xff025645',
+          'color': value.get('Color'),
           'alarm': 1440, // TODO: 기본 하루 전 알람
         });
 
@@ -118,6 +118,18 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
   // My DB
   String? myName;
 
+  var color = context.read<DalddongProvider>().DalddongLunch  == true ? // lunch
+  context.read<DalddongProvider>().starRating == 1 ? "0xFFFFECB3"
+      : context.read<DalddongProvider>().starRating == 2 ? "0xFFFFE082"
+      : context.read<DalddongProvider>().starRating == 3 ? "0xFFFFD54F"
+      : context.read<DalddongProvider>().starRating == 4 ? "0xFFFFCA28"
+      : "0xFFFFC107"
+      :   context.read<DalddongProvider>().starRating == 1 ? "0xFFC5CAE9"
+      : context.read<DalddongProvider>().starRating == 2 ? "0xFF9FA8DA"
+      : context.read<DalddongProvider>().starRating == 3 ? "0xFF7986CB"
+      : context.read<DalddongProvider>().starRating == 4 ? "0xFF5C6BC0"
+      : "0xFF3F51B5";
+
   SharedPreferences.getInstance().then((value) {
     SharedPreferences prefs = value;
     myName = prefs.getString('userName');
@@ -128,7 +140,7 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
       'hostName': myName,
       'LunchOrDinner':
       context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
-      'Color': "0xff025645",
+      'Color': color,
       'DalddongId': dalddongId,
       'Importance': context.read<DalddongProvider>().starRating,
       'CreateTime': DateTime.now(),
@@ -179,6 +191,19 @@ String addDalddongList(
   String? myImage;
   String? myEmail;
 
+  var color = context.read<DalddongProvider>().DalddongLunch  == true ? // lunch
+                  context.read<DalddongProvider>().starRating == 1 ? "0xFFFFECB3"
+                  : context.read<DalddongProvider>().starRating == 2 ? "0xFFFFE082"
+                  : context.read<DalddongProvider>().starRating == 3 ? "0xFFFFD54F"
+                  : context.read<DalddongProvider>().starRating == 4 ? "0xFFFFCA28"
+                  : "0xFFFFC107"
+              :   context.read<DalddongProvider>().starRating == 1 ? "0xFFC5CAE9"
+                  : context.read<DalddongProvider>().starRating == 2 ? "0xFF9FA8DA"
+                  : context.read<DalddongProvider>().starRating == 3 ? "0xFF7986CB"
+                  : context.read<DalddongProvider>().starRating == 4 ? "0xFF5C6BC0"
+                  : "0xFF3F51B5";
+
+  print(color);
   SharedPreferences.getInstance().then((value) {
     SharedPreferences prefs = value;
     myName = prefs.getString('userName');
@@ -192,7 +217,7 @@ String addDalddongList(
       'hostName': myName,
       'LunchOrDinner':
           context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
-      'Color': "0xff025645",
+      'Color': color,
       'DalddongId': DalddongId,
       'Importance': context.read<DalddongProvider>().starRating,
       'CreateTime': DateTime.now(),
@@ -338,12 +363,12 @@ void completeDalddongSchedule(
             .set({
           'scheduleId': dalddongId,
           'title':
-              "${dalddongValue.get('hostName')} 외 ${dalddongValue.get('MemberNumbers')}명 과의 ${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'}",
+              "${dalddongValue.get('LunchOrDinner') == 0 ? '점심' : '저녁'} 달똥",
           'startDate': dalddongValue.get('DalddongDate'),
           'endDate': dalddongValue.get('DalddongDate'),
           'isAllDay': false,
           'isAppointment': true,
-          'color': '0xff025645',
+          'color': dalddongValue.get('Color'),
           'alarm': 1440, // TODO:기본 하루 전 알람
         });
 
@@ -360,14 +385,12 @@ void completeDalddongSchedule(
             .then((value) {
           bool isExistBlocked = false;
           value.docs.forEach((element) {
-            print("$blockDate / ${DateTime.parse(element.id)}");
             if (element.id == blockDate) {
               isExistBlocked = true;
               return;
             }
           });
 
-          print(isExistBlocked);
           FirebaseFirestore.instance
               .collection('user')
               .doc(userValue.get('userEmail'))

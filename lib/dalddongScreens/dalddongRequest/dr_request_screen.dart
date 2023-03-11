@@ -22,8 +22,10 @@ class RegistrationDalddong extends StatefulWidget {
 class _RegistrationDalddongState extends State<RegistrationDalddong> {
   TextEditingController searchTextEditingController = TextEditingController();
   Future<QuerySnapshot>? futureSearchResults;
+
   bool isError = false;
   bool isMyBlockDate = false;
+  bool isBlockDate = false;
   bool isMyDalddongIngDate = false;
   bool isDalddongIngDate = false;
 
@@ -61,105 +63,6 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
     setState(() {
       futureSearchResults = allUsers;
     });
-  }
-
-  displayUsersFoundScreen() {
-    double width = MediaQuery.of(context).size.width * 0.6;
-
-    return FutureBuilder(
-        future: futureSearchResults,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          }
-
-          return SizedBox(
-            child: ListView.builder(
-              itemCount: snapshot.data?.docs.length,
-              itemBuilder: (ctx, index) => Container(
-                padding: const EdgeInsets.all(1),
-                child: Card(
-                  child: InkWell(
-                    onTap: () {},
-                    child: Row(children: [
-                      Checkbox(
-                          value: false,
-                          onChanged: (value) {
-                            setState(() {});
-                          }),
-                      SizedBox(
-                        width: 90,
-                        height: 80,
-                        child: Image.network(
-                            snapshot.data?.docs[index]['picked_image']),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              width: width,
-                              child: Text(
-                                snapshot.data?.docs[index]['userName'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    ]),
-                  ),
-                ),
-              ),
-            ),
-          );
-        });
-  }
-
-  displayNoSearchResultScreen() {
-    // final Orientation orientation = MediaQuery.of(context).orientation;
-    return FutureBuilder(
-        future: futureSearchResults,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          List<UserResult> friendsListResult = [];
-
-          snapshot.data?.docs.forEach((document) {
-            UserResult userResult = UserResult(document);
-            friendsListResult.add(userResult);
-          });
-
-          return Flexible(
-            fit: FlexFit.tight,
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.8,
-              child: ListView(
-                // shrinkWrap: true,
-                children: friendsListResult,
-              ),
-            ),
-          );
-        });
-  }
-
-  allDoneRequestDalddong() {
-    if (isError == false) {
-      var dalddongId = addDalddongList(
-          context, context.read<DalddongProvider>().newDdFriends);
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ResponseStatus(
-              dalddongId: dalddongId,
-            ),
-          ));
-    }
   }
 
   @override
@@ -201,14 +104,24 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                 width: MediaQuery.of(context).size.width - 30,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: GeneralUiConfig.floatingBtnColor,
                   ),
                   child: Text(
-                      "${context.read<DalddongProvider>().DalddongDate.year}년 "
-                      "${context.read<DalddongProvider>().DalddongDate.month}월 "
-                      "${context.read<DalddongProvider>().DalddongDate.day}일 "
-                      "(${weekday_list[context.read<DalddongProvider>().DalddongDate.weekday - 1]})"),
+                    "${context.read<DalddongProvider>().DalddongDate.year}년 "
+                    "${context.read<DalddongProvider>().DalddongDate.month}월 "
+                    "${context.read<DalddongProvider>().DalddongDate.day}일 "
+                    "(${weekday_list[context.read<DalddongProvider>().DalddongDate.weekday - 1]})",
+                    style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: GeneralUiConfig.hintSize),
+                  ),
                   onPressed: () {
+                    isError = false;
+                    isMyBlockDate = false;
+                    isBlockDate = false;
+                    isMyDalddongIngDate = false;
+                    isDalddongIngDate = false;
+
                     Future<DateTime?> selectedStartDate = showDatePicker(
                       context: context,
                       initialDate:
@@ -220,7 +133,7 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                       //마지막일
                       builder: (BuildContext context, Widget? child) {
                         return Theme(
-                          data: ThemeData.light(), //다크 테마
+                          data: ThemeData.light(), // 테마
                           child: child!,
                         );
                       },
@@ -251,7 +164,7 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         context.read<DalddongProvider>().DalddongLunch == true
-                            ? Colors.blue
+                            ? GeneralUiConfig.floatingBtnColor
                             : Colors.grey,
                   ),
                   child: const Text("점심"),
@@ -261,7 +174,6 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                         .read<DalddongProvider>()
                         .changeDalddongDinner(false);
                     context.read<DalddongProvider>().changeLunchOrDinner(0);
-
                   },
                 ),
               ),
@@ -274,7 +186,7 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
                         context.read<DalddongProvider>().DalddongDinner == true
-                            ? Colors.blue
+                            ? GeneralUiConfig.floatingBtnColor
                             : Colors.grey,
                   ),
                   child: const Text("저녁"),
@@ -282,7 +194,6 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                     context.read<DalddongProvider>().changeDalddongLunch(false);
                     context.read<DalddongProvider>().changeDalddongDinner(true);
                     context.read<DalddongProvider>().changeLunchOrDinner(1);
-
                   },
                 ),
               ),
@@ -463,8 +374,8 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
               height: 40,
               child: ElevatedButton(
                 style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(GeneralUiConfig.btnColor),
+                    backgroundColor: MaterialStateProperty.all(
+                        GeneralUiConfig.floatingBtnColor),
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                         RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0.0),
@@ -489,134 +400,161 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                     return;
                   }
 
-                  try{
-                    isMyBlockDate = await FirebaseFirestore.instance
-                        .collection('user')
-                        .doc(FirebaseAuth.instance.currentUser?.email)
-                        .collection('BlockDatesList')
-                        .get()
-                        .then((value) {
-                      bool myTemp = false;
-                      value.docs.forEach((docs) {
-                        if (DateTime.parse(docs.id) ==
-                            context.read<DalddongProvider>().DalddongDate &&
-                            (docs.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
-                                docs.get('LunchOrDinner') == 2)) {
-                          myTemp = true;
-                          showAlertDialog(
-                              context,
-                              "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
-                                  " ${docs.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 존재합니다. 날짜를 바꿔보세요!!!' : docs.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 존재합니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 존재합니다. 날짜를 바꿔보세요!!'}");
+                  // 신청인 블락 날짜 계산
+                  isMyBlockDate = await FirebaseFirestore.instance
+                      .collection('user')
+                      .doc(FirebaseAuth.instance.currentUser?.email)
+                      .collection('BlockDatesList')
+                      .get()
+                      .then((value) {
+                    var temp = false;
+                    value.docs.forEach((docs) {
+                      if (DateTime.parse(docs.id) ==
+                          context.read<DalddongProvider>().DalddongDate) {
+                        if (docs.get('LunchOrDinner') ==
+                            context.read<DalddongProvider>().lunchOrDinner) {
+                          temp = true;
                           return;
                         }
-                      });
-                      return myTemp;
+                      }
                     });
+                    return temp;
+                  });
 
-                    if (context.mounted) {
-                      if (isMyBlockDate == false) {
-                        // 해당날짜에 진행중인 달똥이 있을 경우
-                        context
-                            .read<DalddongProvider>()
-                            .newDdFriends.forEach((eachUser) async{
-                              bool ingTemp = false;
-                              isDalddongIngDate = await FirebaseFirestore.instance
-                                  .collection('DalddongList')
-                                  .where('isAllConfirmed', isEqualTo: false)
-                              .get()
-                              .then((value) {
-                                value.docs.forEach((element) {
-                                  if(ingTemp){
-                                    print("ingTemp is true");
-                                    return;
-                                  }
-
-                                  // 내가 진행중인 달똥이 있을 경우
-                                  if(List.from(element.get('dalddongMembers')).contains(FirebaseAuth.instance.currentUser?.email) &&
-                                      element.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner &&
-                                      DateTime.fromMillisecondsSinceEpoch(element.get('DalddongDate').seconds * 1000) == context.read<DalddongProvider>().DalddongDate
-                                  ){
-                                    showAlertDialog(
-                                        context,
-                                        "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
-                                            " ${element.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : element.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!'}");
-                                    ingTemp = true;
-                                    return;
-                                  }
-
-                                  // 상대가 진행중인 달똥이 있을 경우
-                                  if(List.from(element.get('dalddongMembers')).contains(eachUser.get('userEmail')) &&
-                                      element.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner &&
-                                      DateTime.fromMillisecondsSinceEpoch(element.get('DalddongDate').seconds * 1000) == context.read<DalddongProvider>().DalddongDate
-                                  ){
-                                    showAlertDialog(
-                                        context,
-                                        "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
-                                            " ${element.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : element.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!'}");
-                                    ingTemp = true;
-                                    return;
-                                  }
-                                });
-                                return ingTemp;
-                              });
-                              if(isDalddongIngDate){
-                                return;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    var temp = false;
+                    context
+                        .read<DalddongProvider>()
+                        .newDdFriends
+                        .forEach((eachUser) async {
+                      // 해당날짜에 진행중인 달똥이 있을 경우
+                      isDalddongIngDate = await FirebaseFirestore.instance
+                          .collection('DalddongList')
+                          .where('isAllConfirmed', isEqualTo: false)
+                          .get()
+                          .then((value) {
+                        value.docs.forEach((element) {
+                          // 신청인 진행중인 달똥
+                          if (element.get('DalddongDate') != null) {
+                            if (List.from(element.get('dalddongMembers'))
+                                .contains(
+                                    FirebaseAuth.instance.currentUser?.email)) {
+                              if (DateTime.fromMillisecondsSinceEpoch(
+                                      element.get('DalddongDate').seconds *
+                                              1000 ??
+                                          DateTime.now()) ==
+                                  context
+                                      .read<DalddongProvider>()
+                                      .DalddongDate) {
+                                if (element.get('LunchOrDinner') ==
+                                    context
+                                        .read<DalddongProvider>()
+                                        .lunchOrDinner) {
+                                  temp = true;
+                                  return;
+                                }
                               }
-
-                              return;
-
+                            } else if (List.from(element.get('dalddongMembers'))
+                                .contains(eachUser.get('userEmail'))) {
+                              if (DateTime.fromMillisecondsSinceEpoch(
+                                      element.get('DalddongDate').seconds *
+                                              1000 ??
+                                          DateTime.now()) ==
+                                  context
+                                      .read<DalddongProvider>()
+                                      .DalddongDate) {
+                                if (element.get('LunchOrDinner') ==
+                                    context
+                                        .read<DalddongProvider>()
+                                        .lunchOrDinner) {
+                                  temp = true;
+                                  return;
+                                }
+                              }
+                            }
+                          }
                         });
-                        
-                        // 해당날짜에 블락한 인원이 있을 경우
-                        context.read<DalddongProvider>().newDdFriends
-                            .forEach((eachUser) async {
-                          bool temp = false;
-                          isError = await FirebaseFirestore.instance
-                              .collection('user')
-                              .doc(eachUser.get('userEmail'))
-                              .collection('BlockDatesList')
-                              .get()
-                              .then((value) {
-                            value.docs.forEach((blockDate) {
-                              if (DateTime.parse(blockDate.id) == context.read<DalddongProvider>().DalddongDate &&
-                                  (blockDate.get('LunchOrDinner') == context.read<DalddongProvider>().lunchOrDinner ||
-                                      blockDate.get('LunchOrDinner') == 2)) {
-                                showAlertDialog(
-                                    context,
-                                    "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
-                                        " ${blockDate.get('LunchOrDinner') == 0 ? '점심에 이미 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!!' : blockDate.get('LunchOrDinner') == 1 ? '저녁에 이미 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!!' : '종일 달똥약속이 존재하는 인원이 있습니다. 날짜를 바꿔보세요!!'}");
+                        return temp;
+                      });
+
+                      if (!isDalddongIngDate) {
+                        isBlockDate = await FirebaseFirestore.instance
+                            .collection('user')
+                            .doc(eachUser.get('userEmail'))
+                            .collection('BlockDatesList')
+                            .get()
+                            .then((blockValue) {
+                          blockValue.docs.forEach((blockDates) {
+                            if (DateTime.parse(blockDates.id) ==
+                                context.read<DalddongProvider>().DalddongDate) {
+                              if (blockDates.get('LunchOrDinner') ==
+                                  context
+                                      .read<DalddongProvider>()
+                                      .lunchOrDinner) {
                                 temp = true;
                                 return;
                               }
-                            });
-                            return temp;
+                            }
                           });
+                          return temp;
                         });
-
-                        if (context.mounted) {
-                          if (!isError && !isDalddongIngDate) {
-                            var dalddongId = addDalddongList(context,
-                                context.read<DalddongProvider>().newDdFriends);
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ResponseStatus(
-                                    dalddongId: dalddongId,
-                                  ),
-                                ));
-                          }
-                        }
                       }
-                    }
-                  } catch(e){
-                    showAlertDialog(context, e.toString());
-                    print(e.toString());
-                  }
 
+                      if (isDalddongIngDate || isBlockDate) {
+                        return;
+                      }
+                    });
+                  });
+
+                  if(context.mounted){
+                    print("isDalddongIngDate : $isDalddongIngDate");
+                    print("isMyDalddongIngDate : $isMyDalddongIngDate");
+                    print("isMyBlockDate : $isMyBlockDate");
+                    print("isBlockDate : $isBlockDate");
+
+
+                    if (isMyBlockDate || isBlockDate) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        showAlertDialog(
+                            context,
+                            "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
+                                " ${context.read<DalddongProvider>().lunchOrDinner == 0 ? '점심' : context.read<DalddongProvider>().lunchOrDinner == 1 ? '저녁' : '종일'} 이미 블락되어있습니다. 날짜를 바꿔보세요!!!");
+                      });
+                      return;
+                    }
+
+                    if (isDalddongIngDate) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        showAlertDialog(
+                            context,
+                            "${DateFormat('yyyy-MM-dd', 'ko_KR').format(context.read<DalddongProvider>().DalddongDate)}"
+                                " ${context.read<DalddongProvider>().lunchOrDinner == 0 ? '점심' : context.read<DalddongProvider>().lunchOrDinner == 1 ? '저녁' : '종일'}  달똥약속이 진행중인 인원이 있습니다. 날짜를 바꿔보세요!!!'");
+                      });
+                      return;
+                    }
+
+                    // if (!isDalddongIngDate &&
+                    //     !isBlockDate &&
+                    //     !isMyBlockDate &&
+                    //     !isMyDalddongIngDate) {
+                      // WidgetsBinding.instance.addPostFrameCallback((_) {
+                        var dalddongId = addDalddongList(context,
+                            context.read<DalddongProvider>().newDdFriends);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ResponseStatus(
+                                dalddongId: dalddongId,
+                              ),
+                            ));
+                      // });
+                    // }
+                  // });
+                  }
                 },
                 child: const Text("달력에 동그라미"),
               ),
-            )
+            ),
           ],
         ),
       ),

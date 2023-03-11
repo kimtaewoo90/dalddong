@@ -36,7 +36,7 @@ class _UploadPostState extends State<UploadPost> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CommunityProvider>(context);
-    final List<String> categoryList = ['독서/영화', '말타기', '겨울스포츠', '여름스포츠', '게임', '친목', '커피', '봄괴롭히기', '기타'];
+    final List<String> categoryList = ['전체', '일상', '맛집추천', '취미', '회사생활', '기타'];
 
     List<CategoryChip> categoryChips = [];
     for (var category in categoryList) {
@@ -257,7 +257,7 @@ class _CategoryChipState extends State<CategoryChip> {
         onPressed: (){
           context.read<CommunityProvider>().changeSelectedCategory(widget.category!);
         },
-        backgroundColor: context.read<CommunityProvider>().isSelectedCategory == widget.category! ? Colors.black : Colors.grey,
+        backgroundColor: context.read<CommunityProvider>().isSelectedCategory == widget.category! ? Colors.black : Colors.white,
       ),
     );
   }

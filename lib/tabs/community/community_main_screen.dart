@@ -61,7 +61,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<CommunityProvider>(context);
 
-    final List<String> categoryList = ['전체', '독서/영화', '말타기', '겨울스포츠', '여름스포츠', '게임', '친목', '커피', '봄괴롭히기', '기타'];
+    final List<String> categoryList = ['전체', '일상', '맛집추천', '취미', '회사생활', '기타'];
 
     final List<String> valueList = ['최신순', '인기순(좋아요순)'];
     String? selectedValue = '최신순';

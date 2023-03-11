@@ -23,9 +23,17 @@ class GeneralUiConfig{
 
    static const Color floatingBtnColor = Colors.amberAccent;
 
-   static const Color blockLunchColor = Colors.red;
-   static const Color blockDinnerColor = Colors.pink;
-   static const Color blockAlldayColor = Colors.grey;
+   static const Color lunchStart5Color = Color(0xFFFFC107);
+   static const Color lunchStart4Color = Color(0xFFFFCA28);
+   static const Color lunchStart3Color = Color(0xFFFFD54F);
+   static const Color lunchStart2Color = Color(0xFFFFE082);
+   static const Color lunchStart1Color = Color(0xFFFFECB3);
+
+   static const Color dinnerStart5Color = Color(0xFF3F51B5);
+   static const Color dinnerStart4Color = Color(0xFF5C6BC0);
+   static const Color dinnerStart3Color = Color(0xFF7986CB);
+   static const Color dinnerStart2Color = Color(0xFF9FA8DA);
+   static const Color dinnerStart1Color = Color(0xFFC5CAE9);
 
    static const Color borderDarkModeColor = Colors.white;
    static const Color borderWhiteModeColor = Colors.black12;

@@ -84,12 +84,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
               title: "달똥메이트",
               backBtn: false,
               center: false,
+              hasIcon: true,
+
             ),
             body: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('user')
                   .doc(FirebaseAuth.instance.currentUser?.email)
-                  .collection('friendsList')
+                  .collection('friendsList').orderBy('userName', descending: false)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -147,7 +149,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
 
                     if (snapshot.data!.docs.isEmpty)
                       const Center(
-                        child: Text("노 친구"),
+                        child: Text("친구가 없습니다. 아래 추가하기 버튼을 친구를 추가해주세요"),
                       ),
 
                     if (snapshot.data!.docs.isNotEmpty)
@@ -173,9 +175,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                     radius: 25,
                                     backgroundColor: Colors.white,
                                     backgroundImage: NetworkImage(snapshot
-                                            .data?.docs[index]['userImage'] ??
-                                        "")
-                                    //ExactAssetImage('image/default_profile.png'),
+                                            .data?.docs[index]['userImage'])
                                     ),
                                 title: Text(
                                   snapshot.data?.docs[index]['userName'],

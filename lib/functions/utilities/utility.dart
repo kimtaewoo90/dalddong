@@ -106,7 +106,7 @@ Future<void> showAlertDialog(BuildContext context, String msg) async {
 Future<int?> addBlockTypeDialog(BuildContext context, String msg) async {
   return await showDialog<int>(
     context: context,
-    barrierDismissible: false, // user must tap button!
+    barrierDismissible: true,
     builder: (BuildContext context) {
       return AlertDialog(
         content: SingleChildScrollView(
@@ -118,9 +118,7 @@ Future<int?> addBlockTypeDialog(BuildContext context, String msg) async {
         ),
         actions: <Widget>[
           ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, 0);
-              },
+              onPressed: () => Navigator.pop(context, 0),
               child: const Text('점심')),
           ElevatedButton(
               onPressed: () => Navigator.pop(context, 1),

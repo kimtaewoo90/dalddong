@@ -33,7 +33,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
         appBar: BaseAppBar(
           appBar: AppBar(),
           title: "수락대기중",
-          backBtn: false, 
+          backBtn: false,
           center: true,
         ),
         body: FutureBuilder<QuerySnapshot>(

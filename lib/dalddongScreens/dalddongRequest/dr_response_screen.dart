@@ -149,7 +149,7 @@ class _ResponseDRState extends State<ResponseDR> {
 
                   if(context.mounted) {
                     PageRouteWithAnimation pageRoute =
-                      PageRouteWithAnimation(MainScreen());
+                      PageRouteWithAnimation(const MainScreen());
                     Navigator.push(context, pageRoute.slideRitghtToLeft());
                   }
                 },
@@ -305,7 +305,7 @@ class _UserResponse extends State<UserResponse> {
                           width: 50,
                           child: Container(
                             decoration: BoxDecoration(
-                                color: const Color(0xff025645),
+                                color: GeneralUiConfig.floatingBtnColor,
                                 borderRadius: BorderRadius.circular(5)),
                             child: const Center(
                                 child: Text(
