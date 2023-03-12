@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dalddong/commonScreens/config.dart';
 import 'package:dalddong/functions/utilities/Utility.dart';
 import 'package:dalddong/functions/utilities/utilities_dalddong.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../commonScreens/shared_app_bar.dart';
 import '../../functions/providers/calendar_provider.dart';
 import 'dv_calculate_available_date_screen.dart';
+import 'dv_vote_screen.dart';
 
 
 class RegistrationDalddongInChat extends StatefulWidget {
@@ -29,6 +32,10 @@ class _RegistrationDalddongInChatState
   TextEditingController searchTextEditingController = TextEditingController();
   Future<QuerySnapshot>? futureSearchResults;
   List<String> alreadyInChatRoom = [];
+
+  List<DateTime> voteDates = [];
+  String dalddongId = "";
+
 
   @override
   void initState() {
@@ -350,7 +357,7 @@ class _RegistrationDalddongInChatState
             child: ElevatedButton(
               style: ButtonStyle(
                   backgroundColor:
-                  MaterialStateProperty.all(const Color(0xff025645))),
+                  MaterialStateProperty.all(GeneralUiConfig.floatingBtnColor)),
               onPressed: () async {
                 // 기존 맴버 provider에 추가
                 widget.chatMembers?.forEach((element) {
@@ -358,18 +365,44 @@ class _RegistrationDalddongInChatState
                 });
 
                 if (context.read<DalddongProvider>().newDdFriends.isNotEmpty) {
-                  var myName = await getMyName();
+                  var dalddongMembers = context.read<DalddongProvider>().newDdFriends;
+                  var dalddongLunch = context.read<DalddongProvider>().DalddongLunch;
+                  var starRating = context.read<DalddongProvider>().starRating;
 
+                  // 투표날짜 계산 로직
+                  var blockDates =  getBlockDatesList(dalddongMembers);
+                  voteDates =  getVoteDates(dalddongMembers, blockDates);
+                  dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+
+                  voteDates.forEach((element) async {
+                    await FirebaseFirestore.instance
+                        .collection('DalddongList')
+                        .doc(dalddongId)
+                        .collection('voteDates')
+                        .doc(DateFormat('yyyy-MM-dd').format(element))
+                        .set({
+                      'voted': 0,
+                      'votedMembers': FieldValue.arrayUnion([]),
+                    });
+                  });
+
+                  // var myName = await getMyName();
                   if(context.mounted) {
-                    // var dalddongId = addDalddongVoteList(context, context.read<DalddongProvider>().newDdFriends);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => WaitCalculateDates(
-                              dalddongMembers: context.read<DalddongProvider>().newDdFriends,
-                              hostName: myName!
-                          ),
-                        ));
+
+                    // TODO:
+                    if(dalddongId != ""){
+                      print("push to voteScreen  $dalddongId");
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VoteScreen(
+                                voteDates: voteDates,
+                                dalddongId: dalddongId
+                            ),
+                          ));
+                    }
+
+
                   }
                 }
               },

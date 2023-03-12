@@ -50,10 +50,8 @@ class _VoteScreenState extends State<VoteScreen> {
                 .get(),
             builder: (context, dalddongSnapshot){
 
-              var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
-              print('expiredTime $expiredTime............');
-              print(dalddongSnapshot.data?.get('CreateTime'));
-              // print(DateTime.fromMillisecondsSinceEpoch(expiredTime.seconds * 1000));
+              // var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
+
               return FutureBuilder(
                 future: FirebaseFirestore.instance
                     .collection('DalddongList')
@@ -143,11 +141,11 @@ class _VoteScreenState extends State<VoteScreen> {
                                   TimerBuilder.periodic(
                                           const Duration(minutes: 1),
                                           builder: (context) {
-                                            diffHour = (DateTime.fromMillisecondsSinceEpoch(expiredTime.seconds * 1000)
+                                            diffHour = (DateTime.fromMillisecondsSinceEpoch(dalddongSnapshot.data?.get("ExpiredTime").seconds * 1000)
                                                 .difference(DateTime.now())
                                                 .inMinutes / 60).floor();
 
-                                            diffMin = (DateTime.fromMillisecondsSinceEpoch(expiredTime.seconds * 1000)
+                                            diffMin = (DateTime.fromMillisecondsSinceEpoch(dalddongSnapshot.data?.get("ExpiredTime").seconds * 1000)
                                                 .difference(DateTime.now())
                                                 .inMinutes % 60);
 

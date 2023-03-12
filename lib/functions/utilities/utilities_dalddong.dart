@@ -106,7 +106,8 @@ void completeDalddongVote(BuildContext context, String? dalddongId,
 
 }
 
-String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dalddongMembers, List<DateTime> voteList){
+Future<String> addDalddongVoteList(
+    List<QueryDocumentSnapshot> dalddongMembers, List<DateTime> voteList, bool dalddongLunch, int starRating) async {
   String dalddongId = generateRandomString(15);
   final pushManager = PushManager();
 
@@ -118,19 +119,19 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
   // My DB
   String? myName;
 
-  var color = context.read<DalddongProvider>().DalddongLunch  == true ? // lunch
-  context.read<DalddongProvider>().starRating == 1 ? "0xFFFFECB3"
-      : context.read<DalddongProvider>().starRating == 2 ? "0xFFFFE082"
-      : context.read<DalddongProvider>().starRating == 3 ? "0xFFFFD54F"
-      : context.read<DalddongProvider>().starRating == 4 ? "0xFFFFCA28"
+  var color = dalddongLunch  == true ? // lunch
+        starRating == 1 ? "0xFFFFECB3"
+      : starRating == 2 ? "0xFFFFE082"
+      : starRating == 3 ? "0xFFFFD54F"
+      : starRating== 4 ? "0xFFFFCA28"
       : "0xFFFFC107"
-      :   context.read<DalddongProvider>().starRating == 1 ? "0xFFC5CAE9"
-      : context.read<DalddongProvider>().starRating == 2 ? "0xFF9FA8DA"
-      : context.read<DalddongProvider>().starRating == 3 ? "0xFF7986CB"
-      : context.read<DalddongProvider>().starRating == 4 ? "0xFF5C6BC0"
+      :  starRating == 1 ? "0xFFC5CAE9"
+      : starRating == 2 ? "0xFF9FA8DA"
+      : starRating == 3 ? "0xFF7986CB"
+      : starRating== 4 ? "0xFF5C6BC0"
       : "0xFF3F51B5";
 
-  SharedPreferences.getInstance().then((value) {
+  await SharedPreferences.getInstance().then((value) {
     SharedPreferences prefs = value;
     myName = prefs.getString('userName');
 
@@ -139,10 +140,10 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
       'DalddongDate': null,
       'hostName': myName,
       'LunchOrDinner':
-      context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
+      dalddongLunch == true ? 0 : 1,
       'Color': color,
       'DalddongId': dalddongId,
-      'Importance': context.read<DalddongProvider>().starRating,
+      'Importance': starRating,
       'CreateTime': DateTime.now(),
       'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
       'dalddongMembers': FieldValue.arrayUnion(membersEmail),
@@ -151,7 +152,7 @@ String addDalddongVoteList(BuildContext context, List<QueryDocumentSnapshot> dal
       'isAllConfirmed': false
     });
     print("done insert main dalddong list to db");
-    print(dalddongId);
+
 
 
     // Member 개인DB에 저장
@@ -405,4 +406,53 @@ void completeDalddongSchedule(
       });
     });
   });
+}
+
+
+List<DateTime> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers)  {
+
+  List<DateTime> blockedDates = [];
+
+  print("getBlockDates Start");
+  dalddongMembers?.forEach((element) {
+    // get BlockDatesList among members
+    FirebaseFirestore.instance
+        .collection('user')
+        .doc(element.get('userEmail'))
+        .collection('BlockDatesList') //.where('isDalddong', isEqualTo: true)
+        .snapshots()
+        .forEach((blockedCollection) {
+      blockedCollection.docs.forEach((blocked) {
+        blockedDates.add(DateTime.parse(blocked.id));
+      });
+    });
+  });
+  print("getBlockDates End");
+
+  blockedDates = blockedDates.toSet().toList();
+  return blockedDates;
+}
+
+List<DateTime> getVoteDates(List<QueryDocumentSnapshot>? dalddongMembers, List<DateTime> blockedDates)  {
+
+  List<DateTime> voteDates = [];
+  int addedDate = 1;
+
+  print("getVoteDates Start");
+  while (true) {
+    DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    DateTime candidateDate = today.add(Duration(days: addedDate));
+    if (blockedDates.contains(candidateDate) == false) {
+      voteDates.add(candidateDate);
+    }
+    if(voteDates.length == 5){
+      break;
+    }
+    else {
+      addedDate += 1;
+    }
+  }
+  print("getVoteDates End");
+
+  return voteDates;
 }
