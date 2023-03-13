@@ -358,6 +358,7 @@ class _RegistrationDalddongInChatState
               style: ButtonStyle(
                   backgroundColor:
                   MaterialStateProperty.all(GeneralUiConfig.floatingBtnColor)),
+
               onPressed: () async {
                 // 기존 맴버 provider에 추가
                 widget.chatMembers?.forEach((element) {
@@ -370,7 +371,7 @@ class _RegistrationDalddongInChatState
                   var starRating = context.read<DalddongProvider>().starRating;
 
                   // 투표날짜 계산 로직
-                  var blockDates =  getBlockDatesList(dalddongMembers);
+                  var blockDates =  getBlockDatesList(dalddongMembers, dalddongLunch);
                   voteDates =  getVoteDates(dalddongMembers, blockDates);
                   dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
 

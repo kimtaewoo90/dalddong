@@ -507,10 +507,10 @@ class _RegistrationDalddongState extends State<RegistrationDalddong> {
                   });
 
                   if(context.mounted){
-                    print("isDalddongIngDate : $isDalddongIngDate");
-                    print("isMyDalddongIngDate : $isMyDalddongIngDate");
-                    print("isMyBlockDate : $isMyBlockDate");
-                    print("isBlockDate : $isBlockDate");
+                    // print("isDalddongIngDate : $isDalddongIngDate");
+                    // print("isMyDalddongIngDate : $isMyDalddongIngDate");
+                    // print("isMyBlockDate : $isMyBlockDate");
+                    // print("isBlockDate : $isBlockDate");
 
 
                     if (isMyBlockDate || isBlockDate) {

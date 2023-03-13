@@ -50,6 +50,10 @@ class _VoteScreenState extends State<VoteScreen> {
                 .get(),
             builder: (context, dalddongSnapshot){
 
+              if(!dalddongSnapshot.hasData){
+                return const Center(child: CircularProgressIndicator());
+              }
+
               // var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
 
               return FutureBuilder(

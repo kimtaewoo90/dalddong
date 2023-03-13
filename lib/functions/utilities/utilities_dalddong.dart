@@ -71,6 +71,13 @@ void completeDalddongVote(BuildContext context, String? dalddongId,
             userToken: userToken, title: title, body: body, details: details);
 
 
+        // 진행중인 달똥에서 삭제
+        FirebaseFirestore.instance
+            .collection('user')
+            .doc(members.get('userEmail'))
+            .collection('DalddongInProcess')
+            .doc(dalddongId).delete();
+
         // Register Dalddong Schedule at calendar
         FirebaseFirestore.instance
             .collection('user')
@@ -137,6 +144,7 @@ Future<String> addDalddongVoteList(
 
     // Main Dalddong List DB
     FirebaseFirestore.instance.collection('DalddongList').doc(dalddongId).set({
+      'dalddongType' : 'vote',
       'DalddongDate': null,
       'hostName': myName,
       'LunchOrDinner':
@@ -169,7 +177,28 @@ Future<String> addDalddongVoteList(
         'userImage': value['userImage'],
         'currentStatus': 0,
       });
-      print('${value['userName']} 를 Members에 추가 완료');
+      
+      FirebaseFirestore.instance
+        .collection('user')
+        .doc(value['userEmail'])
+        .collection('DalddongInProcess')
+        .doc(dalddongId)
+        .set({
+          'dalddongType' : 'vote',
+          'DalddongDate': null,
+          'hostName': myName,
+          'LunchOrDinner':
+          dalddongLunch == true ? 0 : 1,
+          'Color': color,
+          'DalddongId': dalddongId,
+          'Importance': starRating,
+          'CreateTime': DateTime.now(),
+          'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
+          'dalddongMembers': FieldValue.arrayUnion(membersEmail),
+          'MemberNumbers': dalddongMembers.length,
+          'voteDates': FieldValue.arrayUnion(voteList),
+          'isAllConfirmed': false
+      });
     });
   });
 
@@ -204,7 +233,7 @@ String addDalddongList(
                   : context.read<DalddongProvider>().starRating == 4 ? "0xFF5C6BC0"
                   : "0xFF3F51B5";
 
-  print(color);
+ 
   SharedPreferences.getInstance().then((value) {
     SharedPreferences prefs = value;
     myName = prefs.getString('userName');
@@ -214,6 +243,7 @@ String addDalddongList(
 
     // Main Dalddong List DB
     FirebaseFirestore.instance.collection('DalddongList').doc(DalddongId).set({
+      'dalddongType' : 'request',
       'DalddongDate': context.read<DalddongProvider>().DalddongDate,
       'hostName': myName,
       'LunchOrDinner':
@@ -226,6 +256,28 @@ String addDalddongList(
       'dalddongMembers': FieldValue.arrayUnion(membersEmail),
       'MemberNumbers': dalddongMembers.length,
       'isAllConfirmed': false
+    });
+
+    // DalddongInProcess 임시저장
+    FirebaseFirestore.instance
+        .collection('user')
+        .doc(myEmail)
+        .collection('DalddongInProcess')
+        .doc(DalddongId)
+        .set({
+          'dalddongType' : 'request',
+          'DalddongDate': context.read<DalddongProvider>().DalddongDate,
+          'hostName': myName,
+          'LunchOrDinner':
+              context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
+          'Color': color,
+          'DalddongId': DalddongId,
+          'Importance': context.read<DalddongProvider>().starRating,
+          'CreateTime': DateTime.now(),
+          'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
+          'dalddongMembers': FieldValue.arrayUnion(membersEmail),
+          'MemberNumbers': dalddongMembers.length,
+          'isAllConfirmed': false
     });
 
     FirebaseFirestore.instance
@@ -278,6 +330,28 @@ String addDalddongList(
         'userImage': value['userImage'],
         'currentStatus': 0,
       });
+
+      // DalddongInProcess 임시저장
+    FirebaseFirestore.instance
+        .collection('user')
+        .doc(value['userEmail'])
+        .collection('DalddongInProcess')
+        .doc(DalddongId)
+        .set({
+          'dalddongType' : 'request',
+          'DalddongDate': context.read<DalddongProvider>().DalddongDate,
+          'hostName': myName,
+          'LunchOrDinner':
+              context.read<DalddongProvider>().DalddongLunch == true ? 0 : 1,
+          'Color': color,
+          'DalddongId': DalddongId,
+          'Importance': context.read<DalddongProvider>().starRating,
+          'CreateTime': DateTime.now(),
+          'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
+          'dalddongMembers': FieldValue.arrayUnion(membersEmail),
+          'MemberNumbers': dalddongMembers.length,
+          'isAllConfirmed': false
+    });
 
       FirebaseFirestore.instance
           .collection('user')
@@ -342,7 +416,14 @@ void completeDalddongSchedule(
         pushManager.sendPushMsg(
             userToken: pushToken, title: title, body: body, details: details);
 
-        // print(element[''])
+  
+        // 진행중인 달똥에서 삭제
+        FirebaseFirestore.instance
+            .collection('user')
+            .doc(element)
+            .collection('DalddongInProcess')
+            .doc(dalddongId).delete();
+
         FirebaseFirestore.instance
             .collection('user')
             .doc(element)
@@ -409,23 +490,51 @@ void completeDalddongSchedule(
 }
 
 
-List<DateTime> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers)  {
+List<DateTime> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers, bool dalddongLunch)  {
 
   List<DateTime> blockedDates = [];
 
-  print("getBlockDates Start");
   dalddongMembers?.forEach((element) {
-    // get BlockDatesList among members
+    // 1. Block Dates
     FirebaseFirestore.instance
         .collection('user')
         .doc(element.get('userEmail'))
-        .collection('BlockDatesList') //.where('isDalddong', isEqualTo: true)
+        .collection('BlockDatesList')
+        .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
         .snapshots()
         .forEach((blockedCollection) {
-      blockedCollection.docs.forEach((blocked) {
-        blockedDates.add(DateTime.parse(blocked.id));
+          blockedCollection.docs.forEach((blocked) {
+          blockedDates.add(DateTime.parse(blocked.id));
       });
     });
+  
+  // 2. dalddong 진행중인 Date
+  FirebaseFirestore.instance
+      .collection('user')
+      .doc(element.get('userEmail'))
+      .collection('DalddongInProcess')
+      .where('dalddongType', isEqualTo: 'request')
+      .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+      .snapshots().forEach((dalddongInProcess){
+        dalddongInProcess.docs.forEach((process){
+          blockedDates.add(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(process.get('DalddongDate').seconds * 1000)));
+        });
+      });
+
+  // 3. dalddong vote 진행중인 Date
+  FirebaseFirestore.instance
+      .collection('user')
+      .doc(element.get('userEmail'))
+      .collection('DalddongInProcess')
+      .where('dalddongType', isEqualTo: 'vote')
+      .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+      .snapshots().forEach((dalddongVoteInProcess){
+        dalddongVoteInProcess.docs.forEach((voteProcess){
+          voteProcess.get('voteDates').forEach((voteDate){
+            blockedDates.add(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(voteDate.seconds * 1000)));
+          });
+        });
+      });
   });
   print("getBlockDates End");
 
