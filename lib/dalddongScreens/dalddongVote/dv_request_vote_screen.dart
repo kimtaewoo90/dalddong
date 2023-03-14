@@ -365,47 +365,93 @@ class _RegistrationDalddongInChatState
                   context.read<DalddongProvider>().changeNewDdFriends(element);
                 });
 
-                if (context.read<DalddongProvider>().newDdFriends.isNotEmpty) {
-                  var dalddongMembers = context.read<DalddongProvider>().newDdFriends;
-                  var dalddongLunch = context.read<DalddongProvider>().DalddongLunch;
-                  var starRating = context.read<DalddongProvider>().starRating;
+                // TODO : check the duplicated Vote members
+                var isDuplicatedMembers = isDuplicatedMembers(widget.chatMembers!, "vote");
+                if(isDuplicatedMembers){
+                  var yesOrNo = yesNoDialog("이미 현재 맴버와 투표중인 달똥이 있습니다. 또다른 달똥투표를 생성하시겠습니까?");
+                  if(yesOrNo){
+                    if (context.read<DalddongProvider>().newDdFriends.isNotEmpty) {
+                      var dalddongMembers = context.read<DalddongProvider>().newDdFriends;
+                      var dalddongLunch = context.read<DalddongProvider>().DalddongLunch;
+                      var starRating = context.read<DalddongProvider>().starRating;
 
-                  // 투표날짜 계산 로직
-                  var blockDates =  getBlockDatesList(dalddongMembers, dalddongLunch);
-                  voteDates =  getVoteDates(dalddongMembers, blockDates);
-                  dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+                      // 투표날짜 계산 로직
+                      var blockDates =  getBlockDatesList(dalddongMembers, dalddongLunch);
+                      voteDates =  getVoteDates(dalddongMembers, blockDates);
+                      dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
 
-                  voteDates.forEach((element) async {
-                    await FirebaseFirestore.instance
-                        .collection('DalddongList')
-                        .doc(dalddongId)
-                        .collection('voteDates')
-                        .doc(DateFormat('yyyy-MM-dd').format(element))
-                        .set({
-                      'voted': 0,
-                      'votedMembers': FieldValue.arrayUnion([]),
-                    });
-                  });
+                      voteDates.forEach((element) async {
+                        await FirebaseFirestore.instance
+                            .collection('DalddongList')
+                            .doc(dalddongId)
+                            .collection('voteDates')
+                            .doc(DateFormat('yyyy-MM-dd').format(element))
+                            .set({
+                          'voted': 0,
+                          'votedMembers': FieldValue.arrayUnion([]),
+                        });
+                      });
 
-                  // var myName = await getMyName();
-                  if(context.mounted) {
+                      // var myName = await getMyName();
+                      if(context.mounted) {
 
-                    // TODO:
-                    if(dalddongId != ""){
-                      print("push to voteScreen  $dalddongId");
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => VoteScreen(
-                                voteDates: voteDates,
-                                dalddongId: dalddongId
-                            ),
-                          ));
+                        // TODO:
+                        if(dalddongId != ""){
+                          print("push to voteScreen  $dalddongId");
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VoteScreen(
+                                    voteDates: voteDates,
+                                    dalddongId: dalddongId
+                                ),
+                              ));
+                        }
+                      }
                     }
-
-
                   }
-                }
+                } 
+                else{
+                  if (context.read<DalddongProvider>().newDdFriends.isNotEmpty) {
+                    var dalddongMembers = context.read<DalddongProvider>().newDdFriends;
+                    var dalddongLunch = context.read<DalddongProvider>().DalddongLunch;
+                    var starRating = context.read<DalddongProvider>().starRating;
+
+                    // 투표날짜 계산 로직
+                    var blockDates =  getBlockDatesList(dalddongMembers, dalddongLunch);
+                    voteDates =  getVoteDates(dalddongMembers, blockDates);
+                    dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+
+                    voteDates.forEach((element) async {
+                      await FirebaseFirestore.instance
+                          .collection('DalddongList')
+                          .doc(dalddongId)
+                          .collection('voteDates')
+                          .doc(DateFormat('yyyy-MM-dd').format(element))
+                          .set({
+                        'voted': 0,
+                        'votedMembers': FieldValue.arrayUnion([]),
+                      });
+                    });
+
+                    // var myName = await getMyName();
+                    if(context.mounted) {
+
+                      // TODO:
+                      if(dalddongId != ""){
+                        print("push to voteScreen  $dalddongId");
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VoteScreen(
+                                  voteDates: voteDates,
+                                  dalddongId: dalddongId
+                              ),
+                            ));
+                      }
+                    }
+                  }
+                }                
               },
               child: const Text("날짜 찾기", style: TextStyle(color: Colors.white),),
             ),

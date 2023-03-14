@@ -565,3 +565,33 @@ List<DateTime> getVoteDates(List<QueryDocumentSnapshot>? dalddongMembers, List<D
 
   return voteDates;
 }
+
+
+Future<bool> isDuplicatedMembers(List<QueryDocumentSnapshot>? members, String dalddongType){
+  var myEmail = await getMyName();
+  var membersSorted = [];
+  var membersInProcess = [];
+  members.forEach((member){
+    membersSorted.add(members.get('userEmail'));
+  });
+  membersSorted.sort();
+
+
+  await FirebaseFirestore.instance
+      .collection('user')
+      .doc(myEmail)
+      .collection('DalddongInProcess').where('dalddongType', isEqualTo: dalddongType)
+      .get().then((value){
+          value.docs.forEach((doc){
+            membersInProcess.add(List.from(doc.get('dalddongMembers').sort()));
+          });
+      });
+  
+  if(membersInProcess.contains(membersSorted)){
+    retrun true;
+  }
+  else{
+    return false;
+  }
+
+} 
