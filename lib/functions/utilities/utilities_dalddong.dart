@@ -1,5 +1,8 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dalddong/functions/pushManager/push_manager.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -118,6 +121,8 @@ Future<String> addDalddongVoteList(
   String dalddongId = generateRandomString(15);
   final pushManager = PushManager();
 
+  print("Step4. addDalddongVoteList");
+
   List<String> membersEmail = [];
   dalddongMembers.forEach((element) {
     membersEmail.add(element.get('userEmail'));
@@ -202,6 +207,7 @@ Future<String> addDalddongVoteList(
     });
   });
 
+  print("Step4_End");
   return dalddongId;
 }
 
@@ -490,64 +496,78 @@ void completeDalddongSchedule(
 }
 
 
-List<DateTime> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers, bool dalddongLunch)  {
+Future<List<DateTime>> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers, bool dalddongLunch) async {
 
+  print("step2. getBlockDatesList");
   List<DateTime> blockedDates = [];
 
-  dalddongMembers?.forEach((element) {
+  dalddongMembers?.forEach((eachUser) {
     // 1. Block Dates
-    FirebaseFirestore.instance
+     FirebaseFirestore.instance
         .collection('user')
-        .doc(element.get('userEmail'))
+        .doc(eachUser.get('userEmail'))
         .collection('BlockDatesList')
         .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
-        .snapshots()
-        .forEach((blockedCollection) {
-          blockedCollection.docs.forEach((blocked) {
-          blockedDates.add(DateTime.parse(blocked.id));
-      });
-    });
-  
-  // 2. dalddong 진행중인 Date
-  FirebaseFirestore.instance
-      .collection('user')
-      .doc(element.get('userEmail'))
-      .collection('DalddongInProcess')
-      .where('dalddongType', isEqualTo: 'request')
-      .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
-      .snapshots().forEach((dalddongInProcess){
-        dalddongInProcess.docs.forEach((process){
-          blockedDates.add(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(process.get('DalddongDate').seconds * 1000)));
-        });
-      });
-
-  // 3. dalddong vote 진행중인 Date
-  FirebaseFirestore.instance
-      .collection('user')
-      .doc(element.get('userEmail'))
-      .collection('DalddongInProcess')
-      .where('dalddongType', isEqualTo: 'vote')
-      .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
-      .snapshots().forEach((dalddongVoteInProcess){
-        dalddongVoteInProcess.docs.forEach((voteProcess){
-          voteProcess.get('voteDates').forEach((voteDate){
-            blockedDates.add(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(voteDate.seconds * 1000)));
+        .get().then((blockedCollection) {
+          print(blockedCollection.docs.length);
+          blockedCollection.docs.forEach((element) {
+            blockedDates.add(DateTime.parse(element.id.substring(0,10)));
           });
-        });
-      });
-  });
-  print("getBlockDates End");
+          blockedDates = blockedDates.toSet().toList();
+          print(blockedDates);
+          print("step2_end");
+     });
 
-  blockedDates = blockedDates.toSet().toList();
+  // // 2. dalddong 진행중인 Date
+  //   FirebaseFirestore.instance
+  //     .collection('user')
+  //     .doc(eachUser.get('userEmail'))
+  //     .collection('DalddongInProcess')
+  //     .where('dalddongType', isEqualTo: 'request')
+  //     .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+  //     .get().then((value){
+  //       value.docs.forEach((process){
+  //         try{
+  //           blockedDates.add(DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(process.get('DalddongDate').seconds * 1000))));
+  //         } catch(e){
+  //           print(e.toString());
+  //         }
+  //       });
+  //   });
+  //
+  //
+  // // 3. dalddong vote 진행중인 Date
+  //  FirebaseFirestore.instance
+  //     .collection('user')
+  //     .doc(eachUser.get('userEmail'))
+  //     .collection('DalddongInProcess')
+  //     .where('dalddongType', isEqualTo: 'vote')
+  //     .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+  //     .get().then((value){
+  //       value.docs.forEach((voteProcess){
+  //         try{
+  //           List.from(voteProcess.get('voteDates')).forEach((element) {
+  //             blockedDates.add(DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(element.seconds * 1000))));
+  //           });
+  //         } catch(e){
+  //           print(e.toString());
+  //         }
+  //       });
+  //  });
+
+
+  });
+
+
   return blockedDates;
 }
 
-List<DateTime> getVoteDates(List<QueryDocumentSnapshot>? dalddongMembers, List<DateTime> blockedDates)  {
+Future<List<DateTime>> getVoteDates(List<QueryDocumentSnapshot>? dalddongMembers, List<DateTime> blockedDates) async {
 
   List<DateTime> voteDates = [];
   int addedDate = 1;
 
-  print("getVoteDates Start");
+  print("Step3. getVoteDates");
   while (true) {
     DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     DateTime candidateDate = today.add(Duration(days: addedDate));
@@ -561,37 +581,49 @@ List<DateTime> getVoteDates(List<QueryDocumentSnapshot>? dalddongMembers, List<D
       addedDate += 1;
     }
   }
-  print("getVoteDates End");
+  print("Step3_End");
 
   return voteDates;
 }
 
 
-Future<bool> isDuplicatedMembers(List<QueryDocumentSnapshot>? members, String dalddongType){
-  var myEmail = await getMyName();
+Future<bool> isDuplicatedMembers(List<QueryDocumentSnapshot>? members, String dalddongType) async {
+
+  print("step1. check duplication");
+
+  var checkEmail = FirebaseAuth.instance.currentUser!.email;
   var membersSorted = [];
-  var membersInProcess = [];
-  members.forEach((member){
-    membersSorted.add(members.get('userEmail'));
+  List<dynamic> membersInProcess = [];
+  members?.forEach((member){
+    membersSorted.add(member.get('userEmail'));
   });
   membersSorted.sort();
 
 
-  await FirebaseFirestore.instance
+  bool result = await FirebaseFirestore.instance
       .collection('user')
-      .doc(myEmail)
+      .doc(checkEmail)
       .collection('DalddongInProcess').where('dalddongType', isEqualTo: dalddongType)
       .get().then((value){
           value.docs.forEach((doc){
-            membersInProcess.add(List.from(doc.get('dalddongMembers').sort()));
+            var temp = List.from(doc.get('dalddongMembers'));
+            temp.sort();
+            membersInProcess.add(temp);
           });
+
+          print("step1_end");
+          var tempBool = false;
+
+          membersInProcess.forEach((element) {
+            if(listEquals(element, membersSorted)){
+              tempBool = true;
+              return;
+            }
+          });
+          return tempBool;
       });
-  
-  if(membersInProcess.contains(membersSorted)){
-    retrun true;
-  }
-  else{
-    return false;
-  }
+  print(result);
+
+  return result;
 
 } 
