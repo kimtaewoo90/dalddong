@@ -28,8 +28,8 @@ class _VoteScreenState extends State<VoteScreen> {
 
   int? diffHour;
   int? diffMin;
-
-  var votedMembers = [];
+  bool isExpiredAlarm = false;
+  bool isMatched = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class _VoteScreenState extends State<VoteScreen> {
               }
 
               // var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
-
+              isMatched = dalddongSnapshot.data?.get('isAllConfirmed');
               return FutureBuilder(
                 future: FirebaseFirestore.instance
                     .collection('DalddongList')
@@ -63,12 +63,12 @@ class _VoteScreenState extends State<VoteScreen> {
                     .collection('Members')
                     .get(),
                 builder: (context, memberSnapshot){
-                  return StreamBuilder(
-                      stream: FirebaseFirestore.instance
+                  return FutureBuilder(
+                      future: FirebaseFirestore.instance
                           .collection('DalddongList')
                           .doc(widget.dalddongId)
                           .collection('voteDates')
-                          .snapshots(),
+                          .get(),
                       builder: (context, datesSnapshot){
 
                         List<VoteDatesCheckBoxList> datesList = [];
@@ -120,9 +120,6 @@ class _VoteScreenState extends State<VoteScreen> {
                                 const TextSpan( text: "날짜 투표를 요청했습니다! \n 원하는 날짜를 골라주세요!")
                               ]
                             )),
-                            // Text("${dalddongSnapshot.data?.get('hostName')} 님이 ${memberSnapshot.data?.docs.length}명에게 \n"
-                            //     "${dalddongSnapshot.data?.get('LunchOrDinner') == true ? "점심" : "저녁"} 날짜 투표를 요청했습니다! \n"
-                            //     "원하는 날짜를 골라주세요!"),
 
                             Flexible(
                               fit: FlexFit.tight,
@@ -168,7 +165,24 @@ class _VoteScreenState extends State<VoteScreen> {
                                               );
                                             }
 
-                                            // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제.
+                                            else if (diffHour == 1 && diffMin == 0 && isExpiredAlarm == false && isMatched == false){
+                                              isExpiredAlarm = true;
+                                              expiredWarningAlarm(memberSnapshot.data?.docs, widget.dalddongId);
+
+                                              return Padding(
+                                                padding:
+                                                const EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                                child: Text(
+                                                  "$diffHour 시간 $diffMin 분전",
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+
+                                            // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제. DalddongList 에서 삭제
                                             else {
                                               return const Padding(
                                                 padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
@@ -221,15 +235,18 @@ class _VoteScreenState extends State<VoteScreen> {
                                               .collection('Members')
                                               .get().then((value) {
                                                 return value.docs;
-                                          });
+                                          }); 
 
                                           if(context.mounted){
                                             if(votedMember.length == totalMembers.length){
-                                              completeDalddongVote(context, widget.dalddongId, votedMember);
+                                              await completeDalddongVote(context, widget.dalddongId, votedMember);
 
-                                              PageRouteWithAnimation pageRoute =
-                                              PageRouteWithAnimation(CompleteAccept(dalddongId: widget.dalddongId,));
-                                              Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                              if(context.mounted){
+                                                PageRouteWithAnimation pageRoute =
+                                                PageRouteWithAnimation(CompleteAccept(dalddongId: widget.dalddongId,));
+                                                Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                              }
+
                                             }
                                             else{
                                               Navigator.push(

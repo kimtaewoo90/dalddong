@@ -59,6 +59,13 @@ class _CompleteAcceptState extends State<CompleteAccept> {
                             );
                           }
 
+                          if(!snapshot.hasData){
+                            return Container(
+                              alignment: Alignment.center,
+                              child: const CircularProgressIndicator(),
+                            );
+                          }
+
                           // isAllConfirmed update to true.
                           FirebaseFirestore.instance.collection('DalddongList').doc(widget.dalddongId).update(
                               {'isAllConfirmed' : true});

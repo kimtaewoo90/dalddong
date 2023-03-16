@@ -90,18 +90,18 @@ class _VoteStatusState extends State<VoteStatus> {
                           height: 40,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(const Color(0xff025645)),
+                              backgroundColor: MaterialStateProperty.all(GeneralUiConfig.floatingBtnColor),
                             ),
                             onPressed: () {
                               Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MainScreen(),
+                                    builder: (context) => const MainScreen(),
                                   ));
                             },
-                            child: const Text('메인화면'),
+                            child: const Text('메인화면', style: TextStyle(color: Colors.black),),
                           ),
-                        )
+                        ),
                       ]);
                     },
                   );

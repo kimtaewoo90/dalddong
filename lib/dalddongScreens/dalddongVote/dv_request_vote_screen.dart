@@ -381,11 +381,9 @@ class _RegistrationDalddongInChatState
                       if(yesOrNo!){
                         // 투표날짜 계산 로직
 
-                        // blockDates =  await getBlockDatesList(dalddongMembers, dalddongLunch);
-                        // voteDates =  await getVoteDates(dalddongMembers, blockDates);
-                        // dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
-
-                        dalddongId = await calculateVoteDate(dalddongMembers, dalddongLunch, starRating);
+                        blockDates =  await getBlockDatesList(dalddongMembers, dalddongLunch);
+                        voteDates =  await getVoteDates(dalddongMembers, blockDates);
+                        dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
 
                         voteDates.forEach((element) async {
                           await FirebaseFirestore.instance
@@ -398,34 +396,31 @@ class _RegistrationDalddongInChatState
                             'votedMembers': FieldValue.arrayUnion([]),
                           });
                         });
+                          // var myName = await getMyName();
+                          if(context.mounted) {
 
-                        // var myName = await getMyName();
-                        if(context.mounted) {
-                          // TODO:
-                          if(dalddongId != ""){
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => VoteScreen(
-                                      voteDates: voteDates,
-                                      dalddongId: dalddongId
-                                  ),
-                                ));
+                            if(dalddongId != ""){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => VoteScreen(
+                                        voteDates: voteDates,
+                                        dalddongId: dalddongId
+                                    ),
+                                  ));
+                            }
                           }
                         }
 
-                      }
                     });
 
 
                   }
                   else{
                       // 투표날짜 계산 로직
-                      // blockDates = await getBlockDatesList(dalddongMembers, dalddongLunch);
-                      // voteDates =  await getVoteDates(dalddongMembers, blockDates);
-                      // dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
-
-                      dalddongId = await calculateVoteDate(dalddongMembers, dalddongLunch, starRating);
+                      blockDates = await getBlockDatesList(dalddongMembers, dalddongLunch);
+                      voteDates =  await getVoteDates(dalddongMembers, blockDates);
+                      dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
 
                       voteDates.forEach((element) async {
                         await FirebaseFirestore.instance
