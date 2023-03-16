@@ -626,4 +626,95 @@ Future<bool> isDuplicatedMembers(List<QueryDocumentSnapshot>? members, String da
 
   return result;
 
-} 
+}
+
+
+Future<String> calculateVoteDate(
+  List<QueryDocumentSnapshot>? members,
+  bool dalddongLunch, 
+  int starRating
+) async {
+
+  print("step2. getBlockDatesList");
+  List<DateTime> blockedDates = [];
+
+  dalddongMembers?.forEach((eachUser) async {
+    // 1. Block Dates
+     await FirebaseFirestore.instance
+        .collection('user')
+        .doc(eachUser.get('userEmail'))
+        .collection('BlockDatesList')
+        .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+        .get().then((blockedCollection) {
+          print(blockedCollection.docs.length);
+          blockedCollection.docs.forEach((element) {
+            blockedDates.add(DateTime.parse(element.id.substring(0,10)));
+          });
+          blockedDates = blockedDates.toSet().toList();
+          
+     });
+
+  // 2. dalddong 진행중인 Date
+    await FirebaseFirestore.instance
+      .collection('user')
+      .doc(eachUser.get('userEmail'))
+      .collection('DalddongInProcess')
+      .where('dalddongType', isEqualTo: 'request')
+      .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+      .get().then((value){
+        value.docs.forEach((process){
+          try{
+            blockedDates.add(DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(process.get('DalddongDate').seconds * 1000))));
+          } catch(e){
+            print(e.toString());
+          }
+        });
+    });
+  
+  
+  // 3. dalddong vote 진행중인 Date
+   await FirebaseFirestore.instance
+      .collection('user')
+      .doc(eachUser.get('userEmail'))
+      .collection('DalddongInProcess')
+      .where('dalddongType', isEqualTo: 'vote')
+      .where('LunchOrDinner', isEqualTo: dalddongLunch ? 0 : 1)
+      .get().then((value){
+        value.docs.forEach((voteProcess){
+          try{
+            List.from(voteProcess.get('voteDates')).forEach((element) {
+              blockedDates.add(DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.fromMillisecondsSinceEpoch(element.seconds * 1000))));
+            });
+          } catch(e){
+            print(e.toString());
+          }
+        });
+   });
+  });
+
+  print("step2_end");
+
+  List<DateTime> voteDates = [];
+  int addedDate = 1;
+  String dalddongId = "";
+
+  print("Step3. getVoteDates");
+  Future.doWhile (true) async {
+    DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    DateTime candidateDate = today.add(Duration(days: addedDate));
+    if (blockedDates.contains(candidateDate) == false) {
+      voteDates.add(candidateDate);
+    }
+    if(voteDates.length == 5){
+      dalddongId = await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+      break;
+    }
+    else {
+      addedDate += 1;
+    }
+  }
+  print("Step3_End");
+
+  return dalddongId;
+          
+}

@@ -381,9 +381,11 @@ class _RegistrationDalddongInChatState
                       if(yesOrNo!){
                         // 투표날짜 계산 로직
 
-                        blockDates =  await getBlockDatesList(dalddongMembers, dalddongLunch);
-                        voteDates =  await getVoteDates(dalddongMembers, blockDates);
-                        dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+                        // blockDates =  await getBlockDatesList(dalddongMembers, dalddongLunch);
+                        // voteDates =  await getVoteDates(dalddongMembers, blockDates);
+                        // dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+
+                        dalddongId = await calculateVoteDate(dalddongMembers, dalddongLunch, starRating);
 
                         voteDates.forEach((element) async {
                           await FirebaseFirestore.instance
@@ -419,9 +421,11 @@ class _RegistrationDalddongInChatState
                   }
                   else{
                       // 투표날짜 계산 로직
-                      blockDates = await getBlockDatesList(dalddongMembers, dalddongLunch);
-                      voteDates =  await getVoteDates(dalddongMembers, blockDates);
-                      dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+                      // blockDates = await getBlockDatesList(dalddongMembers, dalddongLunch);
+                      // voteDates =  await getVoteDates(dalddongMembers, blockDates);
+                      // dalddongId =  await addDalddongVoteList(dalddongMembers, voteDates, dalddongLunch, starRating);
+
+                      dalddongId = await calculateVoteDate(dalddongMembers, dalddongLunch, starRating);
 
                       voteDates.forEach((element) async {
                         await FirebaseFirestore.instance
