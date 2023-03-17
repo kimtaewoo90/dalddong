@@ -149,6 +149,9 @@ flutter:
     - images/dalddongResponse.png
     - images/dalddongRejected.png
     - images/dalddongVote.png
+    - images/bell.png
+    - images/taskDone3.png
+    - images/noEvent3.png
 
 
 

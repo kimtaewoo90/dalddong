@@ -184,6 +184,7 @@ class _VoteScreenState extends State<VoteScreen> {
 
                                             // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제. DalddongList 에서 삭제
                                             else {
+                                              expiredAlarm(memberSnapshot.data?.docs, widget.dalddongId);
                                               return const Padding(
                                                 padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
                                                 child: Text(
@@ -235,7 +236,7 @@ class _VoteScreenState extends State<VoteScreen> {
                                               .collection('Members')
                                               .get().then((value) {
                                                 return value.docs;
-                                          }); 
+                                          });
 
                                           if(context.mounted){
                                             if(votedMember.length == totalMembers.length){

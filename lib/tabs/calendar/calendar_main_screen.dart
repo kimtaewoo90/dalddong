@@ -385,10 +385,10 @@ class _MyScheduleState extends State<MySchedule> {
                             _getDataSource(snapshot.data!.docs)),
                         monthCellBuilder: (BuildContext buildContext,
                             MonthCellDetails details) {
-                          final Color defaultColor =
-                          Theme.of(context).brightness == Brightness.dark
-                              ? GeneralUiConfig.borderDarkModeColor
-                              : GeneralUiConfig.borderWhiteModeColor;
+                          // final Color defaultColor =
+                          // Theme.of(context).brightness == Brightness.dark
+                          //     ? GeneralUiConfig.borderDarkModeColor
+                          //     : GeneralUiConfig.borderWhiteModeColor;
 
                           // Block Date
                           if (blockDates.contains(DateFormat('yyyy-MM-dd').format(details.date))) {
@@ -399,12 +399,11 @@ class _MyScheduleState extends State<MySchedule> {
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.grey,
-                                        Colors.grey,
-                                        Colors.white,
-                                        Colors.white,
-                                      ],
+                                        colors: [
+                                          Colors.grey,
+                                          Colors.white,
+                                        ],
+                                        stops: [0.5, 0.5]
                                     ),
                                     border: Border(
                                       left: BorderSide(
@@ -438,10 +437,9 @@ class _MyScheduleState extends State<MySchedule> {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         Colors.white,
-                                        Colors.white,
-                                        Colors.grey,
                                         Colors.grey,
                                       ],
+                                      stops: [0.5, 0.5]
                                     ),
                                   border: Border(
                                     left: BorderSide(
@@ -472,10 +470,11 @@ class _MyScheduleState extends State<MySchedule> {
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.grey,
-                                        Colors.grey,
-                                      ],
+                                        colors: [
+                                          Colors.grey,
+                                          Colors.grey,
+                                        ],
+                                        stops: [0.5, 0.5]
                                     ),
                                     // color: backgroundColor,
                                   border: Border(
@@ -500,6 +499,7 @@ class _MyScheduleState extends State<MySchedule> {
                               );
                             }
                           }
+
                           // Open Date
                           else {
                             boxDeco = Container(

@@ -4,8 +4,12 @@ import 'package:dalddong/functions/utilities/Utility.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:nb_utils/nb_utils.dart';
 import 'package:provider/provider.dart';
 
+import '../../../commonScreens/Screens/noEventScreen.dart';
+import '../../../commonScreens/Screens/noMatchedDalddongEvent.dart';
+import '../../../commonScreens/alarm_screen.dart';
 import '../../../commonScreens/shared_app_bar.dart';
 import '../../../functions/providers/community_provider.dart';
 
@@ -82,7 +86,7 @@ class _DalddongListState extends State<DalddongList> {
             ),
 
             const Divider(),
-            const SizedBox(height: 15,),
+            // const SizedBox(height: 15,),
             if(isDone == true)
               Expanded(
                 child: SingleChildScrollView(
@@ -98,9 +102,7 @@ class _DalddongListState extends State<DalddongList> {
                     builder: (context, snapshots){
                       var docs = snapshots.data?.docs.length;
                       if(docs == 0){
-                        return const Center(
-                          child: Text("아직 활동을 시작한 달똥이 없습니다."),
-                        );
+                        return noMatchedDalddongEvent(context);
                       }
                       else{
                         return SizedBox(
@@ -237,7 +239,6 @@ class _DalddongListState extends State<DalddongList> {
                     future: FirebaseFirestore.instance
                         .collection('DalddongList')
                         .where('isAllConfirmed', isEqualTo: false)
-                        // .orderBy('DalddongDate')
                         .get(),
                     builder: (context, ingSnapshot){
                       var myIngDalddong = [];
@@ -248,9 +249,7 @@ class _DalddongListState extends State<DalddongList> {
                       });
                       var docsCount = myIngDalddong.length;
                       if(docsCount == 0){
-                        return const Center(
-                          child: Text("진행중인 달똥이 없습니다."),
-                        );
+                        return noEventScreen(context);
                       }
                       else{
                         return SizedBox(

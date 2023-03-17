@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:timer_builder/timer_builder.dart';
 import '../../commonScreens/shared_app_bar.dart';
 import '../../functions/providers/calendar_provider.dart';
+import '../../functions/utilities/utilities_dalddong.dart';
 import '../../main_screen.dart';
 
 class ResponseStatus extends StatefulWidget {
@@ -224,7 +225,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
 
                                 else if (diffHour == 1 && diffMin == 0 && isExpiredAlarm == false && isMatched == false){
                                   isExpiredAlarm = true;
-                                  expiredWarningAlarm(memberSnapshot.data?.docs, widget.dalddongId);
+                                  expiredWarningAlarm(memberSnapshot.data?.docs, widget.dalddongId!);
 
                                   return Padding(
                                     padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
@@ -237,6 +238,7 @@ class _ResponseStatusState extends State<ResponseStatus> {
 
                                 // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제.
                                 else {
+                                  expiredAlarm(memberSnapshot.data?.docs, widget.dalddongId!);
                                   return const Padding(
                                     padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
                                     child: Text(

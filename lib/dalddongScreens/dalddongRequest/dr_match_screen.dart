@@ -143,7 +143,7 @@ class _CompleteAcceptState extends State<CompleteAccept> {
                                       Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => MainScreen(),
+                                            builder: (context) =>  MainScreen(),
                                           ));
                                     },
                                     child: const Text("메인화면"),
@@ -202,4 +202,5 @@ class _UserAccept extends State<UserAccept>{
     );
   }
 }
+
 

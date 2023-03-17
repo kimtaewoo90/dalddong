@@ -42,16 +42,17 @@ Future<void> completeDalddongVote(BuildContext context, String? dalddongId,
             max = maxVoted;
           }
         });
-        print(max);
-        print(dalddongId);
-
         return DateTime.parse(max['date']);
   });
 
   // Update dalddong Date
   await FirebaseFirestore.instance
       .collection('DalddongList')
-      .doc(dalddongId).update({'DalddongDate': dalddongDate});
+      .doc(dalddongId)
+      .update({
+        'DalddongDate': dalddongDate,
+        'status' : "match"
+    });
 
   await FirebaseFirestore.instance.collection('DalddongList').doc(dalddongId).get().then((value) {
     // 모든 맴버에게 달똥 완료 푸쉬 보내기
@@ -164,8 +165,12 @@ Future<String> addDalddongVoteList(
       'dalddongMembers': FieldValue.arrayUnion(membersEmail),
       'MemberNumbers': dalddongMembers.length,
       'voteDates': FieldValue.arrayUnion(voteList),
-      'isAllConfirmed': false
+      'isAllConfirmed': false,
+      'status' : 'inProcess'
     });
+    print("done insert main dalddong list to db");
+
+
 
     // Member 개인DB에 저장
     dalddongMembers.forEach((value) {
@@ -181,7 +186,7 @@ Future<String> addDalddongVoteList(
         'userImage': value['userImage'],
         'currentStatus': 0,
       });
-      
+
       FirebaseFirestore.instance
         .collection('user')
         .doc(value['userEmail'])
@@ -201,7 +206,8 @@ Future<String> addDalddongVoteList(
           'dalddongMembers': FieldValue.arrayUnion(membersEmail),
           'MemberNumbers': dalddongMembers.length,
           'voteDates': FieldValue.arrayUnion(voteList),
-          'isAllConfirmed': false
+          'isAllConfirmed': false,
+        'status' : 'inProcess'
       });
 
       FirebaseFirestore.instance
@@ -228,6 +234,7 @@ Future<String> addDalddongVoteList(
     });
   });
 
+  print("Step4_End");
   return dalddongId;
 }
 
@@ -259,7 +266,7 @@ String addDalddongList(
                   : context.read<DalddongProvider>().starRating == 4 ? "0xFF5C6BC0"
                   : "0xFF3F51B5";
 
- 
+
   SharedPreferences.getInstance().then((value) {
     SharedPreferences prefs = value;
     myName = prefs.getString('userName');
@@ -281,7 +288,8 @@ String addDalddongList(
       'ExpiredTime': DateTime.now().add(const Duration(hours: 24)),
       'dalddongMembers': FieldValue.arrayUnion(membersEmail),
       'MemberNumbers': dalddongMembers.length,
-      'isAllConfirmed': false
+      'isAllConfirmed': false,
+      'status': 'inProcess'
     });
 
     // DalddongInProcess 임시저장
@@ -422,7 +430,7 @@ void completeDalddongSchedule(
           .collection('DalddongList')
           .doc(dalddongId)
           .get()
-          .then((dalddongValue) {
+          .then((dalddongValue) async {
         var pushToken = userValue.get('pushToken');
         var title = "달똥 매칭 완료!";
         Timestamp dalddongDate = dalddongValue.get('DalddongDate');
@@ -442,15 +450,21 @@ void completeDalddongSchedule(
         pushManager.sendPushMsg(
             userToken: pushToken, title: title, body: body, details: details);
 
-  
+        await FirebaseFirestore.instance
+            .collection('DalddongList')
+            .doc(dalddongId)
+            .update({
+              'status' : "match"
+        });
+
         // 진행중인 달똥에서 삭제
-        FirebaseFirestore.instance
+        await FirebaseFirestore.instance
             .collection('user')
             .doc(element)
             .collection('DalddongInProcess')
             .doc(dalddongId).delete();
 
-        FirebaseFirestore.instance
+        await FirebaseFirestore.instance
             .collection('user')
             .doc(element)
             .collection('AlarmList')
@@ -516,7 +530,7 @@ void completeDalddongSchedule(
 }
 
 
-Future<List<DateTime>> getBlockDatesList(List<QueryDocumntSnapshot>? dalddongMembers, bool dalddongLunch) async {
+Future<List<DateTime>> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers, bool dalddongLunch) async {
 
   List<DateTime> blockedDates = [];
 
@@ -644,12 +658,12 @@ Future<bool> isDuplicatedMembers(List<QueryDocumentSnapshot>? members, String da
 }
 
 
-void expiredWarningAlarm(List<QueryDocumentSnapshot>? dalddongMembers, String dalddongId){
+Future<void> expiredWarningAlarm(List<QueryDocumentSnapshot>? dalddongMembers, String dalddongId) async {
 
   final pushManager = PushManager();
 
-  dalddongMembers?.forEach((element) {
-    FirebaseFirestore.instance
+  dalddongMembers?.forEach((element) async {
+    await FirebaseFirestore.instance
         .collection('user')
         .doc(element.get('userEmail'))
         .get()
@@ -683,3 +697,56 @@ void expiredWarningAlarm(List<QueryDocumentSnapshot>? dalddongMembers, String da
   });
 }
 
+Future<void> expiredAlarm(List<QueryDocumentSnapshot>? dalddongMembers, String dalddongId) async {
+
+  final pushManager = PushManager();
+
+  dalddongMembers?.forEach((element) async {
+
+    await FirebaseFirestore.instance
+        .collection('user')
+        .doc(element.get('userEmail'))
+        .collection('DalddongInProcess')
+        .doc(dalddongId).delete();
+
+    await FirebaseFirestore.instance
+        .collection('DalddongList')
+        .doc(dalddongId)
+        .update({
+      'status' : "expired"
+    });
+
+    await FirebaseFirestore.instance
+        .collection('user')
+        .doc(element.get('userEmail'))
+        .get()
+        .then((userValue) {
+
+        FirebaseFirestore.instance
+          .collection('DalddongList')
+          .doc(dalddongId)
+          .get()
+          .then((dalddongValue) {
+        var pushToken = userValue.get('pushToken');
+        var title = "달똥투표가 만료되었습니다:(";
+        var body =
+            "'${dalddongValue.get('hostName')}'님의 "
+            "${dalddongValue.get('LunchOrDinner') == 0
+            ? '점심'
+            : '저녁'} 투표를 모두 진행하지 않아서 이번 달똥은 무효화됩니다. 다시 달똥을 시도해보세요!";
+
+        var details = {
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'id': dalddongId,
+          'eventId': dalddongId,
+          'eventType': "EDDV",
+          'membersNum': dalddongMembers.length,
+          'hostName': dalddongValue.get('hostName'),
+        };
+
+        pushManager.sendPushMsg(
+            userToken: pushToken, title: title, body: body, details: details);
+      });
+    });
+  });
+}

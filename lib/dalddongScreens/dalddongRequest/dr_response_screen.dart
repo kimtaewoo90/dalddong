@@ -147,6 +147,28 @@ class _ResponseDRState extends State<ResponseDR> {
                       .doc(FirebaseAuth.instance.currentUser?.email)
                       .update({'currentStatus': 3});
 
+                  // DalddongList 에서 해당 dalddong status : reject 로 변경.
+                  await FirebaseFirestore.instance
+                      .collection('DalddongList')
+                      .doc(widget.DalddongId)
+                      .update({'status' : 'reject'});
+
+                  // 거절 시, 개인테이블의 DalddongInProcess 에서 삭제
+                  await FirebaseFirestore.instance
+                      .collection('DalddongList')
+                      .doc(widget.DalddongId)
+                      .collection('Members')
+                      .get()
+                      .then((value) {
+                        value.docs.forEach((element) async {
+                          await FirebaseFirestore.instance
+                              .collection('user')
+                              .doc(element.id)
+                              .collection('DalddongInProcess')
+                              .doc(widget.DalddongId).delete();
+                        });
+                  });
+
                   if(context.mounted) {
                     PageRouteWithAnimation pageRoute =
                       PageRouteWithAnimation(const MainScreen());

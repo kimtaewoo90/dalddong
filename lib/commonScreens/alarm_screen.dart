@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:nb_utils/nb_utils.dart';
 
 import '../dalddongScreens/dalddongRequest/dr_match_screen.dart';
 import '../dalddongScreens/dalddongRequest/dr_not_match_screen.dart';
@@ -25,6 +26,8 @@ class AlarmScreen extends StatefulWidget {
 class _AlarmScreenState extends State<AlarmScreen> {
   bool isDalddongAlarm = false;
   int alarmType = 0;
+  List<String> dalddongRqType = ["EDD", "WDD", "DD", "CDD"];
+  List<String> dalddongVtType = ["EDDV", "WDDV", "DDV", "CDDV"];
 
   @override
   Widget build(BuildContext context) {
@@ -103,43 +106,80 @@ class _AlarmScreenState extends State<AlarmScreen> {
                 height: 10,
               ),
 
-              if (alarmType == 0)
-                StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('user')
-                        .doc(FirebaseAuth.instance.currentUser!.email)
-                        .collection('AlarmList')
-                        .orderBy('alarmTime', descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Container(
-                          alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
-                        );
-                      }
-                      List<MyDalddongAlarm> alarmList = [];
+              StreamBuilder(
+                  stream: FirebaseFirestore.instance
+                      .collection('user')
+                      .doc(FirebaseAuth.instance.currentUser!.email)
+                      .collection('AlarmList')
+                      .orderBy('alarmTime', descending: true)
+                      .snapshots(),
+                  builder: (context, alarmSnapshot){
+                    if (alarmSnapshot.connectionState == ConnectionState.waiting) {
+                      return Container(
+                        alignment: Alignment.center,
+                        child: const CircularProgressIndicator(),
+                      );
+                    }
+                    List<DalddongAlarm> alarmList = [];
 
-                      // TODO: DalddongAlarmList 알람 시간순으로 정렬
-                      snapshot.data?.docs.forEach((document) {
-                        if (document.get('details')['eventType'] == "DD" || // 정해진날짜 달똥
-                            document.get('details')['eventType'] == "CDD" // 달똥매칭 성공
+                    if(alarmType == 0) {
+                      alarmSnapshot.data?.docs.forEach((document) {
+                        if (dalddongRqType.contains(document.get('details')['eventType']) ||
+                            dalddongVtType.contains(document.get('details')['eventType'])
                         ) {
-                          MyDalddongAlarm myAlarmList =
-                          MyDalddongAlarm(document);
+                          DalddongAlarm myAlarmList = DalddongAlarm(eachEvents: document,);
                           alarmList.add(myAlarmList);
                         }
                       });
+                    }
 
-                      List<DalddongVoteAlarm> voteList = [];
-
-                      snapshot.data?.docs.forEach((document) {
+                    else if(alarmType == 1){
+                      alarmSnapshot.data?.docs.forEach((document) {
                         // 투표 알람
-                        if (document.get('details')['eventType'] == "DDV") {
-                          DalddongVoteAlarm myVoteList = DalddongVoteAlarm(eachVotes: document);
-                          voteList.add(myVoteList);
+                        if (dalddongVtType.contains(document.get('details')['eventType'])) {
+                          DalddongAlarm myVoteList =DalddongAlarm(eachEvents: document);
+                          alarmList.add(myVoteList);
                         }
                       });
+                    }
+
+                    else{
+                      alarmSnapshot.data?.docs.forEach((document) {
+                        if (dalddongRqType.contains(document.get('details')['eventType'])) {
+                          DalddongAlarm myAlarmList = DalddongAlarm(eachEvents: document,);
+                          alarmList.add(myAlarmList);
+                        }
+                      });
+                    }
+
+                    if(alarmList.isEmpty){
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              ClipPath(
+                                clipper: SemiCircleClipper(),
+                                child: Container(
+                                  height: context.height() * 0.5,
+                                  decoration: const BoxDecoration(color: Color(0xFFFFC655)),
+                                ),
+                              ),
+                              10.height,
+                              Text("${alarmType==1 ? '달똥투표가' : alarmType == 2 ? '달똥요청이' : '알람이'} 없습니다!", style: boldTextStyle(size: 20)),
+                              16.height,
+                              Text(
+                                '현재 진행중인 ${alarmType==1 ? '달똥투표가' : alarmType == 2 ? '달똥요청이' : '알람이'} 없네요!\n 달똥을 시작해보세요!',
+                                style: secondaryTextStyle(size: 15),
+                                textAlign: TextAlign.center,
+                              ).paddingSymmetric(vertical: 8, horizontal: 60),
+                            ],
+                          ),
+                          Image.asset('images/bell.png', height: 180),
+                        ],
+                      );
+                    }
 
                       return Flexible(
                         fit: FlexFit.tight,
@@ -151,87 +191,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
                           ),
                         ),
                       );
-                    }),
-              // 투표알람
-              if (alarmType == 1)
-                StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('user')
-                        .doc(FirebaseAuth.instance.currentUser!.email)
-                        .collection('AlarmList')
-                        .orderBy('alarmTime', descending: true)
-                        .snapshots(),
-                    builder: (context, voteSnapshot) {
-                      if (voteSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return Container(
-                          alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
-                        );
-                      }
 
-                      List<DalddongVoteAlarm> voteList = [];
-
-                      voteSnapshot.data?.docs.forEach((document) {
-                        // 투표 알람
-                        if (document.get('details')['eventType'] == "DDV" ||
-                            document.get('details')['eventType'] == "CDDV") {
-                          DalddongVoteAlarm myVoteList = DalddongVoteAlarm(eachVotes: document);
-                          voteList.add(myVoteList);
-                        }
-                      });
-                      return Flexible(
-                        fit: FlexFit.tight,
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.8,
-                          child: ListView(
-                            shrinkWrap: true,
-                            children: voteList,
-                          ),
-                        ),
-                      );
-                    }),
-
-              // 달똥알람
-              if (alarmType == 2)
-                StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('user')
-                        .doc(FirebaseAuth.instance.currentUser!.email)
-                        .collection('AlarmList')
-                        .orderBy('alarmTime', descending: true)
-                        .snapshots(),
-                    builder: (context, dalddongSnapshot) {
-                      if (dalddongSnapshot.connectionState == ConnectionState.waiting) {
-                        return Container(
-                          alignment: Alignment.center,
-                          child: const CircularProgressIndicator(),
-                        );
-                      }
-                      List<MyDalddongAlarm> alarmList = [];
-
-                      // TODO: DalddongAlarmList 알람 시간순으로 정렬
-                      dalddongSnapshot.data?.docs.forEach((document) {
-                        if (document.get('details')['eventType'] == "DD" || // 정해진날짜 달똥
-                            document.get('details')['eventType'] == "CDD" // 달똥매칭 성공
-                        ) {
-                          MyDalddongAlarm myAlarmList =
-                          MyDalddongAlarm(document);
-                          alarmList.add(myAlarmList);
-                        }
-                      });
-
-                      return Flexible(
-                        fit: FlexFit.tight,
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.8,
-                          child: ListView(
-                            // shrinkWrap: true,
-                            children: alarmList,
-                          ),
-                        ),
-                      );
-                    }),
+                  }),
             ],
           ),
         ),
@@ -240,257 +201,160 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 }
 
-// 달똥투표알람 class
-class DalddongVoteAlarm extends StatefulWidget {
-  final QueryDocumentSnapshot eachVotes;
 
-  const DalddongVoteAlarm({Key? key, required this.eachVotes})
-      : super(key: key);
+class DalddongAlarm extends StatefulWidget {
+  final QueryDocumentSnapshot eachEvents;
+  const DalddongAlarm({Key? key, required this.eachEvents}) : super(key: key);
 
   @override
-  State<DalddongVoteAlarm> createState() => _DalddongVoteAlarmState();
+  State<DalddongAlarm> createState() => _DalddongAlarmState();
 }
 
-class _DalddongVoteAlarmState extends State<DalddongVoteAlarm> {
+class _DalddongAlarmState extends State<DalddongAlarm> {
+
+  bool isMatched = false;
+  bool isRejected = false;
+  List<String> dalddongRqType = ["EDD", "WDD", "DD", "CDD"];
+  List<String> dalddongVtType = ["EDDV", "WDDV", "DDV", "CDDV"];
+
   @override
   Widget build(BuildContext context) {
-    print(widget.eachVotes.get('details')['voteDates']);
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance
-          .collection('DalddongList')
-          .doc(widget.eachVotes.get('details')['eventId'])
-          .collection('Members')
-          .doc(FirebaseAuth.instance.currentUser!.email)
-          .snapshots(),
-      builder: (context, voteMySnapshot) {
-        if (voteMySnapshot.connectionState == ConnectionState.waiting) {
-          return Container(
-            alignment: Alignment.center,
-            child: const CircularProgressIndicator(),
-          );
-        }
+    
+    var eventType = widget.eachEvents.get('details')['eventType'];
 
-        Timestamp alarmTime = widget.eachVotes['alarmTime'];
-        return Padding(
-            padding: const EdgeInsets.all(3),
-            child: Container(
-                color: Colors.white54,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                          DateTime.fromMillisecondsSinceEpoch(
-                              alarmTime.seconds * 1000))),
-                      ListTile(
-                          leading: const Icon(Icons.calendar_month),
-                          title: Text(
-                            "${widget.eachVotes.get('details')['hostName']}님 외 ${widget.eachVotes.get('details')['membersNum']}명의 ${widget.eachVotes['body']}",
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: GeneralUiConfig.alarmTitleFontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          trailing: voteMySnapshot.data?.get('currentStatus') == 0
-                              ? ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.grey,
-                            ),
-                            onPressed: () {
-                              var acceptMembers = [];
-                              FirebaseFirestore.instance
-                                  .collection('DalddongList')
-                                  .doc(widget.eachVotes.get('details')['eventId'])
-                                  .collection('Members')
-                                  .snapshots()
-                                  .forEach((element) async {
-                                for (var docs in element.docs) {
-                                  if (docs.get('currentStatus') == 1) {
-                                    acceptMembers.add(docs.id);
-                                  }
-                                }
 
-                                // 모든 참가자 투표 완료
-                                if (acceptMembers.length == element.docs.length) {
-                                  if (kDebugMode) {
-                                    print("${acceptMembers.length} / ${element.docs.length}");
-                                  }
+    // 달똥요청 알람
+    if(dalddongRqType.contains(eventType)){
+      return dalddongRqAalarm(widget.eachEvents);
+    }
 
-                                  // TODO : matched vote date
-                                  // PageRouteWithAnimation pageRoute =
-                                  // PageRouteWithAnimation(CompleteVoteDate(eventId : widget.eachVotes.get('details')['eventId']));
-                                  // Navigator.push(context, pageRoute.slideRitghtToLeft());
-                                }
-
-                                // 투표하러 가기
-                                else {
-                                  if (kDebugMode) {
-                                    // print("${acceptMembers.length} / ${element.docs.length}");
-                                    // print("${List.from(widget.eachVotes.get('details')['voteDates'])}-----");
-                                  }
-                                  var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(widget.eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
-                                  PageRouteWithAnimation pageRoute =
-                                  PageRouteWithAnimation(
-                                      VoteScreen(
-                                        voteDates: List.from(voteDates),
-                                        dalddongId: widget.eachVotes.get('details')['eventId'],
-                                      ));
-                                  Navigator.push(context, pageRoute.slideRitghtToLeft());
-                                }
-                              });
-                            },
-                            child: const Text('투표하기'),
-                          )
-                              : ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.green,
-                            ),
-                            onPressed: () {
-                              print("my status = 1");
-                              var acceptMembers = [];
-                              FirebaseFirestore.instance
-                                  .collection('DalddongList')
-                                      .doc(widget.eachVotes.get('details')['eventId'])
-                                      .collection('Members')
-                                      .snapshots()
-                                  .forEach((element) {
-                                for (var docs in element.docs) {
-                                  if (docs.get('currentStatus') == 1) {
-                                    acceptMembers.add(docs.id);
-                                  }
-                                }
-
-                                if (acceptMembers.length == element.docs.length) {
-                                  if (kDebugMode) {
-                                    print("${acceptMembers.length} / ${element.docs.length}");
-                                  }
-                                  if (kDebugMode) {
-                                    print(widget.eachVotes.get('details')['eventId']);
-                                  }
-
-                                  // PageRouteWithAnimation pageRoute =
-                                  // PageRouteWithAnimation(CompleteAccept(dalddongId : eachEvents.get('details')['eventId']));
-                                  // Navigator.push(context, pageRoute.slideRitghtToLeft());
-                                } else {
-                                  if (kDebugMode) {
-                                    print("${acceptMembers.length} / ${element.docs.length}");
-                                  }
-                                  PageRouteWithAnimation pageRoute =
-                                  PageRouteWithAnimation(VoteStatus(dalddongId: widget.eachVotes.get('details')['eventId'],));
-                                  Navigator.push(context, pageRoute.slideRitghtToLeft());
-                                }
-                              });
-                            },
-                            child: const Text('투표현황보기'),
-                          )),
-                      const Divider(),
-                    ])));
-      },
-    );
+    // 달똥투표 알람
+    else if(dalddongVtType.contains(eventType)){
+      return dalddongVtAlarm(widget.eachEvents);
+    }
+    else{
+      return const Text("없음");
+    }
   }
 }
 
-// 달똥알람 class
-class MyDalddongAlarm extends StatefulWidget {
-  final QueryDocumentSnapshot eachEvents;
 
-  const MyDalddongAlarm(this.eachEvents, {super.key});
+Widget dalddongRqAalarm(QueryDocumentSnapshot eachEvents){
 
-  @override
-  // ignore: no_logic_in_create_state
-  State<MyDalddongAlarm> createState() => _MyDalddongAlarm(eachEvents);
-}
+  bool isMatched = false;
+  bool isRejected = false;
+  int myStatus = 0;
+  List<String> acceptMembers = [];
 
-class _MyDalddongAlarm extends State<MyDalddongAlarm> {
-  final QueryDocumentSnapshot eachEvents;
+  return StreamBuilder(
+    stream: FirebaseFirestore.instance
+        .collection('DalddongList')
+        .doc(eachEvents.get('details')['eventId'])
+        .collection('Members')
+        .snapshots(),
+    builder: (context, memberSnapshot){
+      if(memberSnapshot.connectionState == ConnectionState.waiting){
+        return Container(
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(),
+        );
+      }
 
-  _MyDalddongAlarm(this.eachEvents);
-
-  @override
-  Widget build(BuildContext context) {
-
-    bool isMatched = false;
-    bool isRejected = false;
-
-    int myStatus = 0;
-    List<String> acceptMembers = [];
-
-    return StreamBuilder(
-      stream: FirebaseFirestore.instance
-          .collection('DalddongList')
-          .doc(eachEvents.get('details')['eventId'])
-          .collection('Members')
-          .snapshots(),
-      builder: (context, memberSnapshot){
-        if(memberSnapshot.connectionState == ConnectionState.waiting){
-          return Container(
-            alignment: Alignment.center,
-            child: const CircularProgressIndicator(),
-          );
+      for (var docs in memberSnapshot.data!.docs) {
+        if (docs.get('currentStatus') ==2) {
+          acceptMembers.add(docs.id);
         }
-
-        for (var docs in memberSnapshot.data!.docs) {
-          if (docs.get('currentStatus') ==2) {
-            acceptMembers.add(docs.id);
-          }
-          if (docs.get('currentStatus') == 3){
-            isMatched = false;
-            isRejected = true;
-          }
+        if (docs.get('currentStatus') == 3){
+          isMatched = false;
+          isRejected = true;
         }
+      }
 
-        if(memberSnapshot.data?.docs.length == acceptMembers.length){
-          isMatched = true;
-        }
+      if(memberSnapshot.data?.docs.length == acceptMembers.length){
+        isMatched = true;
+      }
 
-        return FutureBuilder(
-            future: FirebaseFirestore.instance
-                .collection('DalddongList')
-                .doc(eachEvents.get('details')['eventId'])
-                .collection('Members')
-                .doc(FirebaseAuth.instance.currentUser!.email)
-                .get(),
-            builder: (context, snapshotAlarm) {
-              if (snapshotAlarm.connectionState == ConnectionState.waiting) {
-                return Container(
-                  alignment: Alignment.center,
-                  child: const CircularProgressIndicator(),
-                );
-              }
+      return StreamBuilder(
+          stream: FirebaseFirestore.instance
+              .collection('DalddongList')
+              .doc(eachEvents.get('details')['eventId'])
+              .collection('Members')
+              .doc(FirebaseAuth.instance.currentUser!.email)
+              .snapshots(),
+          builder: (context, snapshotAlarm) {
+            if (snapshotAlarm.connectionState == ConnectionState.waiting) {
+              return Container(
+                alignment: Alignment.center,
+                child: const CircularProgressIndicator(),
+              );
+            }
 
+            Timestamp alarmTime = eachEvents['alarmTime'];
+            myStatus = snapshotAlarm.data?.get('currentStatus');
 
-              Timestamp alarmTime = eachEvents['alarmTime'];
+            return Padding(
+                padding: const EdgeInsets.all(3),
+                child: Container(
+                    color: Colors.white54,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.calendar_month_outlined),
+                              SizedBox(width: 10,),
+                              Text("달똥요청", style: TextStyle(fontSize: GeneralUiConfig.hintSize, color: Colors.grey),),
+                            ],
+                          ),
 
-              myStatus = snapshotAlarm.data?.get('currentStatus');
-              return Padding(
-                  padding: const EdgeInsets.all(3),
-                  child: Container(
-                      color: Colors.white54,
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                          ListTile(
+                              // leading: Image.asset('images/dalddongRequest.png'),
 
-                            ListTile(
-                                leading: Image.asset('images/dalddongRequest.png'),
-
-                                title: Text(
-                                  "${eachEvents.get('details')['hostName']}님 외 ${eachEvents.get('details')['membersNum']}명의 ${eachEvents['body']}",
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: GeneralUiConfig.alarmTitleFontSize,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              title: Text(
+                                "${eachEvents.get('details')['hostName']}님 외 ${eachEvents.get('details')['membersNum']}명의 ${eachEvents['body']}",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: GeneralUiConfig.alarmTitleFontSize,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                trailing: myStatus == 0
-                                    ? ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.grey,
-                                  ),
-                                  onPressed: () {
+                              ),
+                              trailing: myStatus == 0
+                                  ? ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.grey,
+                                ),
+                                onPressed: () {
 
+                                  if(isRejected){
+                                    PageRouteWithAnimation pageRoute =
+                                    PageRouteWithAnimation(const RejectedDalddong());
+                                    Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                  }
+                                  else{
+                                    PageRouteWithAnimation pageRoute =
+                                    PageRouteWithAnimation(ResponseDR(DalddongId: eachEvents.get('details')['eventId'],));
+                                    Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                  }
+
+                                },
+                                child: isRejected ? const Text("거절됨") : const Text('보기'),
+                              )
+                                  : myStatus == 2
+                                  ? ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: isRejected ? Colors.red : isMatched ? Colors.green : Colors.yellowAccent,
+                                ),
+                                onPressed: () async {
+
+                                  if (isMatched) {
+                                    PageRouteWithAnimation pageRoute =
+                                    PageRouteWithAnimation(
+                                        CompleteAccept(
+                                            dalddongId:eachEvents.get('details')['eventId']));
+                                    Navigator.push(context,pageRoute.slideRitghtToLeft());
+                                  } else {
                                     if(isRejected){
                                       PageRouteWithAnimation pageRoute =
                                       PageRouteWithAnimation(const RejectedDalddong());
@@ -498,69 +362,199 @@ class _MyDalddongAlarm extends State<MyDalddongAlarm> {
                                     }
                                     else{
                                       PageRouteWithAnimation pageRoute =
-                                      PageRouteWithAnimation(ResponseDR(DalddongId: eachEvents.get('details')['eventId'],));
-                                      Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                      PageRouteWithAnimation(
+                                          ResponseStatus(dalddongId: eachEvents.get('details')['eventId'],
+                                          ));
+                                      Navigator.push(
+                                          context,pageRoute.slideRitghtToLeft());
                                     }
+                                  }
+                                },
+                                child: isMatched ? const Text('매칭완료') : isRejected ? const Text("거절됨") : const Text("수락완료", style: TextStyle(color: Colors.black),),
+                              )
+                                  : ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.red,
+                                ),
+                                onPressed: () {
+                                  PageRouteWithAnimation pageRoute =
+                                  PageRouteWithAnimation(const RejectedDalddong());
+                                  Navigator.push(context,
+                                      pageRoute.slideRitghtToLeft());
+                                },
+                                child: const Text('거절함'),
+                              )
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20.0),
+                            child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                    alarmTime.seconds * 1000))),
+                          ),
+                          const Divider(),
+                        ])));
+          });
+    },
+  );
+}
 
-                                  },
-                                  child: isRejected ? const Text("거절됨") : const Text('보기'),
-                                )
-                                    : myStatus == 2
-                                    ? ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: isRejected ? Colors.red : isMatched ? Colors.green : Colors.yellowAccent,
-                                  ),
-                                  onPressed: () async {
+Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
 
-                                      if (isMatched) {
-                                        PageRouteWithAnimation pageRoute =
-                                        PageRouteWithAnimation(
-                                            CompleteAccept(
-                                                dalddongId:eachEvents.get('details')['eventId']));
-                                        Navigator.push(context,pageRoute.slideRitghtToLeft());
-                                      } else {
-                                        if(isRejected){
-                                          PageRouteWithAnimation pageRoute =
-                                          PageRouteWithAnimation(const RejectedDalddong());
-                                          Navigator.push(context, pageRoute.slideRitghtToLeft());
-                                        }
-                                        else{
-                                          PageRouteWithAnimation pageRoute =
-                                          PageRouteWithAnimation(
-                                              ResponseStatus(dalddongId: eachEvents.get('details')['eventId'],
-                                              ));
-                                          Navigator.push(
-                                              context,pageRoute.slideRitghtToLeft());
-                                        }
-                                      }
-                                  },
-                                  child: isMatched ? const Text('매칭완료') : isRejected ? const Text("거절됨") : const Text("수락완료", style: TextStyle(color: Colors.black),),
-                                )
-                                    : ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.red,
-                                  ),
-                                  onPressed: () {
-                                    PageRouteWithAnimation pageRoute =
-                                    PageRouteWithAnimation(const RejectedDalddong());
-                                    Navigator.push(context,
-                                        pageRoute.slideRitghtToLeft());
-                                  },
-                                  child: const Text('거절함'),
-                                )
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 20.0),
-                              child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                                  DateTime.fromMillisecondsSinceEpoch(
-                                      alarmTime.seconds * 1000))),
-                            ),
-                            const Divider(),
-                          ])));
-            });
-      },
-    );
+  bool isMatched = false;
+
+  return StreamBuilder(
+    stream: FirebaseFirestore.instance
+        .collection('DalddongList')
+        .doc(eachVotes.get('details')['eventId'])
+        .collection('Members')
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .snapshots(),
+    builder: (context, voteMySnapshot) {
+      if (voteMySnapshot.connectionState == ConnectionState.waiting) {
+        return Container(
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(),
+        );
+      }
+
+
+      Timestamp alarmTime = eachVotes['alarmTime'];
+      return Padding(
+          padding: const EdgeInsets.all(3),
+          child: Container(
+              color: Colors.white54,
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.how_to_vote),
+                        SizedBox(width: 10,),
+                        Text("달똥투표", style: TextStyle(fontSize: GeneralUiConfig.hintSize, color: Colors.grey),),
+                      ],
+                    ),
+
+                    ListTile(
+                        // leading: Column(
+                        //   children: const [
+                        //     Icon(Icons.how_to_vote),
+                        //   ],
+                        // ),
+                        title: Text(
+                          "${eachVotes.get('details')['hostName']}님 외 ${eachVotes.get('details')['membersNum']}명의 ${eachVotes['body']}",
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: GeneralUiConfig.alarmTitleFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        trailing: voteMySnapshot.data?.get('currentStatus') == 0
+                            ? ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.grey,
+                          ),
+                          onPressed: () async {
+                            var acceptMembers = [];
+                            FirebaseFirestore.instance
+                                .collection('DalddongList')
+                                .doc(eachVotes.get('details')['eventId'])
+                                .collection('Members')
+                                .snapshots()
+                                .forEach((element) async {
+                              for (var docs in element.docs) {
+                                if (docs.get('currentStatus') == 1) {
+                                  acceptMembers.add(docs.id);
+                                }
+                              }
+
+                              // 투표하러 가기
+                              var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
+                              if(context.mounted) {
+                                PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
+                                    VoteScreen(
+                                      voteDates: List.from(voteDates),
+                                      dalddongId: eachVotes.get('details')['eventId'],
+                                    ));
+
+                                Navigator.push(
+                                    context, pageRoute.slideRitghtToLeft());
+                              }
+
+                            });
+                          },
+                          child: const Text('투표하기'),
+                        )
+                            : ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.black,
+                            backgroundColor: GeneralUiConfig.floatingBtnColor,
+                          ),
+                          onPressed: () async  {
+                            List<String> acceptMembers = [];
+                            int totalMembers = 0;
+                            acceptMembers = await FirebaseFirestore.instance
+                                .collection('DalddongList')
+                                .doc(eachVotes.get('details')['eventId'])
+                                .collection('Members')
+                                .get().then((value) {
+                              value.docs.forEach((element) {
+                                if (element.get('currentStatus') == 1) {
+                                  acceptMembers.add(element.id);
+                                }
+                              });
+                              totalMembers = value.docs.length;
+                              return acceptMembers;
+                            });
+
+                            if(context.mounted) {
+                              if (acceptMembers.length == totalMembers) {
+                                isMatched = true;
+                                PageRouteWithAnimation pageRoute =
+                                PageRouteWithAnimation(CompleteAccept(
+                                    dalddongId: eachVotes.get('details')['eventId']));
+                                Navigator.push(context, pageRoute.slideRitghtToLeft());
+                              } else {
+                                isMatched = false;
+                                PageRouteWithAnimation pageRoute =
+                                PageRouteWithAnimation(VoteStatus(
+                                  dalddongId: eachVotes.get('details')['eventId'],));
+                                Navigator.push(context, pageRoute.slideRitghtToLeft());
+                              }
+                            }
+
+                          },
+                          child: isMatched ? const Text("매칭완료"):  const Text('투표현황'),
+                        )),
+                    Padding(
+                        padding:const EdgeInsets.all(8.0),
+                        child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                        DateTime.fromMillisecondsSinceEpoch(
+                            alarmTime.seconds * 1000))),),
+                    const Divider(),
+                  ])));
+    },
+  );
+}
+
+
+class SemiCircleClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    int curveHeight = 60;
+    Offset controlPoint = Offset(size.width / 2, size.height + curveHeight);
+    Offset endPoint = Offset(size.width, size.height - curveHeight);
+
+    Path path = Path()
+      ..lineTo(0, size.height - curveHeight)
+      ..quadraticBezierTo(controlPoint.dx, controlPoint.dy, endPoint.dx, endPoint.dy)
+      ..lineTo(size.width, 0)
+      ..close();
+
+    return path;
   }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
