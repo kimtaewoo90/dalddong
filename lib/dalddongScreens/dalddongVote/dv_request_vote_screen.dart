@@ -437,7 +437,6 @@ class _RegistrationDalddongInChatState
                       // var myName = await getMyName();
                       if(context.mounted) {
 
-                        // TODO:
                         if(dalddongId != ""){
                           Navigator.push(
                               context,

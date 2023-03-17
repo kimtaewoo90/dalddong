@@ -125,8 +125,6 @@ Future<String> addDalddongVoteList(
   String dalddongId = generateRandomString(15);
   final pushManager = PushManager();
 
-  print("Step4. addDalddongVoteList");
-
   List<String> membersEmail = [];
   dalddongMembers.forEach((element) {
     membersEmail.add(element.get('userEmail'));
@@ -168,9 +166,6 @@ Future<String> addDalddongVoteList(
       'voteDates': FieldValue.arrayUnion(voteList),
       'isAllConfirmed': false
     });
-    print("done insert main dalddong list to db");
-
-
 
     // Member 개인DB에 저장
     dalddongMembers.forEach((value) {
@@ -233,7 +228,6 @@ Future<String> addDalddongVoteList(
     });
   });
 
-  print("Step4_End");
   return dalddongId;
 }
 
@@ -522,7 +516,7 @@ void completeDalddongSchedule(
 }
 
 
-Future<List<DateTime>> getBlockDatesList(List<QueryDocumentSnapshot>? dalddongMembers, bool dalddongLunch) async {
+Future<List<DateTime>> getBlockDatesList(List<QueryDocumntSnapshot>? dalddongMembers, bool dalddongLunch) async {
 
   List<DateTime> blockedDates = [];
 

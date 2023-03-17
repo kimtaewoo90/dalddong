@@ -21,7 +21,9 @@ class ResponseStatus extends StatefulWidget {
 class _ResponseStatusState extends State<ResponseStatus> {
   int? diffHour;
   int? diffMin;
-
+  bool isExpiredAlarm = false;
+  bool isMatched = false;
+  
   @override
   Widget build(BuildContext context) {
     context.watch<DalddongProvider>().newDdFriends;
@@ -189,6 +191,8 @@ class _ResponseStatusState extends State<ResponseStatus> {
                             Timestamp expiredTime =
                             snapshot3.data?.get("ExpiredTime");
 
+                            isMatched = snapshot3.data?.get('isAllConfirmed');
+
                             return TimerBuilder.periodic(
                               const Duration(minutes: 1),
                               builder: (context) {
@@ -216,6 +220,19 @@ class _ResponseStatusState extends State<ResponseStatus> {
                                       ),
                                     ),
                                   );
+                                }
+
+                                else if (diffHour == 1 && diffMin == 0 && isExpiredAlarm == false && isMatched == false){
+                                  isExpiredAlarm = true;
+                                  expiredWarningAlarm(memberSnapshot.data?.docs, widget.dalddongId);
+
+                                  return Padding(
+                                    padding: const EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                    child: Text( "$diffHour 시간 $diffMin 분전",
+                                                  style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,),),
+                                    );
                                 }
 
                                 // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제.
