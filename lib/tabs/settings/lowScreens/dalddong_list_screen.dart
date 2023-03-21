@@ -10,7 +10,9 @@ import 'package:provider/provider.dart';
 import '../../../commonScreens/Screens/noEventScreen.dart';
 import '../../../commonScreens/Screens/noMatchedDalddongEvent.dart';
 import '../../../commonScreens/alarm_screen.dart';
+import '../../../commonScreens/page_route_with_animation.dart';
 import '../../../commonScreens/shared_app_bar.dart';
+import '../../../dalddongScreens/dalddongRequest/dr_match_screen.dart';
 import '../../../functions/providers/community_provider.dart';
 
 
@@ -86,7 +88,8 @@ class _DalddongListState extends State<DalddongList> {
             ),
 
             const Divider(),
-            // const SizedBox(height: 15,),
+
+            //
             if(isDone == true)
               Expanded(
                 child: SingleChildScrollView(
@@ -106,22 +109,23 @@ class _DalddongListState extends State<DalddongList> {
                       }
                       else{
                         return SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.8,
+                          height: MediaQuery.of(context).size.height * 0.75,
                           child: ListView.builder(
                               shrinkWrap: true,
                               itemCount: snapshots.data?.docs.length,
                               itemBuilder: (context, index){
 
+
                                 return FutureBuilder(
                                     future: FirebaseFirestore.instance
                                         .collection('DalddongList')
-                                        .doc(snapshots.data?.docs[index].get('DalddongId'))
+                                        .doc(snapshots.data?.docs[index].get('scheduleId'))
                                         .get(),
                                     builder: (context, dalddongSnapshot) {
                                       return FutureBuilder(
                                           future: FirebaseFirestore.instance
                                               .collection('DalddongList')
-                                              .doc(snapshots.data?.docs[index].get('DalddongId'))
+                                              .doc(snapshots.data?.docs[index].get('scheduleId'))
                                               .collection('Members')
                                               .get(),
                                           builder: (context, memberSnapshot) {
@@ -161,7 +165,14 @@ class _DalddongListState extends State<DalddongList> {
                                                 const SizedBox(height: 5,),
                                                 Card(
                                                   child: InkWell(
-                                                    onTap: (){},
+                                                    onTap: (){
+                                                      // 확정된 달똥 클릭.
+                                                      PageRouteWithAnimation pageRoute =
+                                                      PageRouteWithAnimation(CompleteAccept(
+                                                          dalddongId: snapshots.data?.docs[index].get('scheduleId')));
+                                                      Navigator.push(context, pageRoute.slideRitghtToLeft());
+
+                                                    },
                                                     child: Padding(
                                                       padding: const EdgeInsets.all(5.0),
                                                       child: SizedBox(
@@ -237,6 +248,9 @@ class _DalddongListState extends State<DalddongList> {
                   scrollDirection: Axis.vertical,
                   child: FutureBuilder(
                     future: FirebaseFirestore.instance
+
+
+
                         .collection('DalddongList')
                         .where('isAllConfirmed', isEqualTo: false)
                         .get(),

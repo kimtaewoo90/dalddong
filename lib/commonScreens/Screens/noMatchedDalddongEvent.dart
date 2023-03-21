@@ -32,7 +32,7 @@ Widget noMatchedDalddongEvent(BuildContext context){
       50.height,
       AppButton(
         shapeBorder: RoundedRectangleBorder(borderRadius: radius(30)),
-        color: Color(0xFF5B98F3),
+        color: const Color(0xFF5B98F3),
         elevation: 10,
         onTap: () {
           toast('Add Event');

@@ -472,9 +472,15 @@ Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
                               // 투표하러 가기
                               var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
                               if(context.mounted) {
+
+                                List<DateTime> voteDatesDateTime = [];
+                                List.from(voteDates).forEach((element) {
+                                  voteDatesDateTime.add(DateTime.fromMillisecondsSinceEpoch(element.seconds * 1000));
+                                });
+
                                 PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
                                     VoteScreen(
-                                      voteDates: List.from(voteDates),
+                                      voteDates: voteDatesDateTime,
                                       dalddongId: eachVotes.get('details')['eventId'],
                                     ));
 

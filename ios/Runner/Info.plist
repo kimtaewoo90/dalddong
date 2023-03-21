@@ -50,7 +50,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>We need an access</string>
 	<key>NSContactsUsageDescription</key>
-	<string>This app requires contacts access to function properly.</string>
+    <string>App needs access to your contacts for the purpose of add friends conveniently</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need an access</string>
 	<key>NSPhotoLibraryUsageDescription</key>

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dalddong/commonScreens/config.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,6 +33,24 @@ class _VoteScreenState extends State<VoteScreen> {
   bool isExpiredAlarm = false;
   bool isMatched = false;
 
+  // Timestamp? expiredTime;
+  Timer? _timer;
+
+  Future<Timestamp?> _getExpiredTime() async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final DocumentReference documentReference = firestore.collection('DalddongList').doc(widget.dalddongId);
+
+    return await documentReference.get().then((DocumentSnapshot documentSnapshot) {
+      return documentSnapshot.get('ExpiredTime');
+    });
+  }
+
+  // 여기서 Timer.periodic 으로 계산한다?
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -44,117 +64,143 @@ class _VoteScreenState extends State<VoteScreen> {
             center: true,
           ),
           body: FutureBuilder(
-            future: FirebaseFirestore.instance
-                .collection('DalddongList')
-                .doc(widget.dalddongId)
-                .get(),
-            builder: (context, dalddongSnapshot){
+            future: _getExpiredTime(),
+            builder: (context, snapshot) {
 
-              if(!dalddongSnapshot.hasData){
-                return const Center(child: CircularProgressIndicator());
-              }
+              if(snapshot.hasData) {
+                _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+                  diffHour = (DateTime
+                      .fromMillisecondsSinceEpoch(snapshot.data!.seconds * 1000)
+                      .difference(DateTime.now())
+                      .inMinutes / 60).floor();
 
-              // var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
-              isMatched = dalddongSnapshot.data?.get('isAllConfirmed');
-              return FutureBuilder(
-                future: FirebaseFirestore.instance
-                    .collection('DalddongList')
-                    .doc(widget.dalddongId)
-                    .collection('Members')
-                    .get(),
-                builder: (context, memberSnapshot){
-                  return FutureBuilder(
+                  diffMin = (DateTime
+                      .fromMillisecondsSinceEpoch(snapshot.data!.seconds * 1000)
+                      .difference(DateTime.now())
+                      .inMinutes % 60);
+                });
+
+                if(diffHour == null || diffMin == null){
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+
+                return FutureBuilder(
+                  future: FirebaseFirestore.instance
+                      .collection('DalddongList')
+                      .doc(widget.dalddongId)
+                      .get(),
+                  builder: (context, dalddongSnapshot) {
+                    if (!dalddongSnapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    // var expiredTime = dalddongSnapshot.data?.get("ExpiredTime");
+                    isMatched = dalddongSnapshot.data?.get('isAllConfirmed');
+                    return FutureBuilder(
                       future: FirebaseFirestore.instance
                           .collection('DalddongList')
                           .doc(widget.dalddongId)
-                          .collection('voteDates')
+                          .collection('Members')
                           .get(),
-                      builder: (context, datesSnapshot){
+                      builder: (context, memberSnapshot) {
+                        return FutureBuilder(
+                            future: FirebaseFirestore.instance
+                                .collection('DalddongList')
+                                .doc(widget.dalddongId)
+                                .collection('voteDates')
+                                .get(),
+                            builder: (context, datesSnapshot) {
+                              List<VoteDatesCheckBoxList> datesList = [];
+                              datesSnapshot.data?.docs.forEach((element) {
+                                VoteDatesCheckBoxList dateBox = VoteDatesCheckBoxList(
+                                  voteDatesList: element,
+                                  dalddongId: widget.dalddongId,);
+                                datesList.add(dateBox);
+                              });
 
-                        List<VoteDatesCheckBoxList> datesList = [];
-                        datesSnapshot.data?.docs.forEach((element) {
-                          VoteDatesCheckBoxList dateBox = VoteDatesCheckBoxList(voteDatesList: element, dalddongId: widget.dalddongId,);
-                          datesList.add(dateBox);
-                        });
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 30,),
-
-                            Text.rich( TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: "${dalddongSnapshot.data?.get('hostName')}",
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xff025645)
-                                  ),
-                                ),
-
-                                const TextSpan(
-                                  text: " 님이 "
-                                ),
-
-                                TextSpan(
-                                  text: "${memberSnapshot.data?.docs.length} 명",
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xff025645)
-                                  ),
-                                ),
-
-                                const TextSpan(
-                                    text: " 에게 \n "
-                                ),
-                                TextSpan(
-                                  text: "${dalddongSnapshot.data?.get('LunchOrDinner') == true ? "점심" : "저녁"} ",
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xff025645)
-                                  ),
-                                ),
-                                const TextSpan( text: "날짜 투표를 요청했습니다! \n 원하는 날짜를 골라주세요!")
-                              ]
-                            )),
-
-                            Flexible(
-                              fit: FlexFit.tight,
-                              child: SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.8,
-                                child: ListView(
-                                  children: datesList,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 10,),
-
-                            Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
+                                  const SizedBox(height: 30,),
 
-                                  TimerBuilder.periodic(
+                                  Text.rich(TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: "${dalddongSnapshot.data?.get(
+                                              'hostName')}",
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xff025645)
+                                          ),
+                                        ),
+
+                                        const TextSpan(
+                                            text: " 님이 "
+                                        ),
+
+                                        TextSpan(
+                                          text: "${memberSnapshot.data?.docs
+                                              .length} 명",
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xff025645)
+                                          ),
+                                        ),
+
+                                        const TextSpan(
+                                            text: " 에게 \n "
+                                        ),
+                                        TextSpan(
+                                          text: "${dalddongSnapshot.data?.get(
+                                              'LunchOrDinner') == true
+                                              ? "점심"
+                                              : "저녁"} ",
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xff025645)
+                                          ),
+                                        ),
+                                        const TextSpan(
+                                            text: "날짜 투표를 요청했습니다! \n 원하는 날짜를 골라주세요!")
+                                      ]
+                                  )),
+
+                                  Flexible(
+                                    fit: FlexFit.tight,
+                                    child: SizedBox(
+                                      width: MediaQuery
+                                          .of(context)
+                                          .size
+                                          .width * 0.8,
+                                      child: ListView(
+                                        children: datesList,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 10,),
+
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment
+                                          .end,
+                                      children: [
+
+
+                                        TimerBuilder.periodic(
                                           const Duration(minutes: 1),
                                           builder: (context) {
-                                            diffHour = (DateTime.fromMillisecondsSinceEpoch(dalddongSnapshot.data?.get("ExpiredTime").seconds * 1000)
-                                                .difference(DateTime.now())
-                                                .inMinutes / 60).floor();
-
-                                            diffMin = (DateTime.fromMillisecondsSinceEpoch(dalddongSnapshot.data?.get("ExpiredTime").seconds * 1000)
-                                                .difference(DateTime.now())
-                                                .inMinutes % 60);
-
-
-                                            if (diffHour! >= 0 && diffMin! > 0) {
+                                            if (diffHour! >= 0 &&
+                                                diffMin! > 0) {
                                               return Padding(
                                                 padding:
-                                                const EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                                const EdgeInsets.fromLTRB(
+                                                    0, 0, 20, 0),
                                                 child: Text(
                                                   "$diffHour 시간 $diffMin 분전",
                                                   style: const TextStyle(
@@ -165,13 +211,19 @@ class _VoteScreenState extends State<VoteScreen> {
                                               );
                                             }
 
-                                            else if (diffHour == 1 && diffMin == 0 && isExpiredAlarm == false && isMatched == false){
+                                            else
+                                            if (diffHour == 1 && diffMin == 0 &&
+                                                isExpiredAlarm == false &&
+                                                isMatched == false) {
                                               isExpiredAlarm = true;
-                                              expiredWarningAlarm(memberSnapshot.data?.docs, widget.dalddongId);
+                                              expiredWarningAlarm(
+                                                  memberSnapshot.data?.docs,
+                                                  widget.dalddongId);
 
                                               return Padding(
                                                 padding:
-                                                const EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                                const EdgeInsets.fromLTRB(
+                                                    0, 0, 20, 0),
                                                 child: Text(
                                                   "$diffHour 시간 $diffMin 분전",
                                                   style: const TextStyle(
@@ -184,9 +236,14 @@ class _VoteScreenState extends State<VoteScreen> {
 
                                             // TODO: 1.만료되고 2.달똥생성이 되지 않았을 경우, 초대되었던 사람의 DB 컬렉션 삭제. DalddongList 에서 삭제
                                             else {
-                                              expiredAlarm(memberSnapshot.data?.docs, widget.dalddongId);
+                                              expiredAlarm(
+                                                  memberSnapshot.data?.docs,
+                                                  widget.dalddongId);
+                                              _timer?.cancel();
+
                                               return const Padding(
-                                                padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                                padding: EdgeInsets.fromLTRB(
+                                                    0, 0, 20, 0),
                                                 child: Text(
                                                   "만료된 투표..입니다",
                                                   style: TextStyle(
@@ -199,80 +256,102 @@ class _VoteScreenState extends State<VoteScreen> {
                                           },
                                         ),
 
+                                        const SizedBox(
+                                          height: 10,
+                                        ),
 
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
+                                        SizedBox(
+                                          width: double.infinity,
+                                          height: 40,
+                                          child: ElevatedButton(
+                                            style: ButtonStyle(
+                                                backgroundColor:
+                                                MaterialStateProperty.all(
+                                                    GeneralUiConfig
+                                                        .floatingBtnColor)),
+                                            onPressed: () async {
+                                              await FirebaseFirestore.instance
+                                                  .collection('DalddongList')
+                                                  .doc(widget.dalddongId)
+                                                  .collection('Members')
+                                                  .doc(FirebaseAuth.instance
+                                                  .currentUser!.email)
+                                                  .update({'currentStatus': 1});
 
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 40,
-                                    child: ElevatedButton(
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                          MaterialStateProperty.all(GeneralUiConfig.floatingBtnColor)),
-                                      onPressed: () async {
+                                              if (context.mounted) {
+                                                var votedMember = await FirebaseFirestore
+                                                    .instance
+                                                    .collection('DalddongList')
+                                                    .doc(widget.dalddongId)
+                                                    .collection('Members')
+                                                    .where('currentStatus',
+                                                    isEqualTo: 1)
+                                                    .get()
+                                                    .then((value) {
+                                                  return value.docs;
+                                                });
 
+                                                var totalMembers = await FirebaseFirestore
+                                                    .instance
+                                                    .collection('DalddongList')
+                                                    .doc(widget.dalddongId)
+                                                    .collection('Members')
+                                                    .get().then((value) {
+                                                  return value.docs;
+                                                });
 
-                                        await FirebaseFirestore.instance
-                                            .collection('DalddongList')
-                                            .doc(widget.dalddongId)
-                                            .collection('Members')
-                                            .doc(FirebaseAuth.instance.currentUser!.email)
-                                            .update({'currentStatus' : 1});
+                                                if (context.mounted) {
+                                                  if (votedMember.length ==
+                                                      totalMembers.length) {
+                                                    await completeDalddongVote(
+                                                        context,
+                                                        widget.dalddongId,
+                                                        votedMember);
 
-                                        if(context.mounted){
-                                          var votedMember = await FirebaseFirestore.instance
-                                              .collection('DalddongList')
-                                              .doc(widget.dalddongId)
-                                              .collection('Members').where('currentStatus', isEqualTo: 1)
-                                              .get().then((value) {
-                                                return value.docs;
-                                          });
-
-                                          var totalMembers = await FirebaseFirestore.instance
-                                              .collection('DalddongList')
-                                              .doc(widget.dalddongId)
-                                              .collection('Members')
-                                              .get().then((value) {
-                                                return value.docs;
-                                          });
-
-                                          if(context.mounted){
-                                            if(votedMember.length == totalMembers.length){
-                                              await completeDalddongVote(context, widget.dalddongId, votedMember);
-
-                                              if(context.mounted){
-                                                PageRouteWithAnimation pageRoute =
-                                                PageRouteWithAnimation(CompleteAccept(dalddongId: widget.dalddongId,));
-                                                Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                                    if (context.mounted) {
+                                                      PageRouteWithAnimation pageRoute =
+                                                      PageRouteWithAnimation(
+                                                          CompleteAccept(
+                                                            dalddongId: widget
+                                                                .dalddongId,));
+                                                      Navigator.push(context,
+                                                          pageRoute
+                                                              .slideRitghtToLeft());
+                                                    }
+                                                  }
+                                                  else {
+                                                    Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              VoteStatus(
+                                                                  dalddongId: widget
+                                                                      .dalddongId),
+                                                        ));
+                                                  }
+                                                }
                                               }
+                                            },
+                                            child: const Text("투표완료",
+                                              style: TextStyle(
+                                                  color: Colors.black),),
+                                          ),
+                                        )
+                                      ],
 
-                                            }
-                                            else{
-                                              Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) => VoteStatus(dalddongId: widget.dalddongId),
-                                                  ));
-                                            }
-                                          }
-
-                                        }
-                                      },
-                                      child: const Text("투표완료", style: TextStyle(color: Colors.black),),
                                     ),
                                   )
                                 ],
-
-                              ),
-                            )
-                          ],
-                        );
-                      });
-                },
-              );
-            },
+                              );
+                            });
+                      },
+                    );
+                  },
+                );
+              } else {
+                return const Center(child: Text("계산중"),);
+              }
+            }
           ),
         // bottomSheet: ,
       ),

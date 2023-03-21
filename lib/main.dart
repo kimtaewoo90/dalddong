@@ -97,9 +97,11 @@ void main() async {
   flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
+      .resolvePlatformSpecificImplementation< 
       AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
+
+
 
   var initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
@@ -110,12 +112,7 @@ void main() async {
       initializationSettings,
 
       onDidReceiveNotificationResponse: (NotificationResponse details) async { // 여기서 핸들링!
-        print('Foreground onDidReceiveNotificationResponse');
-        print(details.notificationResponseType);
-        print(details.actionId);
-        print(details.id);
-        print(details.input);
-        print(details.payload);
+
       },
       onDidReceiveBackgroundNotificationResponse: pushBackgroundHandler,
 
@@ -234,14 +231,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         );
       }
 
-      if(message.data['alarmType'] == "MSG"){
-          var chatroomId = message.data['eventId'];
-          var chatroomName = message.data['chatroomName'];
-        PageRouteWithAnimation pageRoute =
-        PageRouteWithAnimation(
-            ChatScreen(chatroomId, chatroomName));
-        Navigator.push(context, pageRoute.slideBottonToTop());
-      }
+      // if(message.data['alarmType'] == "MSG"){
+      //     var chatroomId = message.data['eventId'];
+      //     var chatroomName = message.data['chatroomName'];
+      //   PageRouteWithAnimation pageRoute =
+      //   PageRouteWithAnimation(
+      //       ChatScreen(chatroomId, chatroomName));
+      //   Navigator.push(context, pageRoute.slideBottonToTop());
+      // }
 
       // 알람테이블(AlarmList)에 적재
       if(message.data['alarmType'] != "MSG") {
@@ -265,7 +262,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       if(message.data['alarmType'] == "MSG"){
         var chatroomId = message.data['eventId'];
         var chatroomName = message.data['chatroomName'];
-        // var chatroomName = '테스트3';
         SchedulerBinding.instance.addPostFrameCallback((_){
           Navigator.of(GlobalVariable.navState.currentContext!)
         .push(MaterialPageRoute(builder:(context) => ChatScreen(chatroomId, chatroomName),));
