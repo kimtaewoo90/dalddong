@@ -26,10 +26,10 @@ class VoteScreen extends StatefulWidget {
   State<VoteScreen> createState() => _VoteScreenState();
 }
 
-class _VoteScreenState extends State<VoteScreen> {
+class _VoteScreenState extends State<VoteScreen> { 
 
-  int? diffHour;
-  int? diffMin;
+  int? diffHour = 23;
+  int? diffMin = 59;
   bool isExpiredAlarm = false;
   bool isMatched = false;
 
@@ -68,7 +68,9 @@ class _VoteScreenState extends State<VoteScreen> {
             builder: (context, snapshot) {
 
               if(snapshot.hasData) {
-                _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+
+                print(DateTime.fromMillisecondsSinceEpoch(snapshot.data!.seconds * 1000));
+                _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
                   diffHour = (DateTime
                       .fromMillisecondsSinceEpoch(snapshot.data!.seconds * 1000)
                       .difference(DateTime.now())
@@ -80,9 +82,10 @@ class _VoteScreenState extends State<VoteScreen> {
                       .inMinutes % 60);
                 });
 
-                if(diffHour == null || diffMin == null){
-                  return const Center(child: CircularProgressIndicator());
-                }
+                // print(diffHour);
+                // if(diffHour != null && diffMin != null){
+                //   return const Center(child: CircularProgressIndicator(),);
+                // }
 
 
                 return FutureBuilder(
@@ -193,7 +196,7 @@ class _VoteScreenState extends State<VoteScreen> {
 
 
                                         TimerBuilder.periodic(
-                                          const Duration(minutes: 1),
+                                          const Duration(seconds: 1),
                                           builder: (context) {
                                             if (diffHour! >= 0 &&
                                                 diffMin! > 0) {

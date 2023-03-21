@@ -57,7 +57,7 @@ class BaseAppBar extends StatelessWidget implements PreferredSizeWidget {
 
                 PageRouteWithAnimation pageRoute = PageRouteWithAnimation(MyApp());
                 if(context.mounted) {
-                  Navigator.push(context, pageRoute.slideRitghtToLeft());
+                  Navigator.pushReplacement(context, pageRoute.slideRitghtToLeft());
                 }
               }
 

@@ -2,7 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:dalddong/commonScreens/config.dart';
 import 'package:dalddong/commonScreens/shared_app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import '../../functions/utilities/Utility.dart';
 
 class SearchFromPhone extends StatefulWidget {
   const SearchFromPhone({Key? key}) : super(key: key);
@@ -60,67 +63,85 @@ class _SearchFromPhoneState extends State<SearchFromPhone> {
                 phoneNumbers.add(element.phones!.first.value!);
               });
 
-              print(phoneNumbers);
+              if(phoneNumbers.isEmpty){
+                return const Text("empty");
+              }
               return FutureBuilder(
                 future: FirebaseFirestore.instance
                     .collection('user')
                     .where('phoneNumber', whereIn: phoneNumbers)
                     .get(),
                 builder: (context, phoneSnapshot){
-                  print('future phone snapshot');
                   if(!phoneSnapshot.hasData){
                     return const Center(child: Text("연락처 리스트 중 달똥가입자가 없습니다."),);
                   } else{
-                    return ListView.builder(
-                        itemCount: phoneSnapshot.data?.docs.length,
-                        itemBuilder: (context, index){
-                          return ListTile(
-                              title: Text(phoneSnapshot.data?.docs[index].get('userName')),
-                              subtitle: Text(phoneSnapshot.data?.docs[index].get('userEmail')),
-                              leading: CircleAvatar(
-                                  radius: 25,
-                                  backgroundColor: Colors.white,
-                                  backgroundImage: NetworkImage(phoneSnapshot
-                                      .data?.docs[index]['userImage'])),
-                              trailing: ElevatedButton(
-                                child: const Text('선택'),
-                                onPressed: (){},
-                              )
-                          );
+                    return FutureBuilder(
+                        future: FirebaseFirestore.instance
+                            .collection('user')
+                            .doc(FirebaseAuth.instance.currentUser?.email)
+                            .collection('friendsList').where('phoneNumber', whereIn: phoneNumbers)
+                            .get(),
+                        builder: (context, friendsSnapshot){
+                          if(!friendsSnapshot.hasData){
+                            return ListView.builder(
+                                itemCount: phoneSnapshot.data?.docs.length,
+                                itemBuilder: (context, index){
+                                  return ListTile(
+                                      title: Text(phoneSnapshot.data?.docs[index].get('userName')),
+                                      subtitle: Text(phoneSnapshot.data?.docs[index].get('userEmail')),
+                                      leading: CircleAvatar(
+                                          radius: 25,
+                                          backgroundColor: Colors.white,
+                                          backgroundImage: NetworkImage(phoneSnapshot
+                                              .data?.docs[index]['userImage'])),
+                                      trailing: ElevatedButton(
+                                        child: const Text('추가'),
+                                        onPressed: (){},
+                                      )
+                                  );
+                                });
+                          } else{
+                            List<String> friendsPhoneNumbers = [];
+                            bool isFriend = false;
+                            friendsSnapshot.data?.docs.forEach((element) {
+                              friendsPhoneNumbers.add(element.get('phoneNumber'));
+                            });
+                            return ListView.builder(
+                                itemCount: phoneSnapshot.data?.docs.length,
+                                itemBuilder: (context, index){
+                                  if(friendsPhoneNumbers.contains(phoneSnapshot.data?.docs[index].get('phoneNumber'))){
+                                    isFriend = true;
+                                  } else{ isFriend = false;}
+
+                                  return ListTile(
+                                      title: Text(phoneSnapshot.data?.docs[index].get('userName')),
+                                      subtitle: Text(phoneSnapshot.data?.docs[index].get('userEmail')),
+                                      leading: CircleAvatar(
+                                          radius: 25,
+                                          backgroundColor: Colors.white,
+                                          backgroundImage: NetworkImage(phoneSnapshot
+                                              .data?.docs[index]['userImage'])),
+                                      trailing: ElevatedButton(
+                                        child: isFriend ? const Text('달똥메이트') : const Text('추가'),
+                                        onPressed: () async {
+                                          if(!isFriend){
+                                            insertFriendList(phoneSnapshot.data?.docs[index].get('userEmail'));
+                                            setState(() {
+
+                                            });
+                                          } else {
+                                            var isBlockFriend = await yesNoDialog(context, "현재 친구를 끊으시겠습니까?");
+                                            if(isBlockFriend!){
+                                              print("친구차단");
+                                            }
+                                          }
+                                        },
+                                      )
+                                  );
+                                });
+                          }
                         });
 
-
-
-
-
-
-
-
-                      // phoneSnapshot.data?.docs.forEach((element) {
-                      //   dalddongContacts!.add(element);
-                      //   print(element.id);
-                      // });
-                      //
-                      // print(dalddongContacts?.length);
-                      // if(dalddongContacts == null){
-                      //   return const Center(child: Text("연락처 리스트 중 달똥가입자가 없습니다."),);
-                      //
-                      // }else{
-                      //   return ListView.builder(
-                      //     itemCount: dalddongContacts?.length,
-                      //     itemBuilder: (BuildContext context, int index) {
-                      //       return ListTile(
-                      //           title: Text(dalddongContacts![index].get('userImage')),
-                      //           subtitle: Text(dalddongContacts![index].get('userName')),
-                      //           leading: Icon(dalddongContacts![index].get('userImage')),
-                      //           trailing: ElevatedButton(
-                      //           child: const Text('선택'),
-                      //           onPressed: (){},
-                      //       )
-                      //       );
-                      //     }
-                      //   );
-                      // }
                   }
 
 

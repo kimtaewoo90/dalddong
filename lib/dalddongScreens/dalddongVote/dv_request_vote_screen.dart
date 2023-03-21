@@ -400,7 +400,7 @@ class _RegistrationDalddongInChatState
                           if(context.mounted) {
 
                             if(dalddongId != ""){
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => VoteScreen(

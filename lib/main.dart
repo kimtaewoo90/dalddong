@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // localization
 import 'package:syncfusion_localizations/syncfusion_localizations.dart';
@@ -80,6 +81,22 @@ void main() async {
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
+  PermissionStatus permissionStatus = await Permission.notification.status;
+
+  if(permissionStatus.isGranted){
+    print(permissionStatus.isGranted);
+  }
+  else{
+    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    print("User granted permission : ${settings.authorizationStatus}");
+  }
+
+
+
   channel = const AndroidNotificationChannel(
       'push notification',    // channel Id
       'push notification to others',  // channel title
@@ -96,8 +113,9 @@ void main() async {
 
   flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
+  // 채널등록
   await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation< 
+      .resolvePlatformSpecificImplementation<
       AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(channel);
 
@@ -286,6 +304,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body:  StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot){
+          print(snapshot.data?.email);
           if(snapshot.hasData || snapshot.data?.email != null){
             // Main Page.
             return const MainScreen();

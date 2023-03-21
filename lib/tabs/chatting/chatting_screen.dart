@@ -72,7 +72,7 @@ class _ChatScreenState extends State<ChatScreen>  {
         });
 
         PageRouteWithAnimation pageRoute = PageRouteWithAnimation(const MainScreen(initialIndex: 1,));
-        Navigator.push(context, pageRoute.slideRitghtToLeft());
+        Navigator.pushReplacement(context, pageRoute.slideRitghtToLeft());
 
 
         return true;
