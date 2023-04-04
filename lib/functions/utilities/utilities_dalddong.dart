@@ -1,5 +1,7 @@
 
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dalddong/functions/pushManager/push_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -234,7 +236,22 @@ Future<String> addDalddongVoteList(
     });
   });
 
-  print("Step4_End");
+
+  // Timestamp? expiredTime;
+
+  Duration remainingDuration = const Duration(hours: 1);
+  DateTime expiredDateTime =  DateTime.now().add(const Duration(seconds: 60));
+  Timer.periodic(const Duration(seconds: 1), (timer) {
+    remainingDuration = expiredDateTime.difference(DateTime.now());
+
+    print("${remainingDuration.inSeconds} 초");
+    if (remainingDuration.inSeconds <= 0) {
+      expiredAlarm(dalddongMembers, dalddongId);
+      // stop the Timer when 24 hours have passed
+      timer.cancel();
+    }
+    });
+
   return dalddongId;
 }
 
@@ -728,7 +745,7 @@ Future<void> expiredAlarm(List<QueryDocumentSnapshot>? dalddongMembers, String d
           .get()
           .then((dalddongValue) {
         var pushToken = userValue.get('pushToken');
-        var title = "달똥투표가 만료되었습니다:(";
+        var title = "투표만료 ($dalddongId)";
         var body =
             "'${dalddongValue.get('hostName')}'님의 "
             "${dalddongValue.get('LunchOrDinner') == 0

@@ -401,8 +401,6 @@ Widget dalddongRqAalarm(QueryDocumentSnapshot eachEvents){
 
 Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
 
-  bool isMatched = false;
-
   return StreamBuilder(
     stream: FirebaseFirestore.instance
         .collection('DalddongList')
@@ -417,6 +415,8 @@ Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
           child: const CircularProgressIndicator(),
         );
       }
+
+      // TODO: 이미 만료되서 DalddongList에서 삭제되었으면, 만료된 페이지 렌더링
 
 
       Timestamp alarmTime = eachVotes['alarmTime'];
@@ -436,11 +436,6 @@ Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
                     ),
 
                     ListTile(
-                        // leading: Column(
-                        //   children: const [
-                        //     Icon(Icons.how_to_vote),
-                        //   ],
-                        // ),
                         title: Text(
                           "${eachVotes.get('details')['hostName']}님 외 ${eachVotes.get('details')['membersNum']}명의 ${eachVotes['body']}",
                           style: const TextStyle(
@@ -449,29 +444,32 @@ Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        trailing: voteMySnapshot.data?.get('currentStatus') == 0
-                            ? ElevatedButton(
+                        trailing: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.grey,
+                            foregroundColor: voteMySnapshot.data?.get('currentStatus') == 0 ? Colors.white : Colors.black,
+                            backgroundColor: voteMySnapshot.data?.get('currentStatus') == 0 ? Colors.grey : GeneralUiConfig.floatingBtnColor,
                           ),
                           onPressed: () async {
-                            var acceptMembers = [];
-                            FirebaseFirestore.instance
+                            print("클릭은됨");
+                            List<String> acceptMembers = [];
+                            List<QueryDocumentSnapshot> allMembers = [];
+                            await FirebaseFirestore.instance
                                 .collection('DalddongList')
                                 .doc(eachVotes.get('details')['eventId'])
                                 .collection('Members')
-                                .snapshots()
-                                .forEach((element) async {
-                              for (var docs in element.docs) {
-                                if (docs.get('currentStatus') == 1) {
-                                  acceptMembers.add(docs.id);
-                                }
-                              }
+                                .get().then((value) {
+                                  value.docs.forEach((element) {
+                                    allMembers.add(element);
+                                    if (element.get('currentStatus') == 1) {
+                                      acceptMembers.add(element.id);
+                                    }
+                                  });
+                            });
 
-                              // 투표하러 가기
-                              var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
-                              if(context.mounted) {
+                              print("여기인건가 currentStatus : ${voteMySnapshot.data?.get('currentStatus')}");
+                              if(voteMySnapshot.data?.get('currentStatus') == 0){
+                                // 투표하러 가기
+                                var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
 
                                 List<DateTime> voteDatesDateTime = [];
                                 List.from(voteDates).forEach((element) {
@@ -482,67 +480,58 @@ Widget dalddongVtAlarm(QueryDocumentSnapshot eachVotes){
                                     VoteScreen(
                                       voteDates: voteDatesDateTime,
                                       dalddongId: eachVotes.get('details')['eventId'],
+                                      dalddongMembers: allMembers,
                                     ));
 
                                 Navigator.push(
                                     context, pageRoute.slideRitghtToLeft());
-                              }
 
-                            });
-                          },
-                          child: const Text('투표하기'),
-                        )
-                            : ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.black,
-                            backgroundColor: GeneralUiConfig.floatingBtnColor,
-                          ),
-                          onPressed: () async  {
-                            List<String> acceptMembers = [];
-                            int totalMembers = 0;
-                            acceptMembers = await FirebaseFirestore.instance
-                                .collection('DalddongList')
-                                .doc(eachVotes.get('details')['eventId'])
-                                .collection('Members')
-                                .get().then((value) {
-                              value.docs.forEach((element) {
-                                if (element.get('currentStatus') == 1) {
-                                  acceptMembers.add(element.id);
+                              }
+                              else{
+                                print(">?>>>sdjnflksjflksf???????????????");
+                                if (acceptMembers.length == allMembers.length) {
+                                  PageRouteWithAnimation pageRoute =
+                                  PageRouteWithAnimation(CompleteAccept(
+                                      dalddongId: eachVotes.get('details')['eventId']));
+                                  Navigator.push(context, pageRoute.slideRitghtToLeft());
                                 }
-                              });
-                              totalMembers = value.docs.length;
-                              return acceptMembers;
-                            });
+                                else {
+                                  var voteDates = await FirebaseFirestore.instance.collection('DalddongList').doc(eachVotes.get('details')['eventId']).get().then((value) => value.get('voteDates'));
 
-                            if(context.mounted) {
-                              if (acceptMembers.length == totalMembers) {
-                                isMatched = true;
-                                PageRouteWithAnimation pageRoute =
-                                PageRouteWithAnimation(CompleteAccept(
-                                    dalddongId: eachVotes.get('details')['eventId']));
-                                Navigator.push(context, pageRoute.slideRitghtToLeft());
-                              } else {
-                                isMatched = false;
-                                PageRouteWithAnimation pageRoute =
-                                PageRouteWithAnimation(VoteStatus(
-                                  dalddongId: eachVotes.get('details')['eventId'],));
-                                Navigator.push(context, pageRoute.slideRitghtToLeft());
+                                  List<DateTime> voteDatesDateTime = [];
+                                  List.from(voteDates).forEach((element) {
+                                    voteDatesDateTime.add(DateTime.fromMillisecondsSinceEpoch(element.seconds * 1000));
+                                  });
+
+                                  PageRouteWithAnimation pageRoute = PageRouteWithAnimation(
+                                      VoteScreen(
+                                        voteDates: voteDatesDateTime,
+                                        dalddongId: eachVotes.get('details')['eventId'],
+                                        dalddongMembers: allMembers,
+                                      ));
+
+                                  Navigator.push(
+                                      context, pageRoute.slideRitghtToLeft());
+                                }
                               }
-                            }
 
-                          },
-                          child: isMatched ? const Text("매칭완료"):  const Text('투표현황'),
-                        )),
+
+
+
+                            }, child: voteMySnapshot.data?.get('currentStatus') == 0 ? const Text('투표하기') : const Text("확인하기"),),),
                     Padding(
-                        padding:const EdgeInsets.all(8.0),
-                        child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
-                        DateTime.fromMillisecondsSinceEpoch(
-                            alarmTime.seconds * 1000))),),
+                      padding:const EdgeInsets.all(8.0),
+                      child: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(
+                          DateTime.fromMillisecondsSinceEpoch(
+                              alarmTime.seconds * 1000))),),
                     const Divider(),
-                  ])));
-    },
+                  ]
+              ),
+          ),
+      );},
   );
 }
+
 
 
 class SemiCircleClipper extends CustomClipper<Path> {

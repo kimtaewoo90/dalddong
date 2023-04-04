@@ -373,7 +373,8 @@ class _RegistrationDalddongInChatState
                 bool? yesOrNo = false;
 
                 // TODO : check the duplicated Vote members
-                isDuplicated = await isDuplicatedMembers(widget.chatMembers!, "vote");
+                // isDuplicated = await isDuplicatedMembers(widget.chatMembers!, "vote");
+                isDuplicated = await isDuplicatedMembers(context.read<DalddongProvider>().newDdFriends, "vote");
                   if(isDuplicated){
                     WidgetsBinding.instance.addPostFrameCallback((_) async {
                       yesOrNo = await yesNoDialog(context, "이미 현재 맴버와 투표중인 달똥이 있습니다. 또다른 달똥투표를 생성하시겠습니까?");
@@ -405,7 +406,8 @@ class _RegistrationDalddongInChatState
                                   MaterialPageRoute(
                                     builder: (context) => VoteScreen(
                                         voteDates: voteDates,
-                                        dalddongId: dalddongId
+                                        dalddongId: dalddongId,
+                                        dalddongMembers: context.read<DalddongProvider>().newDdFriends
                                     ),
                                   ));
                             }
@@ -443,7 +445,8 @@ class _RegistrationDalddongInChatState
                               MaterialPageRoute(
                                 builder: (context) => VoteScreen(
                                     voteDates: voteDates,
-                                    dalddongId: dalddongId
+                                    dalddongId: dalddongId,
+                                    dalddongMembers: context.read<DalddongProvider>().newDdFriends,
                                 ),
                               ));
                         }

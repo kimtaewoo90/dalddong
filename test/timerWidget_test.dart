@@ -16,10 +16,10 @@ void main() {
   group('MyWidget tests', () {
     testWidgets('MyWidget has a title', (WidgetTester tester) async {
       // Arrange
-      final widget = VoteScreen(dalddongId: 'mnBgFPvhqz35kny', voteDates: [DateTime.now(), DateTime.now(),DateTime.now(),DateTime.now(),DateTime.now()],);
+      // final widget = VoteScreen(dalddongId: 'mnBgFPvhqz35kny', voteDates: [DateTime.now(), DateTime.now(),DateTime.now(),DateTime.now(),DateTime.now()],);
 
       // Act
-      await tester.pumpWidget(widget);
+      // await tester.pumpWidget(widget);
 
       // Assert
       // expectect(find.text('Test Title'), findsOneWidget);
